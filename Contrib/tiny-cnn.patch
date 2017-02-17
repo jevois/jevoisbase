@@ -1,0 +1,51 @@
+diff --git a/tiny_cnn/config.h b/tiny_cnn/config.h
+index 3f0b557..97e6047 100644
+--- a/tiny_cnn/config.h
++++ b/tiny_cnn/config.h
+@@ -30,7 +30,9 @@
+ /**
+  * define if you want to use intel TBB library
+  */
+-//#define CNN_USE_TBB
++
++// JEVOIS: enable TBB. On host, need to apt-get install libtbb-dev, on platform it is compiled with opencv
++#define CNN_USE_TBB
+ 
+ /**
+  * define to enable avx vectorization
+@@ -59,7 +61,9 @@
+ #ifdef CNN_USE_OMP
+ #define CNN_TASK_SIZE 100
+ #else
+-#define CNN_TASK_SIZE 8
++//#define CNN_TASK_SIZE 8
++// JEVOIS assume 48+ CPUs on the host
++#define CNN_TASK_SIZE 50
+ #endif
+ 
+ namespace tiny_cnn {
+@@ -68,7 +72,10 @@ namespace tiny_cnn {
+  * calculation data type
+  * you can change it to float, or user defined class (fixed point,etc)
+  **/
+-typedef double float_t;
++///typedef double float_t;
++
++//JEVOIS: use float instead of default double:
++  typedef float float_t;
+ 
+ /**
+  * size of layer, model, data etc.
+diff --git a/tiny_cnn/layers/max_pooling_layer.h b/tiny_cnn/layers/max_pooling_layer.h
+index f9b3ab7..a384506 100644
+--- a/tiny_cnn/layers/max_pooling_layer.h
++++ b/tiny_cnn/layers/max_pooling_layer.h
+@@ -112,7 +112,7 @@ public:
+         for_(parallelize_, 0, size_t(in_size_), [&](const blocked_range& r) {
+             for (int i = r.begin(); i != r.end(); i++) {
+                 cnn_size_t outi = in2out_[i];
+-                prev_delta[i] = (max_idx[outi] == i) ? current_delta[outi] * prev_h.df(prev_out[i]) : float_t(0);
++                prev_delta[i] = (int(max_idx[outi]) == i) ? current_delta[outi] * prev_h.df(prev_out[i]) : float_t(0);
+             }
+         });
+         return prev_->back_propagation(prev_delta_[index], index);

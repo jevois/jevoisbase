@@ -1,0 +1,9 @@
+#run this script to insert the modules necessary for firewire capture
+
+echo -------Insert Modules-----
+modprobe ieee1394
+modprobe ohci1394
+modprobe raw1394
+modprobe video1394
+lsmod | grep 1394
+

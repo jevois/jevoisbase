@@ -1,0 +1,123 @@
+######################################################################################################################
+#
+# JeVois Smart Embedded Machine Vision Toolkit - Copyright (C) 2016 by Laurent Itti, the University of Southern
+# California (USC), and iLab at USC. See http://iLab.usc.edu and http://jevois.org for information about this project.
+#
+# This file is part of the JeVois Smart Embedded Machine Vision Toolkit.  This program is free software; you can
+# redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
+# Foundation, version 2.  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+# License for more details.  You should have received a copy of the GNU General Public License along with this program;
+# if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# Contact information: Laurent Itti - 3641 Watt Way, HNB-07A - Los Angeles, BA 90089-2520 - USA.
+# Tel: +1 213 740 3527 - itti@pollux.usc.edu - http://iLab.usc.edu - http://jevois.org
+######################################################################################################################
+
+
+####################################################################################################
+JeVois embedded machine vision framework INSTALL
+####################################################################################################
+
+####################################################################################################
+Installing OpenCV 3.1.0 on an intel/linux host system:
+####################################################################################################
+
+Note: for compatibility with the platform, which downloads the latest "release" code, make sure you install that same
+release code on your host as well, as some modules, APIs, etc may differ between the release and latest github versions.
+
+sudo apt-get install libopencv-dev build-essential cmake git libgtk2.0-dev pkg-config python-dev python-numpy libdc1394-22 libdc1394-22-dev libjpeg-dev libpng12-dev libtiff5-dev libjasper-dev libavcodec-dev libavformat-dev libswscale-dev libxine2-dev libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libv4l-dev libtbb-dev libqt4-dev libfaac-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev libtheora-dev libvorbis-dev libxvidcore-dev x264 v4l-utils unzip qt5-default
+
+mkdir ~/opencv31
+cd ~/opencv31
+
+wget https://github.com/opencv/opencv/archive/3.1.0.tar.gz
+tar zxvf 3.1.0.tar.gz
+rm -f 3.1.0.tar.gz
+
+wget https://github.com/opencv/opencv_contrib/archive/3.1.0.tar.gz
+tar zxvf 3.1.0.tar.gz
+rm -f 3.1.0.tar.gz
+
+# Run cmake to generate the makefile:
+cd opencv-3.1.0/
+mkdir build
+cd build
+
+# Note: for now we disable building the hdf module in opencv_contrib as it needs to be patched on ubuntu 16.04 to
+# properly find hdf5.h in the system headers.
+
+cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D WITH_V4L=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D WITH_CUDA=OFF -D BUILD_EXAMPLES=ON -D INSTALL_C_EXAMPLES=ON -D OPENCV_EXTRA_MODULES_PATH=~/opencv31/opencv_contrib-3.1.0/modules -D BUILD_opencv_hdf=OFF ..
+
+# Compile (replace 50 below by your number of cores):
+make -j 50
+
+# install:
+sudo make install
+
+# This installs into /usr/local/
+# The sample programs are in /usr/local/share/OpenCV/samples/
+
+
+####################################################################################################
+Compiling JeVois library and base apps
+####################################################################################################
+
+You can compile the JeVois software to run on almost any Linux computer. You can use a standard USB webcam to develop
+and test your algorithms rapidly. Once ready, you can compile the exact same code for execution on the hardware
+platform. Both host and platform compilation is possible at the same time.
+
+JeVois uses CMake, which simplifies the dual compilation for host hardware (typically, Intel x86_64 CPU) and platform
+hardware (ARM CPU). CMake compiles everything in a directory you create, thus we can create two directories, once for
+native compilation on the host computer, and one for cross-compilation for the platform hardware.
+
+In the instructions below, we use:
+
+hbuild directory for the files compiled for the HOST
+pbuild directory for the files compiled for the PLATFORM
+
+####################################################################################################
+Compiling JeVois library and base apps for host computer
+####################################################################################################
+
+cd jevois
+
+mkdir hbuild && cd hbuild
+
+cmake ..
+
+make -j 48     # replace 48 by your number of CPU cores
+
+make doc       # optional, to build the documentation
+
+# Library and executables are in the current directory (jevois/hbuild)
+
+sudo make install
+
+# install to /usr/local by default. In there, will install library under lib/, apps under bin/, include files under
+# include/, and doc file under share/doc/jevois/
+
+
+
+####################################################################################################
+Compiling JeVois library and base apps for hardware platform
+####################################################################################################
+
+This requires that the Allwinner Lichee software environment, buildroot (for the filesystem on the SD card), and the
+linux kernel 3.4 for the platform be build already.
+
+
+
+
+cd jevois
+
+mkdir pbuild && cd pbuild
+
+cmake -DJEVOIS_PLATFORM=ON ..
+
+make -j 48     # replace 48 by your number of CPU cores
+
+sudo make install
+
+# This installs /usr in your target directory of your buildroot install, which will end up in /usr/bin, /usr/lib/, etc
+# on the SD card when it is flashed.

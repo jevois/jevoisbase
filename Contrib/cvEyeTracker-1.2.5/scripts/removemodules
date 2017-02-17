@@ -1,0 +1,8 @@
+echo ------Remove Modules-----
+rmmod raw1394
+rmmod video1394
+rmmod ohci1394
+rmmod ieee1394
+
+lsmod | grep 1394
+echo ---------------------
