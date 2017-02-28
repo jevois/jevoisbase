@@ -11,6 +11,6 @@ if [ `cat /proc/cpuinfo | grep ARM | wc -l` -gt 0 ]; then ncpu=1; fi
 
 
 # avoid clogging up the SD card with tiny-cnn training data:
-/bin/rm ${HOME}/jevois-sdk/out/sun8iw5p1/linux/common/buildroot/target/jevois/modules/*/JeVois/*/tiny-dnn/*/*.bin
+/bin/rm -f ${HOME}/jevois-sdk/out/sun8iw5p1/linux/common/buildroot/target/jevois/modules/*/JeVois/*/tiny-dnn/*/*.bin
 
-/bin/rm ${HOME}/jevois-sdk/out/sun8iw5p1/linux/common/buildroot/target/jevois/modules/*/JeVois/*/tiny-dnn/*/*ubyte
+/bin/rm -f ${HOME}/jevois-sdk/out/sun8iw5p1/linux/common/buildroot/target/jevois/modules/*/JeVois/*/tiny-dnn/*/*ubyte
