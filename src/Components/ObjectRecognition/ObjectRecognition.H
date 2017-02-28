@@ -19,6 +19,11 @@
 
 #include <jevois/Component/Component.H>
 #include <stdarg.h> // needed by tiny_dnn
+
+// Defines used to optimize tiny-dnn:
+#define CNN_USE_TBB
+#undef CNN_USE_DOUBLE
+
 #include <tiny-dnn/tiny_dnn/config.h> // for float_t, etc. this does not include much code
 #include <tiny-dnn/tiny_dnn/util/aligned_allocator.h> // for aligned_allocator
 #include <tiny-dnn/tiny_dnn/util/util.h> // for index3d
