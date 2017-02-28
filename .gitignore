@@ -1,0 +1,11 @@
+modinfo.html
+modinfo.yaml
+Contrib/NNPACK
+Contrib/Ne10
+Contrib/OF_DIS
+Contrib/ZBar
+Contrib/generalized-hough-tranform
+Contrib/pixy
+Contrib/pthreadpool
+Contrib/tiny-dnn
+Contrib/vlfeat
