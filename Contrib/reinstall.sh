@@ -2,11 +2,18 @@
 
 read -p "Do you want to nuke, fetch and patch all contributed packages [y/N]? "
 if [ "X$REPLY" = "Xy" ]; then
-    /bin/rm -rf `/bin/ls -p1 | /bin/grep /`
+    /bin/rm -rf generalized-hough-tranform Ne10 NNPACK OF_DIS pixy pthreadpool tiny-dnn vlfeat ZBar
 
     git clone --recursive https://github.com/Maratyszcza/NNPACK.git # Accelerator for convnets
     git clone https://github.com/Maratyszcza/pthreadpool.git
-    git clone https://github.com/tiny-dnn/tiny-dnn.git  # Convolutional neural networks
+
+    # we get some release version of tiny-dnn as the master branch is under quite active development
+    # with frequent API changes:
+    #git clone https://github.com/tiny-dnn/tiny-dnn.git  # Convolutional neural networks
+    wget https://github.com/tiny-dnn/tiny-dnn/archive/v1.0.0a3.tar.gz
+    tar zxvf v1.0.0a3.tar.gz 
+    /bin/rm v1.0.0a3.tar.gz
+    mv tiny-dnn-1.0.0a3 tiny-dnn
 
     git clone https://github.com/ZBar/ZBar.git          # Barcode/QRcode detection
     cp zbar-config.h ZBar/include/config.h
@@ -22,9 +29,6 @@ if [ "X$REPLY" = "Xy" ]; then
     #wget http://thirtysixthspan.com/openEyes/cvEyeTracker-1.2.5.tar.gz
     #tar zxvf cvEyeTracker-1.2.5.tar.gz
     #/bin/rm cvEyeTracker-1.2.5.tar.gz 
-    git pull # get it back as we just nuked it above...
 
     cd OF_DIS && patch -p1 < ../OF_DIS.patch && cd ..
-    cd tiny-dnn && patch -p1 < ../tiny-dnn.patch && cd ..
-
 fi
