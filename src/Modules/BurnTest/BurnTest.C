@@ -85,14 +85,18 @@ class BurnTest : public jevois::Module
       itsFilter->setProgram("shaders/simplevertshader.glsl", "shaders/combofragshader.glsl");
       itsFilter->setProgramParam2f("offset", -1.0F, -1.0F);
       itsFilter->setProgramParam2f("scale", 2.0F, 2.0F);
+      itsRunning.store(true);
     }
 
     //! Kill our external processes on uninit
     void postUninit() override
     {
+      itsRunning.store(false);
       system("/bin/rm /tmp/jevois-burntest");
       system("killall -9 dhrystone");
       system("killall -9 whetstone");
+      try { itsGPUfut.get(); } catch (...) { }
+      try { itsNEONfut.get(); } catch (...) { }
     }
     
     //! Virtual destructor for safe inheritance
@@ -142,25 +146,25 @@ class BurnTest : public jevois::Module
 
         // then load the GPU
         itsGrayImg = jevois::rawimage::convertToCvGray(inimg);
-        itsGPUfut = std::async(std::launch::async, [&](unsigned int w, unsigned int h) {
-            cv::Mat gpuout(h, w, CV_8UC4);
-            while (true) itsFilter->process(itsGrayImg, gpuout);
+        itsGPUfut = std::async(std::launch::async, [&](unsigned int ww, unsigned int hh) {
+            cv::Mat gpuout(hh, ww, CV_8UC4);
+            while (itsRunning.load()) itsFilter->process(itsGrayImg, gpuout);
           }, w, h);
 
         // and load NEON too
         itsRGBAimg = jevois::rawimage::convertToCvRGBA(inimg);
 
-        itsNEONfut = std::async(std::launch::async, [&](unsigned int w, unsigned int h) {
-            cv::Mat neonresult(h, w, CV_8UC4);
-            ne10_size_t src_size { w, h }, kernel_size { 5, 5 };
-            while (true)
+        itsNEONfut = std::async(std::launch::async, [&](unsigned int ww, unsigned int hh) {
+            cv::Mat neonresult(hh, ww, CV_8UC4);
+            ne10_size_t src_size { ww, hh }, kernel_size { 5, 5 };
+            while (itsRunning.load())
             {
 #ifdef __ARM_NEON__
               // Neon version:
-              ne10_img_boxfilter_rgba8888_neon(itsRGBAimg.data, neonresult.data, src_size, w * 4, w * 4, kernel_size);
+              ne10_img_boxfilter_rgba8888_neon(itsRGBAimg.data, neonresult.data, src_size, ww * 4, ww * 4, kernel_size);
 #else
               // On non-ARM/NEON host, revert to CPU version again:
-              ne10_img_boxfilter_rgba8888_c(itsRGBAimg.data, neonresult.data, src_size, w * 4, w * 4, kernel_size);
+              ne10_img_boxfilter_rgba8888_c(itsRGBAimg.data, neonresult.data, src_size, ww * 4, ww * 4, kernel_size);
 #endif
             }
           }, w, h);
@@ -271,6 +275,7 @@ class BurnTest : public jevois::Module
     cv::Mat itsGrayImg;
     std::future<void> itsNEONfut;
     cv::Mat itsRGBAimg;
+    std::atomic<bool> itsRunning;
 };
 
 // Allow the module to be loaded as a shared object (.so) file:
