@@ -20,6 +20,7 @@
 #include <jevois/Util/Utils.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevois/Debug/Timer.H>
+#include <jevois/Util/Coordinates.H>
 
 #include <linux/videodev2.h>
 #include <opencv2/core/core.hpp>
@@ -124,6 +125,7 @@ JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if
     @author Laurent Itti
 
     @videomapping YUYV 320 254 60.0 YUYV 320 240 60.0 JeVois ObjectTracker
+    @videomapping NONE 0 0 0.0 YUYV 320 240 60.0 JeVois ObjectTracker
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California
@@ -145,7 +147,61 @@ class ObjectTracker : public jevois::Module,
     //! Virtual destructor for safe inheritance
     virtual ~ObjectTracker() { }
 
-    //! Processing function
+    //! Processing function, no USB video output
+    virtual void process(jevois::InputFrame && inframe) override
+    {
+      // Wait for next available camera image. Any resolution ok, but require YUYV since we assume it for drawings:
+      jevois::RawImage inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
+      inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
+
+      // Convert input image to BGR24, then to HSV:
+      cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
+      cv::Mat imghsv; cv::cvtColor(imgbgr, imghsv, cv::COLOR_BGR2HSV);
+
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      // Threshold the HSV image to only keep pixels within the desired HSV range:
+      cv::Mat imgth;
+      cv::inRange(imghsv, cv::Scalar(hrange::get().min(), srange::get().min(), vrange::get().min()),
+                  cv::Scalar(hrange::get().max(), srange::get().max(), vrange::get().max()), imgth);
+
+      // Apply morphological operations to cleanup the image noise:
+      cv::Mat erodeElement = getStructuringElement(cv::MORPH_RECT, cv::Size(erodesize::get(), erodesize::get()));
+      cv::erode(imgth, imgth, erodeElement);
+
+      cv::Mat dilateElement = getStructuringElement(cv::MORPH_RECT, cv::Size(dilatesize::get(), dilatesize::get()));
+      cv::dilate(imgth, imgth, dilateElement);
+
+      // Detect objects by finding contours:
+      std::vector<std::vector<cv::Point> > contours; std::vector<cv::Vec4i> hierarchy;
+      cv::findContours(imgth, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+
+      // Identify the "good" objects:
+      if (hierarchy.size() > 0 && hierarchy.size() <= maxnumobj::get())
+      {
+        double refArea = 0.0; int x = 0, y = 0;
+
+        for (int index = 0; index >= 0; index = hierarchy[index][0])
+        {
+          cv::Moments moment = cv::moments((cv::Mat)contours[index]);
+          double area = moment.m00;
+          if (objectarea::get().contains(int(area + 0.4999)) && area > refArea)
+          { x = moment.m10 / area + 0.4999; y = moment.m01 / area + 0.4999; refArea = area; }
+        }
+        
+        if (refArea > 0.0)
+        {
+          // Standardize the coordinates to -1000 ... 1000:
+          float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h);
+
+          // Send coords to serial port (for arduino, etc):
+          sendSerial("T2D " + std::to_string(xx) + ' ' + std::to_string(yy));
+        }
+      }
+    }
+
+    //! Processing function, with USB video output
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
       static jevois::Timer timer("processing");
@@ -221,10 +277,11 @@ class ObjectTracker : public jevois::Module,
           ++numobj;
           jevois::rawimage::drawCircle(outimg, x, y, 20, 1, jevois::yuyv::LightGreen);
 
-          // Send coords to serial port (for arduino, etc), normalizing to -1000...1000:
-          sendSerial("T2D " + std::to_string(int((x - 0.5F * w) * 2000.0F / w)) + ' ' +
-                     std::to_string(int((y - 0.5F * h) * 2000.0F / h)));
-  
+          // Standardize the coordinates to -1000 ... 1000:
+          float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h);
+
+          // Send coords to serial port (for arduino, etc):
+          sendSerial("T2D " + std::to_string(xx) + ' ' + std::to_string(yy));
         }
       }
 
