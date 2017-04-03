@@ -150,9 +150,8 @@ class ObjectTracker : public jevois::Module,
     //! Processing function, no USB video output
     virtual void process(jevois::InputFrame && inframe) override
     {
-      // Wait for next available camera image. Any resolution ok, but require YUYV since we assume it for drawings:
+      // Wait for next available camera image. Any resolution and format ok:
       jevois::RawImage inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
-      inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
 
       // Convert input image to BGR24, then to HSV:
       cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
