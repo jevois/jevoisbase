@@ -111,7 +111,7 @@ class DemoCPUGPU : public jevois::Module
           float kfxraw, kfyraw; itsKF->get(kfxraw, kfyraw);
       
           // Send kalman-filtered most-salient-point info to serial port (for arduino, etc):
-          sendSerial("T2D " + std::to_string(int(kfxraw + 0.4999F)) + ' ' + std::to_string(int(kfyraw + 0.4999F)));
+          sendSerial(jevois::sformat("T2D %.1f %.1f", kfxraw, kfyraw));
 
           // Wait for output image to be available:
           std::lock_guard<std::mutex> _(itsOutMtx);

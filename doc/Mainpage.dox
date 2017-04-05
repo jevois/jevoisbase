@@ -2,20 +2,19 @@
 
 \section welcome Welcome to the documentation of the JeVois Smart Embedded Machine Vision Toolkit.
 
-\note This documentation is still under development and is not finished yet. We estimate that it will be finished in
-February 2017.
-
 This documentation is for a base set of machine vision modules implemented under the JeVois programming framework and
 intended to run on a JeVois smart camera.
 
-For more information about the JeVois framework, see the [Jevois Documentation](http://jevois.org/doc/).
+For more information about the JeVois framework, see the [JeVois Documentation](http://jevois.org/doc/).
+
+New users, be sure to check out [JeVois Start](/start/).
 
 \section contents Table of contents
 
 If you are not yet familiar with JeVois, see the documentation for [JeVois](http://jevois.org/doc/) first.
 
-- \subpage components
-- \subpage modules
+- \subpage components - building blocks for machine vision algorithms.
+- \subpage modules - complete camera-to-USB machine vision pipelines.
 
 */
 

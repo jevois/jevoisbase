@@ -286,7 +286,7 @@ class JeVoisIntro : public jevois::Module
                                          20, 1, jevois::yuyv::LightGreen);
             
             // Send saliency info to serial port (for arduino, etc):
-            sendSerial("T2D " + std::to_string(int(kfxraw + 0.5F)) + ' ' + std::to_string(int(kfyraw + 0.5F)));
+            sendSerial(jevois::sformat("T2D %.1f %.1f", kfxraw, kfyraw));
 
             // If intro mode, draw some text messages according to our script:
             if (intromode && intromoviedone)

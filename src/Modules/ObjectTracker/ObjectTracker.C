@@ -195,7 +195,7 @@ class ObjectTracker : public jevois::Module,
           float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h);
 
           // Send coords to serial port (for arduino, etc):
-          sendSerial("T2D " + std::to_string(xx) + ' ' + std::to_string(yy));
+          sendSerial(jevois::sformat("T2D %.1f %.1f", xx, yy));
         }
       }
     }
@@ -280,7 +280,7 @@ class ObjectTracker : public jevois::Module,
           float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h);
 
           // Send coords to serial port (for arduino, etc):
-          sendSerial("T2D " + std::to_string(xx) + ' ' + std::to_string(yy));
+          sendSerial(jevois::sformat("T2D %.1f %.1f", xx, yy));
         }
       }
 

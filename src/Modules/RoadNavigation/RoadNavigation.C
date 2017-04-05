@@ -88,7 +88,7 @@ class RoadNavigation : public jevois::Module
       
       // Get the filtered target point x and send to serial:
       int const tpx = int(itsRoadFinder->getFilteredTargetX() * 2000.0F / inimg.width - 1000.0F);
-      sendSerial("T1D " + std::to_string(tpx));
+      sendSerial(jevois::sformat("T1D %.1f", tpx));
     }
 
     // ####################################################################################################
@@ -129,7 +129,7 @@ class RoadNavigation : public jevois::Module
 
       // Get the filtered target point x and send to serial:
       int const tpx = int(itsRoadFinder->getFilteredTargetX() * 2000.0F / w - 1000.0F);
-      sendSerial("T1D " + std::to_string(tpx));
+      sendSerial(jevois::sformat("T1D %.1f", tpx));
       
       // Write some extra info about the vp:
       std::ostringstream otxt; otxt << std::fixed << std::setprecision(3);

@@ -132,8 +132,7 @@ class DemoSaliency : public jevois::Module
                                          20, 1, jevois::yuyv::LightGreen);
       
             // Send kalman-filtered most-salient-point coords to serial port (for arduino, etc):
-            sendSerial("T2D " + std::to_string(int(kfxraw + 0.4999F)) + ' ' +
-                       std::to_string(int(kfyraw + 0.4999F)));
+            sendSerial(jevois::sformat("T2D %.1f %.1f", kfxraw, kfyraw));
       
             // Paste the saliency map:
             drawMap(outimg, &itsSaliency->salmap, w, 0, smfac, 20);
