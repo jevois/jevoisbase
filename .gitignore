@@ -9,8 +9,8 @@ Contrib/pixy
 Contrib/pthreadpool
 Contrib/tiny-dnn
 Contrib/vlfeat
-/doc/
-/jvpkg/
-/pbuild/
 /hbuild/
+/pbuild/
+/jvpkg/
+/doc/
 /JeVois_jevoisbase.jvpkg
