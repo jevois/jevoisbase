@@ -29,7 +29,7 @@ static jevois::ParameterCategory const ParamCateg("DemoGPU Parameters");
 // Note: we use NoEffect here as None seems to be defined a s anumeric constant somewhere, when compiling on host
 
 //! Parameter \relates DemoGPU
-JEVOIS_DEFINE_ENUM_CLASS(Effect, (NoEffect) (Blur) (Sobel) (Median) (Mult) (Thresh) (Dilate) (Erode) (Twirl) );
+JEVOIS_DEFINE_ENUM_CLASS(Effect, (NoEffect) (Blur) (Sobel) (Median) (Mult) (Thresh) (Dilate) (Erode) (Twirl) (Dewrap));
 
 //! Parameter \relates DemoGPU
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "GPU image processing effect to apply",
@@ -149,6 +149,10 @@ class DemoGPU : public jevois::Module,
       case Effect::Twirl:
         itsFilter->setProgram("shaders/simplevertshader.glsl", "shaders/twirlfragshader.glsl");
         itsFilter->setProgramParam1f("twirlamount", 2.0F);
+        break;
+
+      case Effect::Dewrap:
+        itsFilter->setProgram("shaders/dewrapvertshader.glsl", "shaders/dewrapfragshader.glsl");
         break;
       }
 
