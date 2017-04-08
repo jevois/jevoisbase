@@ -1,15 +1,12 @@
 
-
 // @author Ali AlSaibie
-// @email ali\@alsaibie.com
+// @email ali@alsaibie.com
 
 // Adopted from Vegard Øye found at https://epsil@bitbucket.org/mpg_papers/thesis-2015-vegard.git
 // This is the 4th strategy in the paper (GDBB). The vertex shader is a pass through shader and the 
 // fragment shader performs backward mapping. The process is as follows:
 // Tex to Position Transformation -> Cartesian to Polar -> Fisheye Backward Mapping -> Polar to Cartesian -> Back 
-// to Tex and clamped.
-
-
+// to Tex and clamped. 
 precision mediump float;
 
 varying vec2 tcoord;
