@@ -33,7 +33,7 @@ JEVOIS_DEFINE_ENUM_CLASS(Effect, (NoEffect) (Blur) (Sobel) (Median) (Mult) (Thre
 
 //! Parameter \relates DemoGPU
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "GPU image processing effect to apply",
-                                       Effect::Dewarp, Effect_Values, ParamCateg);
+                                       Effect::Twirl, Effect_Values, ParamCateg);
 
 // icon by by Freepik in technology at flaticon
 
@@ -161,7 +161,7 @@ class DemoGPU : public jevois::Module,
       itsFilter->setProgramParam2f("offset", -1.0F, -1.0F);
       itsFilter->setProgramParam2f("scale", 2.0F, 2.0F);
 
-      // Crop Dewarped Image 
+      // Crop Dewarped Image - change According to dewarped image
       itsFilter->setProgramParam2f("offsetd", -1.2F, -1.2F);
       itsFilter->setProgramParam2f("scaled", 2.4F, 2.4F);
     }
