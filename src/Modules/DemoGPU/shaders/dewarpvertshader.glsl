@@ -1,3 +1,5 @@
+// Identical to simplevertshader with different offset/scale
+
 attribute vec4 vertex;
 uniform vec2 offsetd;
 uniform vec2 scaled;
