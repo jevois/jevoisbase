@@ -198,15 +198,15 @@ class BurnTest : public jevois::Module
         std::async(std::launch::async, [&]() {
             // Filter the attended locations:
             itsKF->set(dmx, dmy, w, h);
-            float kfxraw, kfyraw, kfximg, kfyimg; itsKF->get(kfxraw, kfyraw, kfximg, kfyimg, w, h);
-
+            float kfxraw, kfyraw, kfximg, kfyimg;
+            itsKF->get(kfxraw, kfyraw, kfximg, kfyimg, inimg.width, inimg.height, 1.0F, 1.0F);
+      
             // Draw a circle around the kalman-filtered attended location:
-            jevois::rawimage::drawCircle(outimg, int(kfximg + 0.5F), int(kfyimg + 0.5F),
-                                         20, 1, jevois::yuyv::LightGreen);
-      
-            // Send kalman-filtered most-salient-point coords to serial port (for arduino, etc):
-            //sendSerial(jevois::sformat("T2D %.1f %.1f", kfxraw, kfyraw));
-      
+            jevois::rawimage::drawCircle(outimg, int(kfximg), int(kfyimg), 20, 1, jevois::yuyv::LightGreen);
+            
+            // Send saliency info to serial port (for arduino, etc):
+            //sendSerial(jevois::sformat("T2D %d %d", int(kfxraw), int(kfyraw)));
+
             // Paste the saliency map:
             drawMap(outimg, &itsSaliency->salmap, w, 0, smfac, 20);
             jevois::rawimage::writeText(outimg, "Saliency Map", w*2 - 12*6-4, 3, jevois::yuyv::White);

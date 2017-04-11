@@ -192,10 +192,10 @@ class ObjectTracker : public jevois::Module,
         if (refArea > 0.0)
         {
           // Standardize the coordinates to -1000 ... 1000:
-          float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h);
+          float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h, 1.0F);
 
           // Send coords to serial port (for arduino, etc):
-          sendSerial(jevois::sformat("T2D %.1f %.1f", xx, yy));
+          sendSerial(jevois::sformat("T2D %d %d", int(xx), int(yy)));
         }
       }
     }
@@ -277,10 +277,10 @@ class ObjectTracker : public jevois::Module,
           jevois::rawimage::drawCircle(outimg, x, y, 20, 1, jevois::yuyv::LightGreen);
 
           // Standardize the coordinates to -1000 ... 1000:
-          float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h);
+          float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h, 1.0F);
 
           // Send coords to serial port (for arduino, etc):
-          sendSerial(jevois::sformat("T2D %.1f %.1f", xx, yy));
+          sendSerial(jevois::sformat("T2D %d %d", int(xx), int(yy)));
         }
       }
 

@@ -111,10 +111,10 @@ class SaliencyGist : public jevois::Module
 
       // Filter these locations:
       itsKF->set(dmx, dmy, w, h);
-      float kfxraw, kfyraw; itsKF->get(kfxraw, kfyraw);
+      float kfxraw, kfyraw; itsKF->get(kfxraw, kfyraw, 1.0F); // round to int for serial
       
       // Send kalman-filtered most-salient-point info to serial port (for arduino, etc):
-      sendSerial(jevois::sformat("T2D %.1f %.1f", kfxraw, kfyraw));
+      sendSerial(jevois::sformat("T2D %d %d", int(kfxraw), int(kfyraw)));
 
       // Paste results into the output image, first check for valid output dims:
       unsigned int const mapw = itsSaliency->salmap.dims.w, maph = itsSaliency->salmap.dims.h;

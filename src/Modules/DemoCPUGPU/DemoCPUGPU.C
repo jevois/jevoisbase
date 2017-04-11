@@ -108,10 +108,10 @@ class DemoCPUGPU : public jevois::Module
           
           // Filter over time the salient location coordinates:
           itsKF->set(dmx, dmy, w, h);
-          float kfxraw, kfyraw; itsKF->get(kfxraw, kfyraw);
-      
+          float kfxraw, kfyraw; itsKF->get(kfxraw, kfyraw, 1.0F); // round to int for serial
+
           // Send kalman-filtered most-salient-point info to serial port (for arduino, etc):
-          sendSerial(jevois::sformat("T2D %.1f %.1f", kfxraw, kfyraw));
+          sendSerial(jevois::sformat("T2D %d %d", int(kfxraw), int(kfyraw)));
 
           // Wait for output image to be available:
           std::lock_guard<std::mutex> _(itsOutMtx);

@@ -190,7 +190,7 @@ class DemoArUco : public jevois::Module,
             float x = cm.x, y = cm.y; jevois::coords::imgToStd(x, y, w, h);
             cx += x; cy += y;
           }
-          serout << ' ' << 0.25F * cx << ',' << 0.25F * cy;
+          serout << ' ' << int(0.25F * cx + 0.5F) << ',' << int(0.25F * cy + 0.5F);
         }
         break;
           
@@ -198,8 +198,8 @@ class DemoArUco : public jevois::Module,
           for (cv::Point2f cm : currentMarker)
           {
             // Normalize the coordinates:
-            float x = cm.x, y = cm.y; jevois::coords::imgToStd(x, y, w, h);
-            serout << ' ' << x << ',' << y;
+            float x = cm.x, y = cm.y; jevois::coords::imgToStd(x, y, w, h, 1.0F);
+            serout << ' ' << int(x) << ',' << int(y);
           }
         }
         
