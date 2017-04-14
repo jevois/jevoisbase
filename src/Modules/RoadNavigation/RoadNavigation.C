@@ -35,6 +35,42 @@
     is an implementation of Chang, Siagian and Itti, IROS 2012, available at
     http://ilab.usc.edu/publications/doc/Chang_etal12iros.pdf
 
+    The algorithms combines detection and tracking of line segments at the edges of the road or on the road (e.g., lane
+    dividers), and texture analysis to distinguish the road region from its surroundings.
+
+    The algorithm outputs the horizontal coordinate of the vanishing point of the road, which usually is a good
+    indication of the road heading (except in very tight bends or corners).
+
+    Demo display outputs
+    --------------------
+
+    Detected line segments are shown in black and white, while segments that have been reliably tracked over multiple
+    frames are shown in thick purple. Estimated vanishing point location and confidence is shown as a big green disk on
+    the horizon line.
+
+    Serial outputs
+    --------------
+
+    Issues a message of the form
+    \verbatim
+    T1D x
+    \endverbatim
+    where x is the standardized horizontal coordinate (between -1000 for full left to 1000 for full right) of the
+    vanishing point. See \ref coordhelpers for standardized coordinates.
+
+    Trying it out
+    -------------
+
+    To casually try out this module, just search the web for pictures of roads and point the JeVois camera to one of
+    them. Make sure that you align the horizon line of the algorithm (which has a bumber of purple and green disks)
+    roughly with the horizon line in your picture. As you move the camera left and right, the location of the large
+    green disk that marks the detected vanishing point should move left and right, and should point to the vanishing
+    point of the road in your image.
+
+    When using on a mobile robot in th ereal world, setting the proper horizon line is essential for good operation of
+    the algorithm. This is determined by parameter \c horizon, which should be tuned according to the height and
+    tilt angle of the JeVois camera on your vehicle.
+
     @author Laurent Itti
 
     @videomapping NONE 0 0 0 YUYV 320 240 30.0 JeVois RoadNavigation

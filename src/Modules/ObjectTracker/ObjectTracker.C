@@ -84,14 +84,36 @@ JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if
 
 
 //! Simple color-based object detection/tracking
-/*! This modules isolates pixels within a given HSV range, does some cleanups, and extract object contrours. It sends
-    information about object centers over serial. This module usually works best with the camera sensor set to manual
-    exposure, gain, color balance, etc so that HSV color values are reliable. See the cript.cfg file in this module's
-    directory for an example of how to set the camera settigs each time this module is loaded.
+/*! This modules isolates pixels within a given HSV range (hue, saturation, and value of color pixels), does some
+    cleanups, and extracts object contrours. It sends information about object centers over serial. This module usually
+    works best with the camera sensor set to manual exposure, gain, color balance, etc so that HSV color values are
+    reliable. See the cript.cfg file in this module's directory for an example of how to set the camera settigs each
+    time this module is loaded.
 
     This code was loosely inspired by:
     https://raw.githubusercontent.com/kylehounslow/opencv-tuts/master/object-tracking-tut/objectTrackingTut.cpp written
     by Kyle Hounslow, 2013. 
+
+    Serial output
+    -------------
+
+    This module sends serial messages of the form
+
+    \verbatim
+    T2D x y
+    \endverbatim
+
+    where \a x and \a y are the standardized coordinates of the center of each detected and good object (good objects
+    have a pixel area within the range specified by \p objectarea, and are only reported when the image is clean enough
+    according to \p maxnumobj. See \ref coordhelpers for standardized coordinates. One message is sent for every good
+    object on every frame.
+
+    Trying it out
+    -------------
+
+    The default parameter settings (which are set in \b script.cfg explained below) attempt to detect light blue
+    objects. Present a light blue object to the JeVois camera and see whether it is detected. When detected and good
+    enough according to \p objectarea and \p maxnumobj, a green circle will be drawn at the center of each good object.
 
     Tuning
     ------
@@ -102,7 +124,7 @@ JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if
 
     Tuning the parameters is best done interactively by connecting to your JeVois camera while it is looking at some
     object of the desired color. Once you have achieved a tuning, you may want to set the hrange, srange, and vrange
-    parameters in your script.cfg file for this module on the microSD card (see below).
+    parameters in your \b script.cfg file for this module on the microSD card (see below).
 
     Typically, you would start by narrowing down on the hue, then the value, and finally the saturation. Make sure you
     also move your camera around and show it typical background clutter so check for false positives (detections of
@@ -111,15 +133,14 @@ JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if
     Config file
     -----------
 
-    JeVois allows you to store parameter settings and commands in a file named \c script.cfg stored in the directory of
-    a module. The file \c script.cfg may contain any sequence of commands as you would type them interactively in the
+    JeVois allows you to store parameter settings and commands in a file named \b script.cfg stored in the directory of
+    a module. The file \b script.cfg may contain any sequence of commands as you would type them interactively in the
     JeVois command-line interface. For the ObjectTracker module, a default script is provided that sets the camera to
     manual color, gain, and exposure mode (for more reliable color values), and to setup communication with a pan/tilt
-    head as described at http://jevois.org/doc/ArduinoTutorial.html
+    head as described in \ref ArduinoTutorial.
 
-    The \c script.cfg file for ObjectTracker is stored on your microSD at
-    JEVOIS:/modules/JeVois/ObjectTracker/script.cfg and is shown in this JeVois tutorial:
-    http://jevois.org/doc/ArduinoTutorial.html as an example.
+    The \b script.cfg file for ObjectTracker is stored on your microSD at
+    <b>JEVOIS:/modules/JeVois/ObjectTracker/script.cfg</b> and is shown in \ref ArduinoTutorial as an example.
 
 
     @author Laurent Itti

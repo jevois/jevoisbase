@@ -151,7 +151,7 @@ namespace roadfinder
                            70, ParamCateg);
 
   //! Parameter \relates RoadFinder
-  JEVOIS_DECLARE_PARAMETER(support, int, "Offset (in pixels) between horizon line and hrizon support line (positive "
+  JEVOIS_DECLARE_PARAMETER(support, int, "Offset (in pixels) between horizon line and horizon support line (positive "
                            "values means support line is below horizon line.",
                            20, ParamCateg);
 
