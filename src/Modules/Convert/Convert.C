@@ -34,8 +34,48 @@ JEVOIS_DECLARE_PARAMETER(quality, int, "Compression quality for MJPEG", 75, jevo
 
 //! Simple module to convert between any supported camera grab formats and USB output formats
 /*! This module can convert from any supported camera sensor pixel format (YUYV, BAYER, RGB565) to any supported USB
-    output pixel format (YUYV, GREY, MJPG, BAYER, RGB565, BGR24). Note that it only converts pixel type, and is not
-    capable of resizing the image. Thus, input and output image dimensions must match.
+    output pixel format (YUYV, GREY, MJPG, BAYER, RGB565, BGR24). 
+
+    See \ref PixelFormats for information about supported pixel formats.
+
+    This module accepts any resolution supported by the JeVois camera sensor:
+    
+    - SXGA (1280 x 1024): up to 15 fps
+    - VGA (640 x 480): up to 30 fps
+    - CIF (352 x 288): up to 60 fps
+    - QVGA (320 x 240): up to 60 fps
+    - QCIF (176 x 144): up to 120 fps
+    - QQVGA (160 x 120): up to 60 fps
+    - QQCIF (88 x 72): up to 120 fps
+
+    This module only converts pixel type, and is not capable of rescaling images. Thus, input and output image
+    resolutions must match.
+
+    Things to try
+    -------------
+
+    Edit \c videomappings.cfg on your MicroSD card (see \ref VideoMapping) and try to add some new convert mappings. Not
+    all of the thousands of possible convert mappings have been included in the card to avoid having too many of these
+    simple conversion mappings in the base software distribution. For example,
+
+    \verbatim
+    YUYV 176 144 115.0 BAYER 176 144 115.0 JeVois Convert
+    \endverbatim
+    
+    will grab raw BAYER frames on the sensor, with resolution 176x144 at 115 frames/s, and will convert them to YUYV
+    before sending them over the USB link. To test this mapping, select the corresponding resolution and framerate in
+    your video viewing software (here, YUYV 176x144 \@ 115fps). Although the sensor can capture at up to 120fps at this
+    resolution, here we used 115fps to avoid a conflict with a mapping using YUYV 176x144 \@ 120fps USB output and the
+    SaveVideo module that is already in the default \c videomappings.cfg file.
+
+    Note that this module may suffer from DMA coherency artifacts if the \c camturbo parameter of the jevois::Engine is
+    turned on, which it is by default. The \c camturbo parameter relaxes some of the cache coherency constraints on the
+    video buffers captured by the camera sensor, which allows the JeVois processor to access video pixel data from
+    memory faster. But with modules that do not do much processing, sometimes this yields video artifacts, we presume
+    because some of the video data from previous frames still is in the CPU cache and hence is not again fetched from
+    main memory by the CPU. If you see short stripes of what appears to be wrong pixel colors in the video, try to
+    disable \c camturbo: edit JEVOIS:/config/params.cfg on your MicroSD card and in there turn \c camturbo to false.
+
 
     @author Laurent Itti
 
@@ -46,7 +86,7 @@ JEVOIS_DECLARE_PARAMETER(quality, int, "Compression quality for MJPEG", 75, jevo
     @videomapping MJPG 352 288 60.0 BAYER 352 288 60.0 JeVois Convert
     @videomapping MJPG 320 240 30.0 RGB565 320 240 30.0 JeVois Convert
     @videomapping MJPG 320 240 15.0 YUYV 320 240 15.0 JeVois Convert
-    @videomapping YUYV 640 500 20.0 YUYV 640 480 20.0 JeVois DemoArUco
+    @videomapping YUYV 640 480 20.0 YUYV 640 480 20.0 JeVois Convert
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California

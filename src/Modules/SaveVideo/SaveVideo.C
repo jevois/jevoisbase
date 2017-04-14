@@ -52,20 +52,55 @@ JEVOIS_DECLARE_PARAMETER(fourcc, std::string, "FourCC of the codec to use. The O
                          "MJPG", boost::regex("^\\w{4}$"), ParamCateg);
 
 //! Parameter \relates SaveVideo
-JEVOIS_DECLARE_PARAMETER(fps, double, "Video frames/sec as stored in the file and to be used during playback",
+JEVOIS_DECLARE_PARAMETER(fps, double, "Video frames/sec as stored in the file and to be used both for recording and "
+                         "playback. Beware that the video writer will drop frames if you are capturing faster than "
+                         "the frame rate specified here. For example, if capturing at 120fps, be sure to set this "
+                         "parameter to 120, otherwise by default the saved video will be at 30fps even though capture "
+                         "was running at 120fps.",
                          30.0, ParamCateg);
 
 //! Save captured camera frames into a video file
-/*! Issue the command "start" to start saving video frames, and "stop" to stop saving. Successive start/stop commands
-    will increment the file number (%d argument in the 'filename' parameter. Before a file is written, we check whether
-    it already exists, and skip over it by incrementing the file number if so.
+/*! This module records video and saves it to the MicroSD card inside the JeVois smart camera. It is useful, for
+    example, to record footage that will be used to train some machine vision algorithm.
 
-    This module works with any video resolution and pixel format supported by the camera sensor. Additional video
+    Issue the command \c start over the command-line interface to start saving video frames, and \c stop to stop
+    saving. Successive start/stop commands will increment the file number (%d argument in the 'filename'
+    parameter. Before a file is written, the module checks whether it already exists, and, if so, skips over it by
+    incrementing the file number. See \ref UserCli for details on how to use the command-line interface.
+
+    This module works with any video resolution and pixel format supported by the camera sensor. Thus, additional video
     mappings are possible beyond the ones listed here.
 
-    When using with no USB output (NONE output format), you should first issue a 'streamon' command to start video
+    See \ref PixelFormats for information about pixel formats; with SaveVideo you can use the formats supported by the
+    camera sensor: YUYV, BAYER, RGB565
+
+    This module accepts any resolution supported by the JeVois camera sensor:
+    
+    - SXGA (1280 x 1024): up to 15 fps
+    - VGA (640 x 480): up to 30 fps
+    - CIF (352 x 288): up to 60 fps
+    - QVGA (320 x 240): up to 60 fps
+    - QCIF (176 x 144): up to 120 fps
+    - QQVGA (160 x 120): up to 60 fps
+    - QQCIF (88 x 72): up to 120 fps
+
+    This module can operate both with USB video output, or no USB video output.
+
+    When using with no USB output (NONE output format), you should first issue a \c streamon command to start video
     streaming, then 'start'. The 'streamon' is not necessary when using with a USB video output, the host computer over
     USB triggers video streaming when it starts grabbing frames from the JeVois camera.
+
+    This module internally uses the OpenCV VideoWriter class to compress and write the video file. See the OpenCV
+    documentation for which video formats are supported.
+
+    Note that this module may suffer from DMA coherency artifacts if the \c camturbo parameter of the jevois::Engine is
+    turned on, which it is by default. The \c camturbo parameter relaxes some of the cache coherency constraints on the
+    video buffers captured by the camera sensor, which allows the JeVois processor to access video pixel data from
+    memory faster. But with modules that do not do much processing, sometimes this yields video artifacts, we presume
+    because some of the video data from previous frames still is in the CPU cache and hence is not again fetched from
+    main memory by the CPU. If you see short stripes of what appears to be wrong pixel colors in the video, try to
+    disable \c camturbo: edit JEVOIS:/config/params.cfg on your MicroSD card and in there turn \c camturbo to false.
+
 
     @author Laurent Itti
 

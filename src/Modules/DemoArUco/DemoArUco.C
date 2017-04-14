@@ -66,9 +66,10 @@ JEVOIS_DECLARE_PARAMETER(serstyle, int, "Serial output style for strings issued 
     -----------------------------
 
     We have created the 50 markers available in the default dictionary (4x4_50) as PNG images that you can download and
-    print, at http://jevois.org/data/ArUco/
+    print, at http://jevois.org/data/ArUco.zip
 
-    To make your own, for example, using another dictionary, see the documentation of the ArUco component of JeVoisBase.
+    To make your own, for example, using another dictionary, see the documentation of the ArUco component of
+    JeVoisBase.
 
     Serial Messages
     ---------------

@@ -1,6 +1,6 @@
 /*! \mainpage JeVois Smart Embedded Machine Vision Toolkit - Base Modules
 
-\section welcome Welcome to the documentation of the JeVois Smart Embedded Machine Vision Toolkit.
+\section welcomebase Welcome to the documentation of the JeVois Smart Embedded Machine Vision Toolkit.
 
 This documentation is for a base set of machine vision modules implemented under the JeVois programming framework and
 intended to run on a JeVois smart camera.
@@ -9,7 +9,7 @@ For more information about the JeVois framework, see the [JeVois Documentation](
 
 New users, be sure to check out [JeVois Start](/start/).
 
-\section contents Table of contents
+\section contentsbase Table of contents
 
 If you are not yet familiar with JeVois, see the documentation for [JeVois](http://jevois.org/doc/) first.
 
