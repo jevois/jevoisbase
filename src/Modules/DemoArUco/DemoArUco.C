@@ -69,14 +69,14 @@ JEVOIS_DECLARE_PARAMETER(serstyle, int, "Serial output style for strings issued 
     print, at http://jevois.org/data/ArUco.zip
 
     To make your own, for example, using another dictionary, see the documentation of the ArUco component of
-    JeVoisBase.
+    JeVoisBase. Some utilities are provided with the component.
 
     Serial Messages
     ---------------
 
-    This module can send the following messages over serial port (make sure you set the \c serout parameter to
-    designate the serial port to which you want to send these messages, see the documentation for \c serout under
-    \ref UserCli).
+    This module can send the following messages over serial port (make sure you set the \p serout parameter to
+    designate the serial port to which you want to send these messages, see the documentation for \p serout under
+    the \ref UserCli).
     
     - When serstyle is 0:
       \verbatim
@@ -106,9 +106,39 @@ JEVOIS_DECLARE_PARAMETER(serstyle, int, "Serial output style for strings issued 
 
     The coordinates are normalized so that the serial outputs are independent of camera resolution. x=0, y=0 is the
     center of the field of view, the left edge of the camera image is at x=-1000, the right edge at x=1000, the top edge
-    at y=-750, and the bottom edge at y=750 (since the camera has a 4:3 aspect ratio).
+    at y=-750, and the bottom edge at y=750 (since the camera has a 4:3 aspect ratio). See \ref coordhelpers for more
+    information on standardized coordinates in JeVois.
 
-    One message is issued for each detected ArUco.
+    One message is issued for every detected ArUco, on every video frame.
+
+    Things to try
+    -------------
+
+    - First, use a video viewer software on a host computer and select one of the video modes with video out over
+      USB. Point your JeVois camera towards one of the screenshots provided with this module, or towards some ArUco
+      markers that you find on the web or that you have printed from the collection above (note: the default dictionary
+      is 4x4_50, see parameter \p dictionary).
+
+    - Then try it with no video output, as it would be used by a robot. Connect to the command-line interface of your
+      JeVois camera through the serial-over-USB connection (see \ref UserCli; on Linux, you would use <b>sudo screen
+      /dev/ttyACM0 115200</b>) and try:
+      \verbatim
+      setpar serout USB
+      setmapping NONE 0 0 0.0 YUYV 320 240 30.0 JeVois DemoArUco # FIXME not implemented yet!
+      streamon
+      \endverbatim
+
+    Showing the pose vectors
+    ------------------------
+
+    The OpenCV ArUco module can also compute normals to each marker, which allows you to recover the marker's
+    orientation and distance. The requires that the camera be calibrated, see the documentation of the ArUco component
+    in JeVois. A generic calibration that is for a JeVois camera with standard lens is included in file \b
+    calibration.yaml in the module's directory (on the MicroSD, this is
+    <b>JEVOIS:/modules/JeVois/DemoArUco/calibration.yaml</b>).
+
+    FIXME this crashes since the update to opencv 3.2, need to figure out what changed since 3.1.
+
 
     @author Laurent Itti
 

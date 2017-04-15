@@ -52,7 +52,24 @@
     - issue messages over the serial port
 
     This burn test is useful to test JeVois hardware for any malfunction. It should run forever without crashing on
-    JeVois hardware.
+    JeVois hardware. Demo display layout and markings are the same as for the DemoSaliency module.
+
+    This burn test is one of the tests that every JeVois camera produced is tested with at the factory, before the unit
+    is shipped out.
+
+    Things to try
+    -------------
+
+    Select the burntest video mode (note that it is 640x300 \@ 10fps, while the default MicroSD card also includes a
+    mode with 640x300 \@ 60fps that runs the DemoSaliency module instead). Observe the CPU temperature at the bottom of
+    the live video window. If it ever reaches 75C (which it should not under normal conditions given the high power fan
+    on the JeVois smart camera), the CPU frequency also shown next to the temperature will drop down below 1344 MHz,
+    and will then come back up as the CPU temperature drops below 75C.
+
+    Connect your JeVois camera to your host computer through a USB Tester device that measures voltage, current, and
+    power. You should reach about 3.7 Watts under the burn test, which is the maximum we have ever been able to achieve
+    with a JeVois unit.
+
 
     @author Laurent Itti
 

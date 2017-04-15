@@ -54,7 +54,7 @@ JEVOIS_DECLARE_PARAMETER(quality, int, "Compression quality for MJPEG", 75, jevo
     Things to try
     -------------
 
-    Edit \c videomappings.cfg on your MicroSD card (see \ref VideoMapping) and try to add some new convert mappings. Not
+    Edit \b videomappings.cfg on your MicroSD card (see \ref VideoMapping) and try to add some new convert mappings. Not
     all of the thousands of possible convert mappings have been included in the card to avoid having too many of these
     simple conversion mappings in the base software distribution. For example,
 
@@ -66,15 +66,16 @@ JEVOIS_DECLARE_PARAMETER(quality, int, "Compression quality for MJPEG", 75, jevo
     before sending them over the USB link. To test this mapping, select the corresponding resolution and framerate in
     your video viewing software (here, YUYV 176x144 \@ 115fps). Although the sensor can capture at up to 120fps at this
     resolution, here we used 115fps to avoid a conflict with a mapping using YUYV 176x144 \@ 120fps USB output and the
-    SaveVideo module that is already in the default \c videomappings.cfg file.
+    SaveVideo module that is already in the default \b videomappings.cfg file.
 
-    Note that this module may suffer from DMA coherency artifacts if the \c camturbo parameter of the jevois::Engine is
-    turned on, which it is by default. The \c camturbo parameter relaxes some of the cache coherency constraints on the
+    Note that this module may suffer from DMA coherency artifacts if the \p camturbo parameter of the jevois::Engine is
+    turned on, which it is by default. The \p camturbo parameter relaxes some of the cache coherency constraints on the
     video buffers captured by the camera sensor, which allows the JeVois processor to access video pixel data from
     memory faster. But with modules that do not do much processing, sometimes this yields video artifacts, we presume
     because some of the video data from previous frames still is in the CPU cache and hence is not again fetched from
     main memory by the CPU. If you see short stripes of what appears to be wrong pixel colors in the video, try to
-    disable \c camturbo: edit JEVOIS:/config/params.cfg on your MicroSD card and in there turn \c camturbo to false.
+    disable \p camturbo by editing <b>JEVOIS:/config/params.cfg</b> on your MicroSD card and in there turning \p
+    camturbo to false.
 
 
     @author Laurent Itti
