@@ -114,7 +114,7 @@ JEVOIS_DECLARE_PARAMETER(serstyle, int, "Serial output style for strings issued 
     Things to try
     -------------
 
-    - First, use a video viewer software on a host computer and select one of the video modes with video out over
+    - First, use a video viewer software on a host computer and select one of the video modes with video output over
       USB. Point your JeVois camera towards one of the screenshots provided with this module, or towards some ArUco
       markers that you find on the web or that you have printed from the collection above (note: the default dictionary
       is 4x4_50, see parameter \p dictionary).
@@ -124,9 +124,10 @@ JEVOIS_DECLARE_PARAMETER(serstyle, int, "Serial output style for strings issued 
       /dev/ttyACM0 115200</b>) and try:
       \verbatim
       setpar serout USB
-      setmapping NONE 0 0 0.0 YUYV 320 240 30.0 JeVois DemoArUco # FIXME not implemented yet!
+      setmapping2 YUYV 320 240 30.0 JeVois DemoArUco
       streamon
       \endverbatim
+      and point the camera to some markers; the camera should issue messages about all the markers it identifies.
 
     Showing the pose vectors
     ------------------------
