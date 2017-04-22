@@ -33,13 +33,33 @@ QRcode::~QRcode()
 // ####################################################################################################
 void QRcode::onParamChange(qrcode::symbol const & JEVOIS_UNUSED_PARAM(param), std::string const & newval)
 {
-  // Disable all symbols:
+  // Disable scanning for no symbols:
   itsScanner->set_config(zbar::ZBAR_NONE, zbar::ZBAR_CFG_ENABLE, 0);
 
   // Enable the requested ones:
   std::vector<std::string> vec = jevois::split(newval, "/");
   for (std::string const & v : vec)
-    if (v == "ALL") itsScanner->set_config(zbar::ZBAR_QRCODE, zbar::ZBAR_CFG_ENABLE, 1);
+    if (v == "ALL")
+    {
+      itsScanner->set_config(zbar::ZBAR_QRCODE, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_EAN2, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_EAN5, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_EAN8, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_EAN13, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_UPCE, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_UPCA, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_ISBN10, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_ISBN13, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_COMPOSITE, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_I25, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_DATABAR, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_DATABAR_EXP, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_CODABAR, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_CODE39, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_PDF417, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_CODE93, zbar::ZBAR_CFG_ENABLE, 1);
+      itsScanner->set_config(zbar::ZBAR_CODE128, zbar::ZBAR_CFG_ENABLE, 1);
+    }
     else if (v == "QRCODE") itsScanner->set_config(zbar::ZBAR_QRCODE, zbar::ZBAR_CFG_ENABLE, 1);
     else if (v == "EAN2") itsScanner->set_config(zbar::ZBAR_EAN2, zbar::ZBAR_CFG_ENABLE, 1);
     else if (v == "EAN5") itsScanner->set_config(zbar::ZBAR_EAN5, zbar::ZBAR_CFG_ENABLE, 1);
@@ -47,8 +67,16 @@ void QRcode::onParamChange(qrcode::symbol const & JEVOIS_UNUSED_PARAM(param), st
     else if (v == "EAN13") itsScanner->set_config(zbar::ZBAR_EAN13, zbar::ZBAR_CFG_ENABLE, 1);
     else if (v == "UPCE") itsScanner->set_config(zbar::ZBAR_UPCE, zbar::ZBAR_CFG_ENABLE, 1);
     else if (v == "UPCA") itsScanner->set_config(zbar::ZBAR_UPCA, zbar::ZBAR_CFG_ENABLE, 1);
-    else if (v == "ISBN10") itsScanner->set_config(zbar::ZBAR_ISBN10, zbar::ZBAR_CFG_ENABLE, 1);
-    else if (v == "ISBN13") itsScanner->set_config(zbar::ZBAR_ISBN13, zbar::ZBAR_CFG_ENABLE, 1);
+    else if (v == "ISBN10")
+    {
+      itsScanner->set_config(zbar::ZBAR_EAN13, zbar::ZBAR_CFG_ENABLE, 1); // required?
+      itsScanner->set_config(zbar::ZBAR_ISBN10, zbar::ZBAR_CFG_ENABLE, 1);
+    }
+    else if (v == "ISBN13")
+    {
+      itsScanner->set_config(zbar::ZBAR_EAN13, zbar::ZBAR_CFG_ENABLE, 1); // required?
+      itsScanner->set_config(zbar::ZBAR_ISBN13, zbar::ZBAR_CFG_ENABLE, 1);
+    }
     else if (v == "COMPOSITE") itsScanner->set_config(zbar::ZBAR_COMPOSITE, zbar::ZBAR_CFG_ENABLE, 1);
     else if (v == "I25") itsScanner->set_config(zbar::ZBAR_I25, zbar::ZBAR_CFG_ENABLE, 1);
     else if (v == "DATABAR") itsScanner->set_config(zbar::ZBAR_DATABAR, zbar::ZBAR_CFG_ENABLE, 1);
