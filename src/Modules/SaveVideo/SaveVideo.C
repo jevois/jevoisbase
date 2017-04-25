@@ -109,6 +109,8 @@ JEVOIS_DECLARE_PARAMETER(fps, double, "Video frames/sec as stored in the file an
     @videomapping NONE 0 0 0 YUYV 320 240 60.0 JeVois SaveVideo
     @videomapping NONE 0 0 0 YUYV 320 240 30.0 JeVois SaveVideo
     @videomapping NONE 0 0 0 YUYV 176 144 120.0 JeVois SaveVideo
+    @modulecommand start - start saving video
+    @modulecommand stop - stop saving video and increment video file number
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California
