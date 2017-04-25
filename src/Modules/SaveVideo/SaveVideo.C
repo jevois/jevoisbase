@@ -93,6 +93,19 @@ JEVOIS_DECLARE_PARAMETER(fps, double, "Video frames/sec as stored in the file an
     This module internally uses the OpenCV VideoWriter class to compress and write the video file. See the OpenCV
     documentation for which video formats are supported.
 
+    You should be aware of two things when attempting video recording at high frame rates:
+
+    - If using a video mapping with USB output, the frame rate may be limited by the maximum rate at which the host
+      computer can grab and display. On many host computers, for example, the display refresh rate might be 60Hz. Using
+      a video capture software on these computers is likely going to limit the maximum display rate to 60 frames/s and
+      that will in turn limit the capture and saving rate. This is not an issue when using a video mapping with no USB
+      output.
+
+    - The \p fps parameter should be set to the rate at which you want to save video. If you capture at 60 frames/s
+      according to your video mapping but \p fps is set to 30, saving will be at 30 fps. This limitation of rate is done
+      internally by the OpenCV VideoWriter. So just make sure that you set the \p fps parameter to the rate at which you
+      want to save.
+
     Note that this module may suffer from DMA coherency artifacts if the \c camturbo parameter of the jevois::Engine is
     turned on, which it is by default. The \c camturbo parameter relaxes some of the cache coherency constraints on the
     video buffers captured by the camera sensor, which allows the JeVois processor to access video pixel data from
