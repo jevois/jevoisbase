@@ -105,7 +105,7 @@ class SurpriseRecorder : public jevois::Module,
     {
       itsRunning.store(true);
       
-      // Get our run() thread going, it is in charge of compresing and saving frames:
+      // Get our run() thread going, it is in charge of compressing and saving frames:
       itsRunFut = std::async(std::launch::async, &SurpriseRecorder::run, this);
     }
 
@@ -283,7 +283,7 @@ class SurpriseRecorder : public jevois::Module,
     int itsToSave; //!< Number of context frames after end of event that remain to be saved
     int itsFileNum; //!< Video file number
     std::atomic<bool> itsRunning; //!< Flag to let run thread when to quit
-    std::string itsFilename; //!< Currenf video file name
+    std::string itsFilename; //!< Current video file name
 };
 
 // Allow the module to be loaded as a shared object (.so) file:

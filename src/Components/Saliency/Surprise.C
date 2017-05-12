@@ -595,6 +595,7 @@ double Surprise::process(jevois::RawImage const & input)
   
   size_t const datasiz = data.size(); // final data size
   float const ufac = updatefac::get(); // get() is somewhat expensive (requires mutex lock), so cache it here.
+  float const initfac = 1.0F / (1.0F - ufac);
   
   // Initialize the prior if this is our first frame, or frame size or map size just changed somehow. We initialize
   // alpha and beta as in the SurpriseModelSP of the iLab Neuromorphic C++ Vision Toolkit, from which this
@@ -603,14 +604,14 @@ double Surprise::process(jevois::RawImage const & input)
   if (itsAlpha.size() != datasiz)
   {
     itsAlpha.clear(); itsBeta.clear();
-    for (size_t i = 0; i < datasiz; ++i)
+    for (float d : data)
     {
-      itsAlpha.push_back(data[i] / (1.0F - ufac));
-      itsBeta.push_back(1.0F / (1.0F - ufac));
+      itsAlpha.push_back(d * initfac);
+      itsBeta.push_back(initfac);
     }
   }
     
-  // Compute posterior and KL, independenly for every entry in our vectors. Here we assume Poisson data and a Gamma
+  // Compute posterior and KL, independently for every entry in our vectors. Here we assume Poisson data and a Gamma
   // conjugate prior, as in Itti & Baldi, Vision Research, 2009. Note: we compute surprise using double precision, then
   // store alpha and beta using float:
   double surprise = 0.0;

@@ -28,7 +28,7 @@ namespace surprise
                            jevois::Range<float>(0.001F, 0.999F), ParamCateg);
 
   //! Parameter \relates Surprise
-  JEVOIS_DECLARE_PARAMETER(channels, std::string, "Channels to use for suprise computation: any combination of "
+  JEVOIS_DECLARE_PARAMETER(channels, std::string, "Channels to use for surprise computation: any combination of "
                            "S (saliency), G (gist), C (color), I (intensity), O (orientation), F (flicker), and "
                            "M (motion). Duplicate letters will be ignored.",
                            "SCIOFMG", boost::regex("^[SCIOFMG]+$"), ParamCateg);
