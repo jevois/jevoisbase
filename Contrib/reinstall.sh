@@ -1,6 +1,13 @@
 #!/bin/bash
+# usage: reinstall.sh [-y]
+# will nuke and re-install all contributed packages
 
-read -p "Do you want to nuke, fetch and patch all contributed packages [y/N]? "
+if [ "x$1" = "x-y" ]; then
+    REPLY="y";
+else			   
+    read -p "Do you want to nuke, fetch and patch all contributed packages [y/N]? "
+fi
+
 if [ "X$REPLY" = "Xy" ]; then
     /bin/rm -rf generalized-hough-tranform Ne10 NNPACK OF_DIS pixy pthreadpool tiny-dnn vlfeat ZBar
 

@@ -47,6 +47,9 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "GPU image processing eff
     But an important distinction is that we render to a framebuffer with an RGB565 renderbuffer attached, which
     accelerates processing and transfer of the results a lot.
 
+    Dewarp algorithm contributed by JeVois user [Ali AlSaibie](https://github.com/alsaibie). It is to be used with a
+    modified JeVois camera sensor that has a wide-angle lens. See http://jevois.org/qa/index.php?qa=153 for details.
+
     @author Laurent Itti
 
     @displayname Demo GPU
