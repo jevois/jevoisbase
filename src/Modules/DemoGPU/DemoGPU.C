@@ -29,7 +29,7 @@ static jevois::ParameterCategory const ParamCateg("DemoGPU Parameters");
 // Note: we use NoEffect here as None seems to be defined a s anumeric constant somewhere, when compiling on host
 
 //! Parameter \relates DemoGPU
-JEVOIS_DEFINE_ENUM_CLASS(Effect, (NoEffect) (Blur) (Sobel) (Median) (Mult) (Thresh) (Dilate) (Erode) (Twirl) );
+JEVOIS_DEFINE_ENUM_CLASS(Effect, (NoEffect) (Blur) (Sobel) (Median) (Mult) (Thresh) (Dilate) (Erode) (Twirl) (Dewarp));
 
 //! Parameter \relates DemoGPU
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "GPU image processing effect to apply",
@@ -150,11 +150,20 @@ class DemoGPU : public jevois::Module,
         itsFilter->setProgram("shaders/simplevertshader.glsl", "shaders/twirlfragshader.glsl");
         itsFilter->setProgramParam1f("twirlamount", 2.0F);
         break;
+
+      // See fragment shader dewarpfragshader.glsl file for details
+      case Effect::Dewarp:
+        itsFilter->setProgram("shaders/dewarpvertshader.glsl", "shaders/dewarpfragshader.glsl");
+        break;
       }
 
-      // These parameters are used by the vertex shader and hence apply to all demo programs:
+      // These parameters are used by the vertex shader and hence apply to most demo programs:
       itsFilter->setProgramParam2f("offset", -1.0F, -1.0F);
       itsFilter->setProgramParam2f("scale", 2.0F, 2.0F);
+
+      // Crop Dewarped Image - change According to dewarped image
+      itsFilter->setProgramParam2f("offsetd", -1.2F, -1.2F);
+      itsFilter->setProgramParam2f("scaled", 2.4F, 2.4F);
     }
     
   private:
