@@ -39,8 +39,8 @@ jevois_project_set_flags()
 set(JVB "${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${JVB}/..")
 
-# Setup our library using the source files in src/Components and call it jevoisbase with version 1.0:
-jevois_setup_library(src/Components jevoisbase 1.0)
+# Setup our library using the source files in src/Components and call it jevoisbase with version 1.1:
+jevois_setup_library(src/Components jevoisbase 1.1)
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)
