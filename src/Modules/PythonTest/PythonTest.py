@@ -7,6 +7,7 @@ class PythonTest:
     def __init__(self):
         print("Constructor")
         print(dir(jevois))
+        self.frame = 0 # a simple frame counter used to demonstrate sendSerial()
 
     ####################################################################################################
     # Process function with no USB output
@@ -39,6 +40,11 @@ class PythonTest:
 
         # We are done with the output, ready to send it to host over USB:
         outframe.send()
+
+        # Send a string over serial (e.g., to an Arduino). Remember to tell the JeVois Engine to display those messages,
+        # as they are turned off by default. For example: 'setpar serout All' in the JeVois console:
+        jevois.sendSerial("DONE frame {}".format(self.frame));
+        self.frame += 1
 
     ####################################################################################################
     # Parse a serial command forwarded to us by the JeVois Engine, return a string
