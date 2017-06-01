@@ -7,14 +7,13 @@ class PythonOpenCV:
     # Constructor
     ####################################################################################################
     def __init__(self):
-        print("Constructor")
         self.timer = jevois.Timer("canny", 100, jevois.LOG_INFO)
         
     ####################################################################################################
     # Process function with no USB output
     ####################################################################################################
     def process(self, inframe):
-        print("process no usb")
+        jevois.LFATAL("process with no USB output not implemented yet in this module")
 
     ####################################################################################################
     # Process function with USB output
@@ -39,11 +38,10 @@ class PythonOpenCV:
         # Require that output image has same dims as input and is grayscale:
         outimg.require("output", inimg.width, inimg.height, jevois.V4L2_PIX_FMT_GREY);
         
-        # Detect edges using the Canny algorithm from OpenCV and stuff the results into our outimgcv, and hence directly
-        # into outimg since the pixel data is shared:
+        # Detect edges using the Canny algorithm from OpenCV:
         edges = cv2.Canny(inimggray, 100, 200, apertureSize = 3)
 
-        # Copy the edge map to the output image buffer to send over USB:
+        # Copy the edge map to the output image to send over USB. Since here both are gray, this will be a simple copy:
         jevois.convertCvGRAYtoRawImage(edges, outimg, 100)
 
         # Write frames/s info from our timer:
