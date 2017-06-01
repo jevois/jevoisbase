@@ -1,13 +1,13 @@
 import libjevois as jevois
+import cv2
+import numpy as np
 
-class PythonTest:
+class PythonOpenCV:
     ####################################################################################################
     # Constructor
     ####################################################################################################
     def __init__(self):
         print("Constructor")
-        print(dir(jevois))
-        self.frame = 0 # a simple frame counter used to demonstrate sendSerial()
 
     ####################################################################################################
     # Process function with no USB output
@@ -25,50 +25,41 @@ class PythonTest:
         inimg = inframe.get()
         print("Input image is {} {}x{}".format(jevois.fccstr(inimg.fmt), inimg.width, inimg.height))
 
-        # Get the next available USB output image:
-        outimg = outframe.get()
-        print("Output image is {} {}x{}".format(jevois.fccstr(outimg.fmt), outimg.width, outimg.height))
-
-        # Example of getting pixel data from the input and copying to the output:
-        jevois.paste(inimg, outimg, 0, 0)
+        # Convert the input image to OpenCV grayscale:
+        inimggray = jevois.convertToCvGray(inimg);
 
         # We are done with the input image:
         inframe.done()
 
-        # Example of in-place processing:
-        jevois.hFlipYUYV(outimg)
+        # Get the next available USB output image:
+        outimg = outframe.get()
+        print("Output image is {} {}x{}".format(jevois.fccstr(outimg.fmt), outimg.width, outimg.height))
 
-        # Example of simple drawings:
-        jevois.drawCircle(outimg, int(outimg.width/2), int(outimg.height/2), int(outimg.height/2.2), 2, 0x80ff)
-        jevois.writeText(outimg, "Hi from Python!", 20, 20, 0x80ff, jevois.Font.Font10x20)
+        # Require that output image has same dims as input and is grayscale:
+        # FIXME need values for V$L2_PIX_...
+        
+        # Reinterpret the output image as an OpenCV image (does not copy the pixel data):
+        # THE PIXEL SHARING DOES NOT SEEM TO WORK
+        #outimgcv = jevois.cvImage(outimg)
+        
+        # Detect edges using the Canny algorithm from OpenCV and stuff the results into our outimgcv, and hence directly
+        # into outimg since the pixel data is shared:
+        edges = cv2.Canny(inimggray, 100, 200, apertureSize = 3)
+
+        # Copy the edge map to the output image buffer to send over USB:
+        jevois.convertCvGRAYtoRawImage(edges, outimg, 100)
         
         # We are done with the output, ready to send it to host over USB:
         outframe.send()
-
-        # Send a string over serial (e.g., to an Arduino). Remember to tell the JeVois Engine to display those messages,
-        # as they are turned off by default. For example: 'setpar serout All' in the JeVois console:
-        jevois.sendSerial("DONE frame {}".format(self.frame));
-        self.frame += 1
 
     ####################################################################################################
     # Parse a serial command forwarded to us by the JeVois Engine, return a string
     ####################################################################################################
     def parseSerial(self, str):
-        print("parseserial received command [{}]".format(str))
-        if str == "hello":
-            return self.hello()
         return "ERR: Unsupported command"
     
     ####################################################################################################
     # Return a string that describes the custom commands we support, for the JeVois help message
     ####################################################################################################
     def supportedCommands(self):
-        # use \n seperator if your module supports several commands
-        return "hello - print hello using python"
-
-    ####################################################################################################
-    # Internal method that gets invoked as a custom command
-    ####################################################################################################
-    def hello(self):
-        return("Hello from python!")
-        
+        return ""
