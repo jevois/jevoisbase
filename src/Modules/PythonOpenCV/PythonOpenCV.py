@@ -13,17 +13,19 @@ class PythonOpenCV:
     # Process function with no USB output
     ####################################################################################################
     def process(self, inframe):
+        # Instantiate a JeVois Timer to measure our processing framerate:
         jevois.LFATAL("process with no USB output not implemented yet in this module")
 
     ####################################################################################################
     # Process function with USB output
     ####################################################################################################
     def process(self, inframe, outframe):
-        self.timer.start()
-
         # Get the next camera image (may block until it is captured):
         inimg = inframe.get()
         #jevois.LINFO("Input image is {} {}x{}".format(jevois.fccstr(inimg.fmt), inimg.width, inimg.height))
+
+        # Start measuring image processing time:
+        self.timer.start()
 
         # Convert the input image to OpenCV grayscale:
         inimggray = jevois.convertToCvGray(inimg);
