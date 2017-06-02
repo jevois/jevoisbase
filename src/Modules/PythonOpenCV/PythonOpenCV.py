@@ -7,13 +7,13 @@ class PythonOpenCV:
     # Constructor
     ####################################################################################################
     def __init__(self):
+        # Instantiate a JeVois Timer to measure our processing framerate:
         self.timer = jevois.Timer("canny", 100, jevois.LOG_INFO)
         
     ####################################################################################################
     # Process function with no USB output
     ####################################################################################################
     def process(self, inframe):
-        # Instantiate a JeVois Timer to measure our processing framerate:
         jevois.LFATAL("process with no USB output not implemented yet in this module")
 
     ####################################################################################################
