@@ -47,7 +47,7 @@ class PythonOpenCV:
         jevois.convertCvGRAYtoRawImage(edges, outimg, 100)
 
         # Write frames/s info from our timer:
-        fps = self.timer.stop();
+        fps = self.timer.stop()
         jevois.writeText(outimg, fps, 3, outimg.height-13, jevois.YUYV.White, jevois.Font.Font6x10)
         
         # We are done with the output, ready to send it to host over USB:
