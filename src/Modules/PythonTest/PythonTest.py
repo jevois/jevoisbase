@@ -1,23 +1,40 @@
 import libjevois as jevois
 
+## Simple test of programming JeVois modules in Python
+#
+# This module by default simply draws a cricle and a test message onto the grabbed video frames.
+#
+# Feel free to edit it and try something else. Note that this module does not import OpenCV, see the PythonOpenCV for a
+# minimal JeVois module written in Python that uses OpenCV.
+#
+# @author Laurent Itti
+# 
+# @videomapping YUYV 640 480 15.0 YUYV 640 480 15.0 JeVois PythonTest
+# @email itti\@usc.edu
+# @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
+# @copyright Copyright (C) 2017 by Laurent Itti, iLab and the University of Southern California
+# @mainurl http://jevois.org
+# @supporturl http://jevois.org/doc
+# @otherurl http://iLab.usc.edu
+# @license GPL v3
+# @distribution Unrestricted
+# @restrictions None
+# @ingroup modules
 class PythonTest:
-    ####################################################################################################
-    # Constructor
-    ####################################################################################################
+    # ###################################################################################################
+    ## Constructor
     def __init__(self):
         print("Constructor")
         print(dir(jevois))
         self.frame = 0 # a simple frame counter used to demonstrate sendSerial()
 
-    ####################################################################################################
-    # Process function with no USB output
-    ####################################################################################################
+    # ###################################################################################################
+    ## Process function with no USB output
     def process(self, inframe):
         print("process no usb")
 
-    ####################################################################################################
-    # Process function with USB output
-    ####################################################################################################
+    # ###################################################################################################
+    ## Process function with USB output
     def process(self, inframe, outframe):
         print("process with usb")
 
@@ -50,25 +67,22 @@ class PythonTest:
         jevois.sendSerial("DONE frame {}".format(self.frame));
         self.frame += 1
 
-    ####################################################################################################
-    # Parse a serial command forwarded to us by the JeVois Engine, return a string
-    ####################################################################################################
+    # ###################################################################################################
+    ## Parse a serial command forwarded to us by the JeVois Engine, return a string
     def parseSerial(self, str):
         print("parseserial received command [{}]".format(str))
         if str == "hello":
             return self.hello()
         return "ERR: Unsupported command"
     
-    ####################################################################################################
-    # Return a string that describes the custom commands we support, for the JeVois help message
-    ####################################################################################################
+    # ###################################################################################################
+    ## Return a string that describes the custom commands we support, for the JeVois help message
     def supportedCommands(self):
         # use \n seperator if your module supports several commands
         return "hello - print hello using python"
 
-    ####################################################################################################
-    # Internal method that gets invoked as a custom command
-    ####################################################################################################
+    # ###################################################################################################
+    ## Internal method that gets invoked as a custom command
     def hello(self):
         return("Hello from python!")
         
