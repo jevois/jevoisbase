@@ -16,7 +16,7 @@
 /*! \file */
 
 #include <jevois/Core/Module.H>
-#include <jevoisbase/src/Components/Saliency/Surprise.H>
+#include <jevoisbase/Components/Saliency/Surprise.H>
 #include <jevois/Types/BoundedBuffer.H>
 #include <jevois/Image/RawImageOps.H>
 #include <opencv2/videoio.hpp> // for cv::VideoCapture

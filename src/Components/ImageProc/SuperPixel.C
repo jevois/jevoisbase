@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/ImageProc/SuperPixel.H>
+#include <jevoisbase/Components/ImageProc/SuperPixel.H>
 
 #include <opencv2/ximgproc/slic.hpp>
 #include <opencv2/ximgproc/seeds.hpp>

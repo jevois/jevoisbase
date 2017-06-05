@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/ObjectRecognition/ObjectRecognitionCIFAR.H>
+#include <jevoisbase/Components/ObjectRecognition/ObjectRecognitionCIFAR.H>
 #include "tiny-dnn/tiny_dnn/tiny_dnn.h"
 #include <jevois/Debug/Log.H>
 

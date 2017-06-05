@@ -17,26 +17,28 @@
 
 #pragma once
 
-#include <jevoisbase/src/Components/FilterGPU/OpenGL.H>
+#include <jevoisbase/Components/ObjectRecognition/ObjectRecognition.H>
+#include "tiny-dnn/tiny_dnn/nodes.h"
 
-//! Simple class to load and compile some OpenGL-ES shader code
-class GPUshader
+//! Object recognition CNN for CIFAR-10 dataset
+/*! \ingroup components */
+class ObjectRecognitionCIFAR : public ObjectRecognition<tiny_dnn::sequential>
 {
   public:
-    //! Constructor
-	GPUshader();
-    
+    //! Constructor, loads the given CNN, its sizes must match our (fixed) internal network structure
+    /*! All network data is assumed to be in the module's path plus "tiny-dnn/<instance>". In there, we will look for
+        weights.tnn, and if not found, we will train the network using data in that path and then save weights.tnn. */
+    ObjectRecognitionCIFAR(std::string const & instance);
+
     //! Destructor
-	~GPUshader();
+    virtual ~ObjectRecognitionCIFAR();
     
-    //! Load a shader from file
-    /*! type should be GL_VERTEX_SHADER or GL_FRAGMENT_SHADER */
-	void load(char const * filename, GLuint type);
+    //! Define the network structure
+    virtual void define() override;
     
-    //! Get the shader's ID
-    GLuint id() const;
+    //! Train the network
+    virtual void train(std::string const & path) override;
     
-  private:
-	GLchar * Src;
-	GLuint Id;
+    //! Return the name of a given category (0-based index in the vector of results)
+    virtual std::string const & category(size_t idx) const override;
 };

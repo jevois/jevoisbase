@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <jevoisbase/src/Components/ObjectRecognition/ObjectRecognition.H>
+#include <jevoisbase/Components/ObjectRecognition/ObjectRecognition.H>
 #include "tiny-dnn/tiny_dnn/nodes.h"
 
 //! Object recognition CNN for MNIST handwritten digits

@@ -54,7 +54,7 @@
 #include <opencv2/core/core.hpp>
 #define INVT_TYPEDEF_INT64
 #define INVT_TYPEDEF_UINT64
-#include <jevoisbase/src/Components/RoadFinder/Point2D.H>
+#include <jevoisbase/Components/RoadFinder/Point2D.H>
 #include <opencv2/video/tracking.hpp> // for kalman filter
 
 // ######################################################################

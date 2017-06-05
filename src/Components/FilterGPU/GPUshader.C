@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/FilterGPU/GPUshader.H>
+#include <jevoisbase/Components/FilterGPU/GPUshader.H>
 
 // ####################################################################################################
 GPUshader::GPUshader() :

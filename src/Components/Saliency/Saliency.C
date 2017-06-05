@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/Saliency/Saliency.H>
+#include <jevoisbase/Components/Saliency/Saliency.H>
 
 #include <jevoisbase/src/Components/Saliency/env_config.h>
 #include <jevoisbase/src/Components/Saliency/env_c_math_ops.h>

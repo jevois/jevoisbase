@@ -24,8 +24,8 @@
 #include <jevois/Types/BoundedBuffer.H>
 
 #include <linux/videodev2.h>
-#include <jevoisbase/src/Components/ObjectMatcher/ObjectMatcher.H>
-#include <jevoisbase/src/Components/Saliency/Saliency.H>
+#include <jevoisbase/Components/ObjectMatcher/ObjectMatcher.H>
+#include <jevoisbase/Components/Saliency/Saliency.H>
 #include <opencv2/opencv.hpp>
 
 // icon by Freepik in people at flaticon

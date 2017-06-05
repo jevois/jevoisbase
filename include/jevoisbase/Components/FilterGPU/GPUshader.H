@@ -17,23 +17,26 @@
 
 #pragma once
 
-#include <jevoisbase/src/Components/FilterGPU/GPUshader.H>
+#include <jevoisbase/Components/FilterGPU/OpenGL.H>
 
-//! Simple class to load and compile some OpenGL-ES program
-class GPUprogram
+//! Simple class to load and compile some OpenGL-ES shader code
+class GPUshader
 {
   public:
-    //! Constructor, loads and compiles the program, assigns it a program ID
-	GPUprogram(char const * vertex_shader, char const * fragment_shader);
-
-    //! Destructor, deletes the program from OpenGL and frees up the ID
-    ~GPUprogram();
+    //! Constructor
+	GPUshader();
     
-    //! Get the program ID so we can tell OpenGL to use this program
-	GLuint id() const;
-
+    //! Destructor
+	~GPUshader();
+    
+    //! Load a shader from file
+    /*! type should be GL_VERTEX_SHADER or GL_FRAGMENT_SHADER */
+	void load(char const * filename, GLuint type);
+    
+    //! Get the shader's ID
+    GLuint id() const;
+    
   private:
-	GPUshader itsVertexShader;
-	GPUshader itsFragmentShader;
-	GLuint itsId;
+	GLchar * Src;
+	GLuint Id;
 };

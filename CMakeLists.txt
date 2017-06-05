@@ -21,7 +21,7 @@
 
 cmake_minimum_required(VERSION 3.1)
 
-# Set vendor names, our modules will be placed in a directory by that name under /jevois/modules:
+# Set vendor name, our modules will be placed in a directory by that name under /jevois/modules:
 set(JEVOIS_VENDOR "JeVois")
 set(JEVOIS_CONFIG "/jevois/config" CACHE STRING "Path to JeVois config to use")
 
@@ -34,9 +34,12 @@ include(JeVois)
 project(jevoisbase)
 jevois_project_set_flags()
 
-# Add parent of our base source directory to the include search path to allow #include <jevoibase/x/y> and to create the
-# proper makefile dependencies:
 set(JVB "${CMAKE_CURRENT_SOURCE_DIR}")
+
+# Allow #include <jevoibase/x/y> in our components and modules:
+include_directories("${JVB}/include")
+
+# Allow #include <jevoibase/Contrib/x/y> in our components and modules:
 include_directories("${JVB}/..")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with version 1.1:

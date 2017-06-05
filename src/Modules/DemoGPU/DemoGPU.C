@@ -19,7 +19,7 @@
 #include <jevois/Types/Enum.H>
 #include <jevois/Debug/Timer.H>
 
-#include <jevoisbase/src/Components/FilterGPU/FilterGPU.H>
+#include <jevoisbase/Components/FilterGPU/FilterGPU.H>
 
 #include <jevois/Image/RawImageOps.H>
 #include <linux/videodev2.h>

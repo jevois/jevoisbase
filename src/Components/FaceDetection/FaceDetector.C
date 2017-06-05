@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/FaceDetection/FaceDetector.H>
+#include <jevoisbase/Components/FaceDetection/FaceDetector.H>
 #include <jevois/Debug/Log.H>
 
 // ####################################################################################################

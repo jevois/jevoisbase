@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/FilterGPU/GPUprogram.H>
+#include <jevoisbase/Components/FilterGPU/GPUprogram.H>
 
 // ####################################################################################################
 GPUprogram::GPUprogram(char const * vertex_shader, char const * fragment_shader)

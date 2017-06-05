@@ -19,7 +19,7 @@
 #include <jevois/Debug/Timer.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevois/Util/Coordinates.H>
-#include <jevoisbase/src/Components/ArUco/ArUco.H>
+#include <jevoisbase/Components/ArUco/ArUco.H>
 #include <linux/videodev2.h> // for v4l2 pixel types
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

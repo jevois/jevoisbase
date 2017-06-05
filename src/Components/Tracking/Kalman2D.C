@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/Tracking/Kalman2D.H>
+#include <jevoisbase/Components/Tracking/Kalman2D.H>
 #include <jevois/Util/Coordinates.H>
 #include <cmath>
 

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <jevoisbase/src/Components/Saliency/Saliency.H>
+#include <jevoisbase/Components/Saliency/Saliency.H>
 
 namespace surprise
 {

@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/ObjectRecognition/ObjectRecognition.H>
+#include <jevoisbase/Components/ObjectRecognition/ObjectRecognition.H>
 #include <jevois/Debug/Log.H>
 #include <fstream>
 

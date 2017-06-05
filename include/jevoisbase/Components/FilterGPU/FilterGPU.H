@@ -20,8 +20,8 @@
 #include <jevois/Component/Component.H>
 #include <jevois/Image/RawImageOps.H>
 
-#include <jevoisbase/src/Components/FilterGPU/GPUtexture.H>
-#include <jevoisbase/src/Components/FilterGPU/GPUprogram.H>
+#include <jevoisbase/Components/FilterGPU/GPUtexture.H>
+#include <jevoisbase/Components/FilterGPU/GPUprogram.H>
 
 #include <map>
 

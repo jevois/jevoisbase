@@ -16,7 +16,7 @@
 /*! \file */
 
 #include <jevois/Core/Module.H>
-#include <jevoisbase/src/Components/EyeTracker/EyeTracker.H>
+#include <jevoisbase/Components/EyeTracker/EyeTracker.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevois/Debug/Timer.H>
 
