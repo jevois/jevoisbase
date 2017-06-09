@@ -164,10 +164,12 @@ add_custom_target(doc COMMAND doxygen "${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen.c
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # This is to install the doc of jevois and jevoisbase to jevois.org, only works in ilab:
-add_custom_target(docweb
-  COMMAND ./scripts/docinstall.sh
-  DEPENDS doc
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+if (JEVOIS_ILAB)
+  add_custom_target(docweb
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/docinstall.sh
+    DEPENDS doc
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif (JEVOIS_ILAB)
 
 # Documentation files for our install / distribution package
 set(DOC_FILES README INSTALL COPYING)
