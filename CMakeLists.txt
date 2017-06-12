@@ -48,8 +48,13 @@ jevois_setup_library(src/Components jevoisbase 1.1)
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)
 
-# add includes to our install / distribution package (see the CMakeLists.txt in these directories)
-add_subdirectory(include)
+# Add includes to our install / distribution package (see the CMakeLists.txt in these directories). On host, we install
+# to /usr/include, while on platform we install into buildroot (note: not to the microSD staging area):
+if (JEVOIS_PLATFORM)
+  add_subdirectory(include ${JEVOIS_BULDROOT_BASE}/target/usr)
+else (JEVOIS_PLATFORM)
+  add_subdirectory(include)
+endif (JEVOIS_PLATFORM)
 
 # Now setup any additional includes and sources that we will add to the jevoisbase library for use by our individual
 # modules, typically those are in the Contrib/ drectory:
