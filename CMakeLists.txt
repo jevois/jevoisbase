@@ -189,7 +189,7 @@ set(CPACK_PACKAGE_DESCRIPTION "JeVois Smart Machine Vision Base Modules")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "JeVois Smart Embedded Machine Vision Toolkit, Base Modules")
 set(CPACK_PACKAGE_CONTACT "Laurent Itti <jevois.org@gmail.com>")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER ${CPACK_PACKAGE_CONTACT})
-set(CPACK_DEBIAN_PACKAGE_SECTION "Video")
+set(CPACK_DEBIAN_PACKAGE_SECTION "universe")
 set(CPACK_PACKAGE_VENDOR "iLab at the University of Southern California")
 set(CPACK_PACKAGE_VERSION_MAJOR "${JEVOIS_VERSION_MAJOR}")  # Note: jevoisbase version tracks jevois version
 set(CPACK_PACKAGE_VERSION_MINOR "${JEVOIS_VERSION_MINOR}")
