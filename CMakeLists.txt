@@ -164,12 +164,12 @@ add_custom_target(doc COMMAND doxygen "${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen.c
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # This is to install the doc of jevois and jevoisbase to jevois.org, only works in ilab:
-if (JEVOIS_ILAB)
+if ($ENV{JEVOIS_ILAB})
   add_custom_target(docweb
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/docinstall.sh
     DEPENDS doc
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-endif (JEVOIS_ILAB)
+endif ($ENV{JEVOIS_ILAB})
 
 # Documentation files for our install / distribution package
 set(DOC_FILES README INSTALL COPYING)
@@ -194,6 +194,7 @@ set(CPACK_PACKAGE_VENDOR "iLab at the University of Southern California")
 set(CPACK_PACKAGE_VERSION_MAJOR "${JEVOIS_VERSION_MAJOR}")  # Note: jevoisbase version tracks jevois version
 set(CPACK_PACKAGE_VERSION_MINOR "${JEVOIS_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_RELEASE "1") # packager revision number
 
 # Use helper from JeVois.cmake for all other settings:
 jevois_setup_cpack("jevoisbase")
