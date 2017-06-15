@@ -8,7 +8,17 @@
 
 extra=""
 if [ "X$1" = "X--staging" ]; then extra="-DJEVOIS_MODULES_TO_STAGING=ON"; shift; fi
-if [ "X$1" = "X--microsd" ]; then extra="-DJEVOIS_MODULES_TO_MICROSD=ON"; shift; fi
+if [ "X$1" = "X--microsd" ]; then
+    /bin/ls /media/${USER}/JEVOIS/ >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+	echo "Cannot read /media/${USER}/JEVOIS - insert microSD into host computer "
+	echo "       or run command 'usbsd' in the JeVois command line interface."
+	echo "ABORT"
+	exit 1
+    fi
+    extra="-DJEVOIS_MODULES_TO_MICROSD=ON";
+    shift;
+fi
 
 # On ARM hosts like Raspberry Pi3, we will likely run out of memory if attempting more than 1 compilation thread:
 ncpu=`cat /proc/cpuinfo |grep processor|wc -l`
