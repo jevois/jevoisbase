@@ -194,7 +194,7 @@ set(CPACK_PACKAGE_VENDOR "iLab at the University of Southern California")
 set(CPACK_PACKAGE_VERSION_MAJOR "${JEVOIS_VERSION_MAJOR}")  # Note: jevoisbase version tracks jevois version
 set(CPACK_PACKAGE_VERSION_MINOR "${JEVOIS_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
-set(CPACK_PACKAGE_RELEASE "1") # packager revision number
+set(JEVOIS_PACKAGE_RELEASE "1") # packager revision number
 
 # Use helper from JeVois.cmake for all other settings:
 jevois_setup_cpack("jevoisbase")
