@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/EyeTracker/EyeTracker.H>
+#include <jevoisbase/Components/EyeTracker/EyeTracker.H>
 
 // This code adpated from (see Contrib directory for full source):
 

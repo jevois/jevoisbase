@@ -20,7 +20,7 @@
 #include <jevois/Debug/Log.H>
 #include <jevois/Debug/Timer.H>
 #include <jevois/Image/RawImageOps.H>
-#include <jevoisbase/src/Components/RoadFinder/RoadFinder.H>
+#include <jevoisbase/Components/RoadFinder/RoadFinder.H>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

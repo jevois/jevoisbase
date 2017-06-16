@@ -18,7 +18,7 @@
 #include <jevois/Core/Module.H>
 #include <jevois/Debug/Timer.H>
 #include <jevois/Image/RawImageOps.H>
-#include <jevoisbase/src/Components/QRcode/QRcode.H>
+#include <jevoisbase/Components/QRcode/QRcode.H>
 #include <linux/videodev2.h> // for v4l2 pixel types
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

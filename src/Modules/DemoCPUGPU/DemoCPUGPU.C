@@ -18,9 +18,9 @@
 #include <jevois/Core/Module.H>
 #include <jevois/Types/Enum.H>
 
-#include <jevoisbase/src/Components/FilterGPU/FilterGPU.H>
-#include <jevoisbase/src/Components/Saliency/Saliency.H>
-#include <jevoisbase/src/Components/Tracking/Kalman2D.H>
+#include <jevoisbase/Components/FilterGPU/FilterGPU.H>
+#include <jevoisbase/Components/Saliency/Saliency.H>
+#include <jevoisbase/Components/Tracking/Kalman2D.H>
 
 #include <jevois/Image/RawImageOps.H>
 #include <linux/videodev2.h>

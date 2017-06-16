@@ -22,7 +22,7 @@
 #include <jevois/Debug/Timer.H>
 #include <jevois/Types/Enum.H>
 
-#include <jevoisbase/src/Components/ImageProc/SuperPixel.H>
+#include <jevoisbase/Components/ImageProc/SuperPixel.H>
 
 #include <linux/videodev2.h>
 

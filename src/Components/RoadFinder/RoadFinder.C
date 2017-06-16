@@ -47,7 +47,7 @@
 // Boston, MA 02111-1307 USA.                                           //
 // //////////////////////////////////////////////////////////////////// //
 
-#include <jevoisbase/src/Components/RoadFinder/RoadFinder.H>
+#include <jevoisbase/Components/RoadFinder/RoadFinder.H>
 #include <jevois/Debug/Log.H>
 #include <jevois/Debug/Profiler.H>
 #include <opencv2/imgproc/imgproc.hpp> // for Canny

@@ -21,7 +21,7 @@
 #include <jevois/Debug/Profiler.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevois/Image/ColorConversion.h>
-#include <jevoisbase/src/Components/Saliency/Saliency.H>
+#include <jevoisbase/Components/Saliency/Saliency.H>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

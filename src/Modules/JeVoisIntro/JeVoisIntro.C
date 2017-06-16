@@ -20,11 +20,11 @@
 #include <jevois/Debug/Log.H>
 #include <jevois/Debug/Timer.H>
 #include <jevois/Image/RawImageOps.H>
-#include <jevoisbase/src/Components/Saliency/Saliency.H>
-#include <jevoisbase/src/Components/FaceDetection/FaceDetector.H>
-#include <jevoisbase/src/Components/ObjectRecognition/ObjectRecognitionMNIST.H>
-#include <jevoisbase/src/Components/Tracking/Kalman2D.H>
-#include <jevoisbase/src/Components/Utilities/BufferedVideoReader.H>
+#include <jevoisbase/Components/Saliency/Saliency.H>
+#include <jevoisbase/Components/FaceDetection/FaceDetector.H>
+#include <jevoisbase/Components/ObjectRecognition/ObjectRecognitionMNIST.H>
+#include <jevoisbase/Components/Tracking/Kalman2D.H>
+#include <jevoisbase/Components/Utilities/BufferedVideoReader.H>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

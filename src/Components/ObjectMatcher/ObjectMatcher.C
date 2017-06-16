@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/ObjectMatcher/ObjectMatcher.H>
+#include <jevoisbase/Components/ObjectMatcher/ObjectMatcher.H>
 #include <jevois/Debug/Log.H>
 #include <jevois/Debug/Profiler.H>
 #include <sys/types.h>

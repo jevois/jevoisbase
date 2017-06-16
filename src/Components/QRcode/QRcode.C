@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/QRcode/QRcode.H>
+#include <jevoisbase/Components/QRcode/QRcode.H>
 #include <jevois/Debug/Log.H>
 #include <jevois/Util/Utils.H>
 

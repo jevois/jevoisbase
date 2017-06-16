@@ -15,8 +15,8 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/FilterGPU/FilterGPU.H>
-#include <jevoisbase/src/Components/FilterGPU/OpenGL.H>
+#include <jevoisbase/Components/FilterGPU/FilterGPU.H>
+#include <jevoisbase/Components/FilterGPU/OpenGL.H>
 
 // ####################################################################################################
 FilterGPU::FilterGPU(std::string const & instance) :

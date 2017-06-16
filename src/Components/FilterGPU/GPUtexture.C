@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/FilterGPU/GPUtexture.H>
+#include <jevoisbase/Components/FilterGPU/GPUtexture.H>
 
 // ####################################################################################################
 GPUtexture::GPUtexture(GLsizei width, GLsizei height, GLenum format, bool createFramebuffer) :

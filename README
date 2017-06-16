@@ -1,3 +1,10 @@
 jevoisbase is a baseline collection of 25+ machine vision modules that run on the JeVois smart camera.
 
 See INSTALL in the jevois repository for full installation instructions.
+
+See http://jevois.org for full documentation.
+
+See https://github.com/jevois for full source code.
+
+On Github, the master branch is for stable releases, minor patch work, or addition of new features that do not break the
+current release version. More disruptive development is in devX.Y branches.

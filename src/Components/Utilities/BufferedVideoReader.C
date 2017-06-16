@@ -16,7 +16,7 @@
 /*! \file */
 
 
-#include <jevoisbase/src/Components/Utilities/BufferedVideoReader.H>
+#include <jevoisbase/Components/Utilities/BufferedVideoReader.H>
 
 // ####################################################################################################
 BufferedVideoReader::BufferedVideoReader(std::string const & instance, size_t bufsize) :

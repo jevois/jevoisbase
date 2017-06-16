@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/Saliency/Surprise.H>
+#include <jevoisbase/Components/Saliency/Surprise.H>
 
 // ##############################################################################################################
 Surprise::Surprise(std::string const & instance) :

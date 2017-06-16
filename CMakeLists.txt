@@ -21,7 +21,7 @@
 
 cmake_minimum_required(VERSION 3.1)
 
-# Set vendor names, our modules will be placed in a directory by that name under /jevois/modules:
+# Set vendor name, our modules will be placed in a directory by that name under /jevois/modules:
 set(JEVOIS_VENDOR "JeVois")
 set(JEVOIS_CONFIG "/jevois/config" CACHE STRING "Path to JeVois config to use")
 
@@ -34,16 +34,22 @@ include(JeVois)
 project(jevoisbase)
 jevois_project_set_flags()
 
-# Add parent of our base source directory to the include search path to allow #include <jevoibase/x/y> and to create the
-# proper makefile dependencies:
 set(JVB "${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("${JVB}/..")
 
-# Setup our library using the source files in src/Components and call it jevoisbase with version 1.0:
-jevois_setup_library(src/Components jevoisbase 1.0)
+# Allow #include <jevoibase/x/y> in our components and modules:
+include_directories("include")
+
+# Allow #include <jevoibase/Contrib/x/y> in our components and modules:
+include_directories("..")
+
+# Setup our library using the source files in src/Components and call it jevoisbase with version 1.1:
+jevois_setup_library(src/Components jevoisbase 1.1)
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)
+
+# Add includes to our install / distribution package:
+add_subdirectory(include)
 
 # Now setup any additional includes and sources that we will add to the jevoisbase library for use by our individual
 # modules, typically those are in the Contrib/ drectory:
@@ -133,9 +139,9 @@ else (JEVOIS_PLATFORM)
   add_definitions(-I/usr/include/eigen3)
 endif (JEVOIS_PLATFORM)
   
-# Enable OpenMP, which can accelerate the fast optical flow code. NOTE: With small images and when runnign on a fast
+# Enable OpenMP, which can accelerate the fast optical flow code. NOTE: With small images and when running on a fast
 # Intel-based host, this actually slows down the code by 10x or so, probably the parallelism overhead is not worth it
-# for small images. Yet, we enable it here as it seems to help on thje platform:
+# for small images. Yet, we enable it here as it seems to help on the platform:
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp")
@@ -143,12 +149,13 @@ add_definitions(-DWITH_OPENMP -DUSE_PARALLEL_ON_FLOWAGGR)
 
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others (from pkg-config --libs opencv and deleting a few):
-target_link_libraries(jevoisbase opencv_stitching opencv_superres opencv_videostab opencv_aruco opencv_bgsegm
-  opencv_bioinspired opencv_ccalib opencv_dnn opencv_dpm opencv_fuzzy opencv_line_descriptor opencv_optflow
-  opencv_plot opencv_reg opencv_saliency opencv_stereo opencv_structured_light opencv_rgbd
-  opencv_surface_matching opencv_tracking opencv_datasets opencv_text opencv_face opencv_xfeatures2d opencv_shape
-  opencv_video opencv_ximgproc opencv_calib3d opencv_features2d opencv_flann opencv_xobjdetect opencv_objdetect
-  opencv_ml opencv_xphoto opencv_highgui opencv_videoio opencv_imgcodecs opencv_photo opencv_imgproc opencv_core)
+target_link_libraries(jevoisbase ${JEVOIS_OPENCV_LIBS} opencv_stitching opencv_superres opencv_videostab
+  opencv_aruco opencv_bgsegm opencv_bioinspired opencv_ccalib opencv_dnn opencv_dpm opencv_fuzzy
+  opencv_line_descriptor opencv_optflow opencv_plot opencv_reg opencv_saliency opencv_stereo opencv_structured_light
+  opencv_rgbd opencv_surface_matching opencv_tracking opencv_datasets opencv_text opencv_face opencv_xfeatures2d
+  opencv_shape opencv_video opencv_ximgproc opencv_calib3d opencv_features2d opencv_flann opencv_xobjdetect
+  opencv_objdetect opencv_ml opencv_xphoto opencv_highgui opencv_videoio opencv_imgcodecs opencv_photo
+  opencv_imgproc opencv_core)
 
 ########################################################################################################################
 # Documentation:
@@ -157,33 +164,37 @@ add_custom_target(doc COMMAND doxygen "${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen.c
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # This is to install the doc of jevois and jevoisbase to jevois.org, only works in ilab:
-add_custom_target(docweb
-  COMMAND ./scripts/docinstall.sh
-  DEPENDS doc
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+if ($ENV{JEVOIS_ILAB})
+  add_custom_target(docweb
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/docinstall.sh
+    DEPENDS doc
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif ($ENV{JEVOIS_ILAB})
 
 # Documentation files for our install / distribution package
 set(DOC_FILES README INSTALL COPYING)
-set(DOC_PATH "share/doc/jevoisbase")
+if (JEVOIS_PLATFORM)
+  set(DOC_PATH "share/doc/jevoisbase-platform")
+else (JEVOIS_PLATFORM)
+  set(DOC_PATH "share/doc/jevoisbase-host")
+endif (JEVOIS_PLATFORM)
 install(FILES ${DOC_FILES} DESTINATION ${DOC_PATH} COMPONENT bin)
 
-# Create packages (Debian, RPM): in build/, just type 'cpack' to create the package.
-# To list the files created in a package, run: dpkg --contents <package.deb>
-set(CPACK_PACKAGE_DESCRIPTION "JeVoisBase Embedded Machine Vision Modules")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-  "JeVoisBase Embedded Machine Vision Modules from iLab at the University of Southern California")
-set(CPACK_PACKAGE_NAME "jevoisbase")
+########################################################################################################################
+# Debian packaging:
 
-set(CPACK_PACKAGE_CONTACT "Laurent Itti")
+# Create packages (Debian, RPM): in hbuild/ or pbuild/, just type 'sudo cpack' to create the package.
+# To list the files created in a package, run: dpkg --contents <package.deb>
+set(CPACK_PACKAGE_DESCRIPTION "JeVois Smart Machine Vision Base Modules")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "JeVois Smart Embedded Machine Vision Toolkit, Base Modules")
+set(CPACK_PACKAGE_CONTACT "Laurent Itti <jevois.org@gmail.com>")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER ${CPACK_PACKAGE_CONTACT})
+set(CPACK_DEBIAN_PACKAGE_SECTION "universe")
 set(CPACK_PACKAGE_VENDOR "iLab at the University of Southern California")
-set(CPACK_PACKAGE_VERSION_MAJOR "${JEVOIS_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${JEVOIS_VERSION_MAJOR}")  # Note: jevoisbase version tracks jevois version
 set(CPACK_PACKAGE_VERSION_MINOR "${JEVOIS_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
-set(VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/scripts/postinst;${CMAKE_SOURCE_DIR}/scripts/prerm;")
+set(JEVOIS_PACKAGE_RELEASE "1") # packager revision number
 
-set(CPACK_GENERATOR "DEB;")  # could be DEB;RPM;
-set(CPACK_PACKAGE_FILE_NAME
-  "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CMAKE_SYSTEM_PROCESSOR}")
-SET(CPACK_SOURCE_IGNORE_FILES "${CMAKE_BINARY_DIR}/*")
-include(CPack)
+# Use helper from JeVois.cmake for all other settings:
+jevois_setup_cpack("jevoisbase")

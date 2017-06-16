@@ -18,7 +18,7 @@
 #include <jevois/Core/Module.H>
 #include <jevois/Image/RawImageOps.H>
 
-#include <jevoisbase/src/Components/OpticalFlow/FastOpticalFlow.H>
+#include <jevoisbase/Components/OpticalFlow/FastOpticalFlow.H>
 
 #include <linux/videodev2.h>
 

@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/OpticalFlow/FastOpticalFlow.H>
+#include <jevoisbase/Components/OpticalFlow/FastOpticalFlow.H>
 
 // This is a simplified version of the main() function of the code here: git clone
 // https://github.com/tikroeger/OF_DIS.git

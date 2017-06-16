@@ -22,7 +22,7 @@
 #include <jevois/Debug/Timer.H>
 
 #include <linux/videodev2.h>
-#include <jevoisbase/src/Components/ObjectMatcher/ObjectMatcher.H>
+#include <jevoisbase/Components/ObjectMatcher/ObjectMatcher.H>
 
 
 // icon by Vectors Market in arrows at flaticon

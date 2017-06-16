@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*! \file */
 
-#include <jevoisbase/src/Components/ObjectRecognition/ObjectRecognitionILAB.H>
+#include <jevoisbase/Components/ObjectRecognition/ObjectRecognitionILAB.H>
 #include "tiny-dnn/tiny_dnn/tiny_dnn.h"
 #include <jevois/Debug/Log.H>
 #include <algorithm>
