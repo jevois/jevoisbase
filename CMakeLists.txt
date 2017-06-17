@@ -196,5 +196,13 @@ set(CPACK_PACKAGE_VERSION_MINOR "${JEVOIS_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(JEVOIS_PACKAGE_RELEASE "1") # packager revision number
 
+if (JEVOIS_PLATFORM)
+  set(JEVOIS_DEPEND "jevois-platform (=${JEVOIS_VERSION_MAJOR}.${JEVOIS_VERSION_MINOR})")
+else (JEVOIS_PLATFORM)
+  set(JEVOIS_DEPEND "jevois-host (=${JEVOIS_VERSION_MAJOR}.${JEVOIS_VERSION_MINOR})")
+endif (JEVOIS_PLATFORM)
+
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${JEVOIS_DEPEND}, libgles2-mesa, libgles2-mesa-dev")
+
 # Use helper from JeVois.cmake for all other settings:
 jevois_setup_cpack("jevoisbase")
