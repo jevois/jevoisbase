@@ -6,7 +6,7 @@ import numpy as np
 #
 # This module is here for you to experiment with Python OpenCV on JeVois.
 #
-# By default, we get the next video frame from th ecamera as an OpenCV BGR (color) image named 'inimg'.
+# By default, we get the next video frame from the camera as an OpenCV BGR (color) image named 'inimg'.
 # We then apply some image processing to it to create an output BGR image named 'outimg'.
 # We finally add some text drawings to outimg and send it to host over USB.
 #
