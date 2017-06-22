@@ -72,19 +72,27 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
 
     With \jvversion{1.2} or later you can train this algorithm live.
 
-    Point your JeVois camera to a clean view of an object you want to learn (if
-    possible, with a blank, featureless background, as this algorithm does not attempt to segment objects and would
-    otherwise also learn features of the backgrouns as part of the object), and issue the command:
+    First, enable display of a training window using:
+    \verbatim
+    setpar showwin true
+    \endverbatim
+
+    You should now see a grey rectangle. You can adjust the window size and aspect ration using the \p win parameter. By
+    default, the algorithm will train new objects that occupy half width and height of the camera image.
+    
+    Point your JeVois camera to a clean view of an object you want to learn (if possible, with a blank, featureless
+    background, as this algorithm does not attempt to segment objects and would otherwise also learn features of the
+    backgrouns as part of the object). Make sure the objects fits inside the grey rectangle and fills as much of it as
+    possible. Then issue the command:
 
     \verbatim
     save <name>
     \endverbatim
 
-    over a serial connection to JeVois. This will grab the current camera image and save it as a new training image
-    \<name\>.png for future use. Note that you will need to re-load this module for the new training image to be
-    included. Perhaps the simples to achieve that is to switch your video capture software to another resolution (to
-    unload this module and load another one), then back to this resolution. Note that we save the image as grayscale
-    since this algorithm does not use color anyway.
+    over a serial connection to JeVois. This will grab the current camera image, crop it using the grey rectangle, and
+    save the crop as a new training image \<name\>.png for immediate use. Th ealgorithm will immediately tr-train on all
+    objects, including the new one. You should see the object being detected shortly after you send your save
+    command. Note that we save the image as grayscale since this algorithm does not use color anyway.
 
     You can see the list of current images by using command:
     \verbatim
@@ -97,11 +105,9 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     del <name>
     \endverbatim
 
-    where name is the name without extension, and a .png extension will be added.
+    where name is the name without extension, and a .png extension will be added. The image will immediately be deleted
+    and that object will not be recognized anymore.
 
-    Note that, although \b save and \b del save and delete the images immediately, you do need to restart the module for
-    the changes to be taken into account by the object recognition algorithm (switch your video capture software to
-    another resolution to unload this module and load another one, then back to this resolution to reload it).
 
     @author Laurent Itti
 
