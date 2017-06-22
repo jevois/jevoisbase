@@ -70,7 +70,7 @@ void ObjectMatcher::postInit()
     itsTrainData.push_back(TrainData());
     TrainData & td = itsTrainData.back();
     td.name = fname;
-    td.image = cv::imread(fullfname);
+    td.image = cv::imread(fullfname, cv::IMREAD_GRAYSCALE);
 
     // Compute keypoints and descriptors:
     itsFeatureDetector->detectAndCompute(td.image, cv::Mat(), td.keypoints, td.descriptors);

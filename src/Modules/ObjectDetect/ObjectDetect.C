@@ -23,9 +23,25 @@
 
 #include <linux/videodev2.h>
 #include <jevoisbase/Components/ObjectMatcher/ObjectMatcher.H>
+#include <opencv2/imgcodecs.hpp>
 
+#include <cstdio> // for std::remove
 
 // icon by Vectors Market in arrows at flaticon
+
+static jevois::ParameterCategory const ParamCateg("Object Detection Options");
+
+//! Define a pair of floats, to avoid macro parsing problems when used as a parameter:
+typedef std::pair<float, float> floatpair;
+
+//! Parameter \relates ObjectDetect
+JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(win, floatpair,
+                                       "Width and height (in percent of image size, with valid percentages between "
+                                       "10.0 and 100.0) of the window used to interactively save objects",
+                                       floatpair(50.0F, 50.0F), ParamCateg);
+
+//! Parameter \relates ObjectDetect
+JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture window when true", false, ParamCateg);
 
 //! Simple object detection using keypoint matching
 /*! This module finds objects by matching keypoint descriptors between the current image and a set of training
@@ -37,18 +53,62 @@
     computing descriptors even outside process(). The itsKPfut future is our handle to that thread, and we also use it
     to alternate between detection and matching on alternating frames.
 
-    Training
-    --------
+    Offline training
+    ----------------
 
-    Simply add images of the objects you want to detect in JEVOIS:/modules/JeVois/ObjectDetect/images/ on your JeVois
-    microSD card. Those will be processed when the module starts. The names of recognized objects returned by this
-    module are simply the file names of the pictures you have added in that directory. No additional trainign procedure
-    is needed. Beware that the more images you add, the slower the algorithm will run, and the higher your chances of
-    confusions among several of your objects.
+    Simply add images of the objects you want to detect in <b>JEVOIS:/modules/JeVois/ObjectDetect/images/</b> on your
+    JeVois microSD card. Those will be processed when the module starts. The names of recognized objects returned by
+    this module are simply the file names of the pictures you have added in that directory. No additional training
+    procedure is needed. Beware that the more images you add, the slower the algorithm will run, and the higher your
+    chances of confusions among several of your objects.
+
+    With \jvversion{1.1} or later, you do not need to eject the microSD from JeVois, and you can instead add images live
+    by exporting the microSD inside JeVois using the \c usbsd command. See \ref MicroSD (last section) for details. When
+    you are done addingnew images or deleting unwanted ones, properly eject the virtual USB flash drive, an dJeVois will
+    restart and load the new training data.
+
+    Live training
+    -------------
+
+    With \jvversion{1.2} or later you can train this algorithm live.
+
+    Point your JeVois camera to a clean view of an object you want to learn (if
+    possible, with a blank, featureless background, as this algorithm does not attempt to segment objects and would
+    otherwise also learn features of the backgrouns as part of the object), and issue the command:
+
+    \verbatim
+    save <name>
+    \endverbatim
+
+    over a serial connection to JeVois. This will grab the current camera image and save it as a new training image
+    \<name\>.png for future use. Note that you will need to re-load this module for the new training image to be
+    included. Perhaps the simples to achieve that is to switch your video capture software to another resolution (to
+    unload this module and load another one), then back to this resolution. Note that we save the image as grayscale
+    since this algorithm does not use color anyway.
+
+    You can see the list of current images by using command:
+    \verbatim
+    list
+    \endverbatim
+
+    Finally, you can delete an image using command:
+
+    \verbatim
+    del <name>
+    \endverbatim
+
+    where name is the name without extension, and a .png extension will be added.
+
+    Note that, although \b save and \b del save and delete the images immediately, you do need to restart the module for
+    the changes to be taken into account by the object recognition algorithm (switch your video capture software to
+    another resolution to unload this module and load another one, then back to this resolution to reload it).
 
     @author Laurent Itti
 
     @videomapping YUYV 320 252 30.0 YUYV 320 240 30.0 JeVois ObjectDetect
+    @modulecommand list - show current list of training images
+    @modulecommand save \<name\> - grab current frame and save as new training image \<name\>.png
+    @modulecommand del \<name\> - delete training image \<name\>.png
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California
@@ -59,17 +119,34 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class ObjectDetect : public jevois::Module
+class ObjectDetect : public jevois::Module,
+                     public jevois::Parameter<win, showwin>
 {
   public:
+    // ####################################################################################################
     //! Constructor
+    // ####################################################################################################
     ObjectDetect(std::string const & instance) : jevois::Module(instance), itsDist(1.0e30)
     { itsMatcher = addSubComponent<ObjectMatcher>("surf"); }
 
+    // ####################################################################################################
     //! Virtual destructor for safe inheritance
+    // ####################################################################################################
     virtual ~ObjectDetect() { }
 
-    //! Processing function
+    // ####################################################################################################
+    //! Parameter callback
+    // ####################################################################################################
+    void onParamChange(win const & JEVOIS_UNUSED_PARAM(param), floatpair const & newval)
+    {
+      // Just check that the values are valid here. They will get stored in our param and used later:
+      if (newval.first < 10.0F || newval.first > 100.0F || newval.second < 10.0F || newval.second > 100.0F)
+        throw std::range_error("Invalid window percentage values, must be between 10.0 and 100.0");
+    }
+    
+    // ####################################################################################################
+    //! Processing function with USB output
+    // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
       static jevois::Timer timer("processing", 100, LOG_DEBUG);
@@ -146,7 +223,15 @@ class ObjectDetect : public jevois::Module
         jevois::rawimage::writeText(outimg, std::string("Detected: ") + itsMatcher->traindata(itsTrainIdx).name +
                                     " avg distance " + std::to_string(itsDist), 3, h + 1, jevois::yuyv::White);
       }
-      
+
+      // Show capture window if desired:
+      if (showwin::get())
+      {
+        floatpair const wi = win::get();
+        int const ww = (wi.first * 0.01F) * w, wh = (wi.second * 0.01F) * h;
+        jevois::rawimage::drawRect(outimg, (w - ww) / 2, (h - wh) / 2, ww, wh, 1, jevois::yuyv::MedGrey);
+      }
+
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
@@ -155,6 +240,72 @@ class ObjectDetect : public jevois::Module
       outframe.send();
     }
 
+    // ####################################################################################################
+    //! Receive a string from a serial port which contains a user command
+    // ####################################################################################################
+    void parseSerial(std::string const & str, std::shared_ptr<jevois::UserInterface> s) override
+    {
+      std::vector<std::string> tok = jevois::split(str);
+      if (tok.empty()) throw std::runtime_error("Unsupported empty module command");
+      std::string const dirname = absolutePath(itsMatcher->traindir::get());
+
+      if (tok[0] == "save")
+      {
+        if (tok.size() == 1) throw std::runtime_error("save command requires one <name> argument");
+        
+        // Crop itsGrayImg using the desired window:
+        floatpair const wi = win::get();
+        int ww = (wi.first * 0.01F) * itsGrayImg.cols;
+        int wh = (wi.second * 0.01F) * itsGrayImg.rows;
+        cv::Rect cr( (itsGrayImg.cols - ww) / 2, (itsGrayImg.rows - wh) / 2, ww, wh);
+      
+        // Save it:     
+        cv::imwrite(dirname + '/' + tok[1] + ".png", itsGrayImg(cr));
+        s->writeString(tok[1] + ".png saved - reload module to use it (e.g., switch to a different video resolution "
+                       "then back to this one).");
+      }
+      else if (tok[0] == "del")
+      {
+        if (tok.size() == 1) throw std::runtime_error("del command requires one <name> argument");
+        if (std::remove((dirname + '/' + tok[1] + ".png").c_str()))
+          throw std::runtime_error("Failed to delete " + tok[1] + ".png");
+      }
+      else if (tok[0] == "list")
+      {
+        std::string lst = jevois::system("/bin/ls \"" + dirname + '\"');
+        std::vector<std::string> files = jevois::split(lst, "\\n");
+        for (std::string const & f : files) s->writeString(f);
+        return;
+      }
+      else throw std::runtime_error("Unsupported module command [" + str + ']');
+
+      // If we get here, we had a successful save or del. We need to nuke our matcher and re-load it to retrain:
+      // First, wait until our component is not computing anymore:
+      try { if (itsKPfut.valid()) itsKPfut.get(); } catch (...) { }
+
+      // Detach the sub:
+      removeSubComponent(itsMatcher);
+
+      // Nuke it:
+      itsMatcher.reset();
+
+      // Nuke any other old data:
+      itsKeypoints.clear(); itsDescriptors = cv::Mat(); itsDist = 1.0e30; itsCorners.clear();
+      
+      // Instantiate a new one, it will load the training data:
+      itsMatcher = addSubComponent<ObjectMatcher>("surf");
+    }
+
+    // ####################################################################################################
+    //! Human-readable description of this Module's supported custom commands
+    // ####################################################################################################
+    void supportedCommands(std::ostream & os) override
+    {
+      os << "list - show current list of training images" << std::endl;
+      os << "save <name> - grab current frame and save as new training image <name>.png" << std::endl;
+      os << "del <name> - delete training image <name>.png" << std::endl;
+    }
+    
   private:
     std::shared_ptr<ObjectMatcher> itsMatcher;
     std::future<void> itsKPfut;
