@@ -43,7 +43,7 @@ include_directories("include")
 include_directories("..")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with version 1.1:
-jevois_setup_library(src/Components jevoisbase 1.1)
+jevois_setup_library(src/Components jevoisbase 1.2)
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)

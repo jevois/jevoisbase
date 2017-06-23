@@ -45,13 +45,21 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
 
 //! Simple object detection using keypoint matching
 /*! This module finds objects by matching keypoint descriptors between the current image and a set of training
-    images. Here we use SURF keypoints and descriptors as provided by OpenCV. The algorithm is quite slow and consists
-    of 3 phases: detect keypoint locations, compute keypoint descriptors, and match descriptors from current image to
-    training image descriptors. Here, we alternate between computing keypoints and descriptors on one frame (or more,
-    depending on how slow that gets), and doing the matching on the next frame. This module also provides an example of
-    letting some computation happen even after we exit the process() function. Here, we keep detecting keypoints and
-    computing descriptors even outside process(). The itsKPfut future is our handle to that thread, and we also use it
-    to alternate between detection and matching on alternating frames.
+    images. Here we use SURF keypoints and descriptors as provided by OpenCV.
+
+    The algorithm consists of 4 phases:
+    - detect keypoint locations, typically corners or other distinctive texture elements or markings;
+    - compute keypoint descriptors, which are summary representations of the image neighborhood around each keypoint;
+    - match descriptors from current image to descriptors previously extracted from training images;
+    - if enough matches are found between the current image and a given training image, and they are of good enough
+      quality, compute the homography (geometric transformation) between keypoint locations in that training image and
+      locations of the matching keypoints in the current image. If it is well conditioned (i.e., a 3D viewpoint change
+      could well explain how the keypoints moved between the training and current images), declare that a match was
+      found, and draw a green rectangle around the detected object.
+
+    The algorithm comes by default with one training image, for the Priority Mail logo of the U.S. Postal
+    Service. Search for "USPS priority mail" on the web and point JeVois to a picture of the logo on your screen to
+    recognize it. See the screenshot of this module for an example of how it looks.
 
     Offline training
     ----------------
@@ -64,35 +72,37 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
 
     With \jvversion{1.1} or later, you do not need to eject the microSD from JeVois, and you can instead add images live
     by exporting the microSD inside JeVois using the \c usbsd command. See \ref MicroSD (last section) for details. When
-    you are done addingnew images or deleting unwanted ones, properly eject the virtual USB flash drive, an dJeVois will
+    you are done addingnew images or deleting unwanted ones, properly eject the virtual USB flash drive, and JeVois will
     restart and load the new training data.
 
     Live training
     -------------
 
-    With \jvversion{1.2} or later you can train this algorithm live.
+    With \jvversion{1.2} and later you can train this algorithm live.
 
     First, enable display of a training window using:
     \verbatim
     setpar showwin true
     \endverbatim
 
-    You should now see a grey rectangle. You can adjust the window size and aspect ration using the \p win parameter. By
+    You should now see a grey rectangle. You can adjust the window size and aspect ratio using the \p win parameter. By
     default, the algorithm will train new objects that occupy half width and height of the camera image.
     
     Point your JeVois camera to a clean view of an object you want to learn (if possible, with a blank, featureless
     background, as this algorithm does not attempt to segment objects and would otherwise also learn features of the
     backgrouns as part of the object). Make sure the objects fits inside the grey rectangle and fills as much of it as
-    possible. Then issue the command:
+    possible. You should adjust the distance between th eobject and the camera, and the grey rectangle, to roughly match
+    the distance at which you want to detect that object in the future. Then issue the command:
 
     \verbatim
-    save <name>
+    save somename
     \endverbatim
 
-    over a serial connection to JeVois. This will grab the current camera image, crop it using the grey rectangle, and
-    save the crop as a new training image \<name\>.png for immediate use. Th ealgorithm will immediately tr-train on all
-    objects, including the new one. You should see the object being detected shortly after you send your save
-    command. Note that we save the image as grayscale since this algorithm does not use color anyway.
+    over a serial connection to JeVois, where <em>somename</em> is the name you want to give to this object. This will
+    grab the current camera image, crop it using the grey rectangle, and save the crop as a new training image
+    <b>somename.png</b> for immediate use. The algorithm will immediately re-train on all objects, including the new
+    one. You should see the object being detected shortly after you send your save command. Note that we save the image
+    as grayscale since this algorithm does not use color anyway.
 
     You can see the list of current images by using command:
     \verbatim
@@ -102,19 +112,24 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     Finally, you can delete an image using command:
 
     \verbatim
-    del <name>
+    del somename
     \endverbatim
+    where <em>somename</em> is the object name without extension, and a .png extension will be added. The image will
+    immediately be deleted and that object will not be recognized anymore.
 
-    where name is the name without extension, and a .png extension will be added. The image will immediately be deleted
-    and that object will not be recognized anymore.
+    Programmer note: This algorithm is quite slow. So, here, we alternate between computing keypoints and descriptors on
+    one frame (or more, depending on how slow that gets), and doing the matching on the next frame. This module also
+    provides an example of letting some computation happen even after we exit the process() function. Here, we keep
+    detecting keypoints and computing descriptors even outside process(). The itsKPfut future is our handle to that
+    thread, and we also use it to alternate between detection and matching on alternating frames.
 
 
     @author Laurent Itti
 
     @videomapping YUYV 320 252 30.0 YUYV 320 240 30.0 JeVois ObjectDetect
     @modulecommand list - show current list of training images
-    @modulecommand save \<name\> - grab current frame and save as new training image \<name\>.png
-    @modulecommand del \<name\> - delete training image \<name\>.png
+    @modulecommand save somename - grab current frame and save as new training image somename.png
+    @modulecommand del somename - delete training image somename.png
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California
@@ -267,14 +282,14 @@ class ObjectDetect : public jevois::Module,
       
         // Save it:     
         cv::imwrite(dirname + '/' + tok[1] + ".png", itsGrayImg(cr));
-        s->writeString(tok[1] + ".png saved - reload module to use it (e.g., switch to a different video resolution "
-                       "then back to this one).");
+        s->writeString(tok[1] + ".png saved and trained.");
       }
       else if (tok[0] == "del")
       {
         if (tok.size() == 1) throw std::runtime_error("del command requires one <name> argument");
         if (std::remove((dirname + '/' + tok[1] + ".png").c_str()))
           throw std::runtime_error("Failed to delete " + tok[1] + ".png");
+        s->writeString(tok[1] + ".png deleted and forgotten.");
       }
       else if (tok[0] == "list")
       {
@@ -308,8 +323,8 @@ class ObjectDetect : public jevois::Module,
     void supportedCommands(std::ostream & os) override
     {
       os << "list - show current list of training images" << std::endl;
-      os << "save <name> - grab current frame and save as new training image <name>.png" << std::endl;
-      os << "del <name> - delete training image <name>.png" << std::endl;
+      os << "save <somename> - grab current frame and save as new training image <somename>.png" << std::endl;
+      os << "del <somename> - delete training image <somename>.png" << std::endl;
     }
     
   private:
