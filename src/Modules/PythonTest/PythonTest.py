@@ -25,7 +25,7 @@ class PythonTest:
     ## Constructor
     def __init__(self):
         jevois.LINFO("PythonTest Constructor")
-        jevois.LINFO(dir(jevois))
+        #jevois.print(dir(jevois))
         self.frame = 0 # a simple frame counter used to demonstrate sendSerial()
 
     # ###################################################################################################
