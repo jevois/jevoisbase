@@ -107,7 +107,7 @@ class RoadNavigation : public jevois::Module
     virtual void process(jevois::InputFrame && inframe) override
     {
       // Wait for next available camera image, convert it to gray, and release it:
-      cv::Mat imggray = inframe.getCvGray();
+      cv::Mat imggray = inframe.getCvGRAY();
 
       // Compute the vanishing point, with no drawings:
       jevois::RawImage visual; // unallocated pixels, will not draw anything
@@ -154,7 +154,8 @@ class RoadNavigation : public jevois::Module
       jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height-h, jevois::yuyv::Black);
 
       // Get the filtered target point x and send to serial:
-      sendSerialImg1Dx(w, itsRoadFinder->getFilteredTargetX(), 0.0F, "vp");
+      float const tpx = itsRoadFinder->getFilteredTargetX();
+      sendSerialImg1Dx(w, tpx, 0.0F, "vp");
       
       // Write some extra info about the vp:
       std::ostringstream otxt; otxt << std::fixed << std::setprecision(3);
