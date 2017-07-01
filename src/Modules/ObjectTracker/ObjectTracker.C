@@ -94,19 +94,13 @@ JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if
     https://raw.githubusercontent.com/kylehounslow/opencv-tuts/master/object-tracking-tut/objectTrackingTut.cpp written
     by Kyle Hounslow, 2013. 
 
-    Serial output
-    -------------
+    Serial Messages
+    ---------------
 
-    This module sends serial messages of the form
-
-    \verbatim
-    T2D x y
-    \endverbatim
-
-    where \a x and \a y are the standardized coordinates of the center of each detected and good object (good objects
-    have a pixel area within the range specified by \p objectarea, and are only reported when the image is clean enough
-    according to \p maxnumobj. See \ref coordhelpers for standardized coordinates. One message is sent for every good
-    object on every frame.
+    This module can send standardized serial messages as described in \ref UserSerialStyle. One message is issued for on
+    every video frame for each detected and good object (good objects have a pixel area within the range specified by \p
+    objectarea, and are only reported when the image is clean enough according to \p maxnumobj). The \p id field in the
+    messages simply is \b blob for all messages.
 
     Trying it out
     -------------
@@ -200,24 +194,17 @@ class ObjectTracker : public jevois::Module,
       // Identify the "good" objects:
       if (hierarchy.size() > 0 && hierarchy.size() <= maxnumobj::get())
       {
-        double refArea = 0.0; int x = 0, y = 0;
+        double refArea = 0.0; int x = 0, y = 0; int refIdx = 0;
 
         for (int index = 0; index >= 0; index = hierarchy[index][0])
         {
           cv::Moments moment = cv::moments((cv::Mat)contours[index]);
           double area = moment.m00;
-          if (objectarea::get().contains(int(area + 0.4999)) && area > refArea)
-          { x = moment.m10 / area + 0.4999; y = moment.m01 / area + 0.4999; refArea = area; }
+          if (objectarea::get().contains(int(area + 0.4999)) && area > refArea) { refArea = area; refIdx = index; }
         }
         
-        if (refArea > 0.0)
-        {
-          // Standardize the coordinates to -1000 ... 1000:
-          float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h, 1.0F);
-
-          // Send coords to serial port (for arduino, etc):
-          sendSerial(jevois::sformat("T2D %d %d", int(xx), int(yy)));
-        }
+        // Send coords to serial port (for arduino, etc):
+        if (refArea > 0.0) sendSerialContour2D(w, h, contours[refIdx], "blob");
       }
     }
 
@@ -282,14 +269,14 @@ class ObjectTracker : public jevois::Module,
       int numobj = 0;
       if (hierarchy.size() > 0 && hierarchy.size() <= maxnumobj::get())
       {
-        double refArea = 0.0; int x = 0, y = 0;
+        double refArea = 0.0; int x = 0, y = 0; int refIdx = 0;
 
         for (int index = 0; index >= 0; index = hierarchy[index][0])
         {
           cv::Moments moment = cv::moments((cv::Mat)contours[index]);
           double area = moment.m00;
           if (objectarea::get().contains(int(area + 0.4999)) && area > refArea)
-          { x = moment.m10 / area + 0.4999; y = moment.m01 / area + 0.4999; refArea = area; }
+          { x = moment.m10 / area + 0.4999; y = moment.m01 / area + 0.4999; refArea = area; refIdx = index; }
         }
         
         if (refArea > 0.0)
@@ -297,11 +284,8 @@ class ObjectTracker : public jevois::Module,
           ++numobj;
           jevois::rawimage::drawCircle(outimg, x, y, 20, 1, jevois::yuyv::LightGreen);
 
-          // Standardize the coordinates to -1000 ... 1000:
-          float xx = x, yy = y; jevois::coords::imgToStd(xx, yy, w, h, 1.0F);
-
           // Send coords to serial port (for arduino, etc):
-          sendSerial(jevois::sformat("T2D %d %d", int(xx), int(yy)));
+          sendSerialContour2D(w, h, contours[refIdx], "blob");
         }
       }
 

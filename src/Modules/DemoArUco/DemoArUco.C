@@ -34,13 +34,6 @@ JEVOIS_DECLARE_PARAMETER(showpose, bool, "Show pose vectors, requires a valid ca
 JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (meters), used only for pose estimation",
                          0.1F, aruco::ParamCateg);
 
-//! Parameter \relates DemoArUco
-JEVOIS_DECLARE_PARAMETER(serstyle, int, "Serial output style for strings issued for each detected ArUco marker: "
-                         "0: [ArUco ID] where ID is the decoded ArUco ID; "
-                         "1: [ArUco ID X,Y] sends ID and standardized coordinates of the marker center;"
-                         "2: [ArUco ID X1,Y1 X2,Y2 X3,Y3 X4,Y4] sends ID and standardized coords of the 4 corners.",
-                         0, jevois::Range<int>(0, 2), aruco::ParamCateg);
-
 //! Simple demo of ArUco augmented reality markers detection and decoding
 /*! Detect and decode patterns known as ArUco markers, which are small 2D barcodes often used in augmented
     reality and robotics.
@@ -74,40 +67,9 @@ JEVOIS_DECLARE_PARAMETER(serstyle, int, "Serial output style for strings issued 
     Serial Messages
     ---------------
 
-    This module can send the following messages over serial port (make sure you set the \p serout parameter to
-    designate the serial port to which you want to send these messages, see the documentation for \p serout under
-    the \ref UserCli).
-    
-    - When serstyle is 0:
-      \verbatim
-      ArUco ID
-      \endverbatim
-      where
-      + ID is the decoded ID of the ArUco that was detected
+    This module can send standardized serial messages as described in \ref UserSerialStyle.
 
-    - When serstyle is 1:
-      \verbatim
-      ArUco ID X,Y
-      \endverbatim
-      where
-      + ID is the decoded ID of the ArUco that was detected
-      + X,Y are the coordinates of the marker's center
-
-    - When serstyle is 2:
-      \verbatim
-      ArUco ID X1,Y1 X2,Y2 X3,Y3 X4,Y4
-      \endverbatim
-      where
-      + ID is the decoded ID of the ArUco that was detected
-      + X1,Y1 are the coordinates of the first corner
-      + X2,Y2 are the coordinates of the second corner
-      + X3,Y3 are the coordinates of the third corner
-      + X4,Y4 are the coordinates of the fourth corner
-
-    The coordinates are normalized so that the serial outputs are independent of camera resolution. x=0, y=0 is the
-    center of the field of view, the left edge of the camera image is at x=-1000, the right edge at x=1000, the top edge
-    at y=-750, and the bottom edge at y=750 (since the camera has a 4:3 aspect ratio). See \ref coordhelpers for more
-    information on standardized coordinates in JeVois.
+    When \p showpose is turned on, 3D messages will be sent, otherwise 2D messages.
 
     One message is issued for every detected ArUco, on every video frame.
 
@@ -158,7 +120,7 @@ JEVOIS_DECLARE_PARAMETER(serstyle, int, "Serial output style for strings issued 
     @restrictions None
     \ingroup modules */
 class DemoArUco : public jevois::Module,
-                  public jevois::Parameter<showpose, markerlen, serstyle>
+                  public jevois::Parameter<showpose, markerlen>
 {
   public: 
     // ####################################################################################################
@@ -203,40 +165,10 @@ class DemoArUco : public jevois::Module,
     void sendAllSerial(std::vector<int> ids, std::vector<std::vector<cv::Point2f> > corners,
                        unsigned int w, unsigned int h)
     {
-      int const ss = serstyle::get(); int const nMarkers = int(corners.size());
-      for (int i = 0; i < nMarkers; ++i)
+      for (size_t i = 0; i < corners.size(); ++i)
       {
         std::vector<cv::Point2f> const & currentMarker = corners[i];
-        std::ostringstream serout; serout << "ArUco " << ids[i] << std::fixed << std::setprecision(1);
-        switch (ss)
-        {
-        case 0: // Send only the ID
-          break;
-          
-        case 1: // Send the coordinates of the center
-        {
-          float cx = 0.0F, cy = 0.0F;
-          for (cv::Point2f cm : currentMarker)
-          {
-            // Normalize the coordinates:
-            float x = cm.x, y = cm.y; jevois::coords::imgToStd(x, y, w, h);
-            cx += x; cy += y;
-          }
-          serout << ' ' << int(0.25F * cx + 0.5F) << ',' << int(0.25F * cy + 0.5F);
-        }
-        break;
-          
-        default: // Send the 4 corner coordinates:
-          for (cv::Point2f cm : currentMarker)
-          {
-            // Normalize the coordinates:
-            float x = cm.x, y = cm.y; jevois::coords::imgToStd(x, y, w, h, 1.0F);
-            serout << ' ' << int(x) << ',' << int(y);
-          }
-        }
-        
-        // Send to serial:
-        sendSerial(serout.str());
+        sendSerialContour2D(w, h, currentMarker, std::to_string(ids[i]));
       }
     }
 

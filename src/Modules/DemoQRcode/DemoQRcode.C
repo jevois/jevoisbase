@@ -36,7 +36,16 @@
     such as http://www.qr-code-generator.com/
 
     JeVois detects and decodes QR-codes and other barcodes. The implementation of the detection and decoding algorithm
-    used in JeVois is from the popular libraru ZBar, found at http://zbar.sourceforge.net/
+    used in JeVois is from the popular library ZBar, found at http://zbar.sourceforge.net/
+
+    Serial Messages
+    ---------------
+
+    This module can send standardized serial messages as described in \ref UserSerialStyle. One message is issued for
+    every detected QR-code or barcode, on every video frame.
+
+    Note that when \p serstyle is \b Fine, only 4 corners are returned for each detected QR-code, but many points are
+    returned all over each detected barcode. Beware to not exceed your serial bandwidth in that case.
 
     @author Laurent Itti
 
@@ -72,12 +81,37 @@ class DemoQRcode : public jevois::Module
     { }
 
     // ####################################################################################################
+    //! Send the serial messages with what we found
+    // ####################################################################################################
+    void sendAllSerial(zbar::Image & img, unsigned int camw, unsigned int camh)
+    {
+      for (zbar::Image::SymbolIterator symbol = img.symbol_begin(); symbol != img.symbol_end(); ++symbol)
+      {
+        std::string id = symbol->get_type_name();
+        std::string extra = symbol->get_data();
+
+        std::vector<cv::Point> corners;
+        
+        // Note: For QR codes, we get 4 points at the corners, but for others we get a bunch of points all over the
+        // barcode, hopefully users will not select the Fine serial style...
+        for (zbar::Symbol::PointIterator pitr = symbol->point_begin(); pitr != symbol->point_end(); ++pitr)
+        {
+          zbar::Symbol::Point p(*pitr);
+          corners.push_back(cv::Point(p.x, p.y));
+        }
+        
+        sendSerialContour2D(camw, camh, corners, id, extra);
+      }
+    }
+    
+    // ####################################################################################################
     //! Processing function, no video output
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe) override
     {
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
+      unsigned int const w = inimg.width, h = inimg.height;
 
       // Convert the image to grayscale:
       cv::Mat grayimg = jevois::rawimage::convertToCvGray(inimg);
@@ -90,9 +124,8 @@ class DemoQRcode : public jevois::Module
       itsQRcode->process(zgray);
 
       // Send all the results over serial:
-      for (zbar::Image::SymbolIterator symbol = zgray.symbol_begin(); symbol != zgray.symbol_end(); ++symbol)
-        sendSerial(std::string(symbol->get_type_name()) + ' ' + symbol->get_data());
-      
+      sendAllSerial(zgray, w, h);
+
       // Cleanup zbar image data:
       zgray.set_data(nullptr, 0);
     }
@@ -140,9 +173,6 @@ class DemoQRcode : public jevois::Module
       std::string txt; std::vector<std::string> qdata;
       for (zbar::Image::SymbolIterator symbol = zgray.symbol_begin(); symbol != zgray.symbol_end(); ++symbol)
       {
-        // Send to serial:
-        sendSerial(std::string(symbol->get_type_name()) + ' ' + symbol->get_data());
-
         // Build up some strings to be displayed as video overlay:
         txt += ' ' + symbol->get_type_name();
         qdata.push_back(std::string(symbol->get_type_name()) + ": " + symbol->get_data());
@@ -183,7 +213,7 @@ class DemoQRcode : public jevois::Module
         }
       }
 
-      // Write some strings with what we found and decoded:
+      // Write some strings in the output video with what we found and decoded:
       if (qdata.empty())
         jevois::rawimage::writeText(outimg, "Found no symbols.", 3, h + 3, txtcol);
       else
@@ -193,6 +223,9 @@ class DemoQRcode : public jevois::Module
         for (size_t i = 0; i < std::min(qdata.size(), nshow - 1); ++i)
           jevois::rawimage::writeText(outimg, qdata[i].c_str(), 3, h + 3 + (i+1) * 10, txtcol);
       }
+
+      // Send all serial messages:
+      sendAllSerial(zgray, w, h);
       
       // Cleanup zbar image data:
       zgray.set_data(nullptr, 0);

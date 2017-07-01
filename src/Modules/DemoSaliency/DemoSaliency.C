@@ -35,6 +35,17 @@
 //! Simple demo of the visual saliency algorithm of Itti et al., IEEE PAMI, 1998
 /*! Visual saliency algorithm as described at http://ilab.usc.edu/bu/
 
+    This algorithm finds the loaction in the camera's view that is the most attention-grabbing, conspicuous, or
+    so-called salient. This location is marked on every video frame by the pink square. Locations are smoothed over
+    frames using a Kalman filter. The smoothed locations are shown with a green circle.
+
+    Serial Messages
+    ---------------
+
+    This module can send standardized serial mesages as described in \ref UserSerialStyle. One message is issued on
+    every video frame at the temporally filtered attended location (green circle in the display). The \p id field in the
+    messages simply is \b salient for all messages.
+
     @author Laurent Itti
 
     @videomapping YUYV 176 90 120.0 YUYV 88 72 120.0 JeVois DemoSaliency
@@ -132,7 +143,7 @@ class DemoSaliency : public jevois::Module
             jevois::rawimage::drawCircle(outimg, int(kfximg), int(kfyimg), 20, 1, jevois::yuyv::LightGreen);
       
             // Send kalman-filtered most-salient-point coords to serial port (for arduino, etc):
-            sendSerial(jevois::sformat("T2D %d %d", int(kfxraw), int(kfyraw)));
+            sendSerialImg2D(inimg.width, inimg.height, kfximg, kfyimg, roihw * 2, roihw * 2, "salient");
 
             // Paste the saliency map:
             drawMap(outimg, &itsSaliency->salmap, w, 0, smfac, 20);

@@ -117,7 +117,17 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     where <em>somename</em> is the object name without extension, and a .png extension will be added. The image will
     immediately be deleted and that object will not be recognized anymore.
 
-    Programmer note: This algorithm is quite slow. So, here, we alternate between computing keypoints and descriptors on
+    Serial Messages
+    ---------------
+
+    This module can send standardized serial messages as described in \ref UserSerialStyle. One message is issued on
+    every video frame for the best detected object (highest score). The \p id field in the messages is the filename of
+    the detected object.
+
+    Programmer notes
+    ----------------
+
+    This algorithm is quite slow. So, here, we alternate between computing keypoints and descriptors on
     one frame (or more, depending on how slow that gets), and doing the matching on the next frame. This module also
     provides an example of letting some computation happen even after we exit the process() function. Here, we keep
     detecting keypoints and computing descriptors even outside process(). The itsKPfut future is our handle to that
@@ -243,6 +253,8 @@ class ObjectDetect : public jevois::Module,
                                    jevois::yuyv::LightGreen);
         jevois::rawimage::writeText(outimg, std::string("Detected: ") + itsMatcher->traindata(itsTrainIdx).name +
                                     " avg distance " + std::to_string(itsDist), 3, h + 1, jevois::yuyv::White);
+
+        sendSerialContour2D(w, h, itsCorners, itsMatcher->traindata(itsTrainIdx).name);
       }
 
       // Show capture window if desired:

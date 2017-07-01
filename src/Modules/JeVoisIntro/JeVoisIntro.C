@@ -286,7 +286,7 @@ class JeVoisIntro : public jevois::Module
             jevois::rawimage::drawCircle(outimg, int(kfximg), int(kfyimg), 20, 1, jevois::yuyv::LightGreen);
             
             // Send saliency info to serial port (for arduino, etc):
-            sendSerial(jevois::sformat("T2D %d %d", int(kfxraw), int(kfyraw)));
+            sendSerialImg2D(inimg.width, inimg.height, kfximg, kfyimg, roihw * 2, roihw * 2, "salient");
 
             // If intro mode, draw some text messages according to our script:
             if (intromode && intromoviedone)

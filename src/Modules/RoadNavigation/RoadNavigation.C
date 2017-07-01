@@ -48,15 +48,12 @@
     frames are shown in thick purple. Estimated vanishing point location and confidence is shown as a big green disk on
     the horizon line.
 
-    Serial outputs
-    --------------
+    Serial Messages
+    ---------------
 
-    Issues a message of the form
-    \verbatim
-    T1D x
-    \endverbatim
-    where x is the standardized horizontal coordinate (between -1000 for full left to 1000 for full right) of the
-    vanishing point. See \ref coordhelpers for standardized coordinates.
+    This module can send standardized serial messages as described in \ref UserSerialStyle. One 1D message is issued for
+    on every video frame at vanishing point horizontal location. The \p id field in the messages simply is \b vp for all
+    messages.
 
     Trying it out
     -------------
@@ -109,22 +106,15 @@ class RoadNavigation : public jevois::Module
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe) override
     {
-      // Wait for next available camera image:
-      jevois::RawImage inimg = inframe.get();
-
-      // Convert it to gray:
-      cv::Mat imggray = jevois::rawimage::convertToCvGray(inimg);
+      // Wait for next available camera image, convert it to gray, and release it:
+      cv::Mat imggray = inframe.getCvGray();
 
       // Compute the vanishing point, with no drawings:
       jevois::RawImage visual; // unallocated pixels, will not draw anything
       itsRoadFinder->process(imggray, visual);
       
-      // Let camera know we are done processing the input image:
-      inframe.done();
-      
       // Get the filtered target point x and send to serial:
-      int const tpx = int(itsRoadFinder->getFilteredTargetX() * 2000.0F / inimg.width - 1000.0F);
-      sendSerial(jevois::sformat("T1D %d", int(tpx + 0.5F)));
+      sendSerialImg1Dx(imggray.cols, itsRoadFinder->getFilteredTargetX(), 0.0F, "vp");
     }
 
     // ####################################################################################################
@@ -164,8 +154,7 @@ class RoadNavigation : public jevois::Module
       jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height-h, jevois::yuyv::Black);
 
       // Get the filtered target point x and send to serial:
-      int const tpx = int(itsRoadFinder->getFilteredTargetX() * 2000.0F / w - 1000.0F);
-      sendSerial(jevois::sformat("T1D %d", int(tpx + 0.5F)));
+      sendSerialImg1Dx(w, itsRoadFinder->getFilteredTargetX(), 0.0F, "vp");
       
       // Write some extra info about the vp:
       std::ostringstream otxt; otxt << std::fixed << std::setprecision(3);

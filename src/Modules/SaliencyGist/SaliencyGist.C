@@ -46,6 +46,13 @@
     - saliency + feature maps
     - saliency + feature maps + gist
 
+    Serial Messages
+    ---------------
+
+    This module can send standardized serial messages as described in \ref UserSerialStyle. One message is issued for on
+    every video frame at the temporally filtered attended location. The \p id field in the messages simply is \b salient
+    for all messages.
+
     @author Laurent Itti
 
     @videomapping GREY 120 25 60.0 YUYV 320 240 60.0 JeVois SaliencyGist # saliency + feature maps + gist
@@ -114,7 +121,7 @@ class SaliencyGist : public jevois::Module
       float kfxraw, kfyraw; itsKF->get(kfxraw, kfyraw, 1.0F); // round to int for serial
       
       // Send kalman-filtered most-salient-point info to serial port (for arduino, etc):
-      sendSerial(jevois::sformat("T2D %d %d", int(kfxraw), int(kfyraw)));
+      sendSerialImg2D(w, h, kfximg, kfyimg, 0.0F, 0.0F, "salient");
 
       // Paste results into the output image, first check for valid output dims:
       unsigned int const mapw = itsSaliency->salmap.dims.w, maph = itsSaliency->salmap.dims.h;
