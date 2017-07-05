@@ -39,12 +39,20 @@
     so-called salient. This location is marked on every video frame by the pink square. Locations are smoothed over
     frames using a Kalman filter. The smoothed locations are shown with a green circle.
 
+    For an introduction to visual saliency, see http://ilab.usc.edu/bu/
+
     Serial Messages
     ---------------
 
-    This module can send standardized serial mesages as described in \ref UserSerialStyle. One message is issued on
-    every video frame at the temporally filtered attended location (green circle in the display). The \p id field in the
-    messages simply is \b salient for all messages.
+    This module can send standardized serial messages as described in \ref UserSerialStyle, where all coordinates and
+    sizes are standardized using \ref coordhelpers. One message is issued on every video frame at the temporally
+    filtered attended (most salient) location (green circle in the video display):
+
+    - Serial message type: \b 2D
+    - `id`: always \b sm (shorthand for saliency map)
+    - `x`, `y`: standardized 2D coordinates of temporally-filtered most salient point
+    - `w`, `h`: standardized size of the pink square box around each attended point
+    - `extra`: none (empty string)
 
     @author Laurent Itti
 
@@ -143,7 +151,7 @@ class DemoSaliency : public jevois::Module
             jevois::rawimage::drawCircle(outimg, int(kfximg), int(kfyimg), 20, 1, jevois::yuyv::LightGreen);
       
             // Send kalman-filtered most-salient-point coords to serial port (for arduino, etc):
-            sendSerialImg2D(inimg.width, inimg.height, kfximg, kfyimg, roihw * 2, roihw * 2, "salient");
+            sendSerialImg2D(inimg.width, inimg.height, kfximg, kfyimg, roihw * 2, roihw * 2, "sm");
 
             // Paste the saliency map:
             drawMap(outimg, &itsSaliency->salmap, w, 0, smfac, 20);

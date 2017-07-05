@@ -121,8 +121,13 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     ---------------
 
     This module can send standardized serial messages as described in \ref UserSerialStyle. One message is issued on
-    every video frame for the best detected object (highest score). The \p id field in the messages is the filename of
-    the detected object.
+    every video frame for the best detected object (highest score).
+
+    - Serial message type: \b 2D
+    - `id`: filename of the recognized object
+    - `x`, `y`: standardized 2D coordinates of the object center
+    - `w`, `h`, or vertices: Standardized bounding box around the object
+    - `extra`: none (empty string)
 
     Programmer notes
     ----------------

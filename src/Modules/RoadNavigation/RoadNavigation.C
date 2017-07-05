@@ -52,8 +52,13 @@
     ---------------
 
     This module can send standardized serial messages as described in \ref UserSerialStyle. One 1D message is issued for
-    on every video frame at vanishing point horizontal location. The \p id field in the messages simply is \b vp for all
-    messages.
+    on every video frame at vanishing point horizontal location.
+
+    - Serial message type: \b 1D
+    - `id`: always \b vp (shorthand for vanishing point)
+    - `x`: standardized 2D horizontal coordinate of the filtered vanishing point
+    - `w`: always 0
+    - `extra`: none (empty string)
 
     Trying it out
     -------------

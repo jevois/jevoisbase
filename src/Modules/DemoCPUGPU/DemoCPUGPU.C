@@ -31,8 +31,43 @@
 // icon by Freepik in computer at flaticon
 
 //! Simple image filtering demo using 4-core CPU processing and OpenGL-ES 2.0 shaders on the Mali-400MP2 GPU
-/*! In this demo, we compte saliency and gist over our 4 CPU cores while we also compute 4 different image filters over
-    the GPU, finally combining all results into a single grayscale image.
+/*! In this demo, we compute saliency and gist over our 4 CPU cores while we also compute 4 different image filters over
+    the GPU, finally combining all results into a single grayscale image:
+
+    - saliency: multicore CPU-based detection of the most conspicuous (most attention-grabbing) object in the field of
+      view.
+    - GPU filter 1: Sobel edge detector
+    - GPU filter 2: Median filter
+    - GPU filter 3: Morphological erosion filter
+    - GPU filter 4: Morphological dilation filter
+
+    For an introduction to visual saliency, see http://ilab.usc.edu/bu/
+
+    Video output
+    ------------
+
+    The video output is arranged vertically, with, from top to bottom:
+    - Sobel results (same size as input image)
+    - Median filter results (same size as input image)
+    - Morphological erosion filter results (same size as input image)
+    - Morphological dilation filter results (same size as input image)
+    - Saliency results: from left to right: saliency map, color map, intensity map, orientation map, flicker map, motion
+      map. Map size is input size divided by 8 horizontally and vertically. Gist vector is appended to the right but
+      note that at 160x120 it is truncated (see source code for details).
+
+    Serial Messages
+    ---------------
+
+    This module can send standardized serial messages as described in \ref UserSerialStyle, where all coordinates and
+    sizes are standardized using \ref coordhelpers. One message is issued on every video frame at the temporally
+    filtered attended (most salient) location:
+
+    - Serial message type: \b 2D
+    - `id`: always \b sm (shorthand for saliency map)
+    - `x`, `y`: standardized 2D coordinates of temporally-filtered most salient point
+    - `w`, `h`: always 0, 0
+    - `extra`: none (empty string)
+
 
     @author Laurent Itti
 
@@ -51,7 +86,7 @@
 class DemoCPUGPU : public jevois::Module
 {
   public:
-    //! Constrctor
+    //! Constructor
     DemoCPUGPU(std::string const & instance) : jevois::Module(instance)
     {
       itsFilter = addSubComponent<FilterGPU>("gpu");
@@ -111,7 +146,7 @@ class DemoCPUGPU : public jevois::Module
           float kfxraw, kfyraw; itsKF->get(kfxraw, kfyraw, 1.0F); // round to int for serial
 
           // Send kalman-filtered most-salient-point info to serial port (for arduino, etc):
-          sendSerial(jevois::sformat("T2D %d %d", int(kfxraw), int(kfyraw)));
+          sendSerialStd2D(kfxraw, kfyraw, 0.0F, 0.0F, "sm");
 
           // Wait for output image to be available:
           std::lock_guard<std::mutex> _(itsOutMtx);

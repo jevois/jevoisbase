@@ -28,6 +28,8 @@
 #include <jevoisbase/Components/Filters/LaplacianFilter.H>
 #include <jevoisbase/Components/Filters/BilateralFilter.H>
 
+// icon by Freepik in other at flaticon
+
 static jevois::ParameterCategory const ParamCateg("Color Filtering Parameters");
 
 //! Enum \relates ColorFiltering
@@ -40,9 +42,53 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
 //! Image filtering using OpenCV
 /*! This modules is to learn about basic image filtering. It implements a variety of filters using OpenCV.
 
+    Available filters:
+
+    - Blur: Replace each pixel by the average of all pixels in a box around the pixel of interest. Leads to a
+      blur effect on the image, more pronounced with bigger box sizes. See
+      http://docs.opencv.org/3.2.0/d4/d86/group__imgproc__filter.html#ga8c45db9afe636703801b0b2e440fce37
+
+    - Median: Replaces each pixel by the median value within a box around that pixel. Tends to bur and remove
+      salt-and-peper noise from the
+      image. http://docs.opencv.org/3.2.0/d4/d86/group__imgproc__filter.html#ga564869aa33e58769b4469101aac458f9
+
+    - Morpho: mathematical morphology operations, see
+      http://docs.opencv.org/3.2.0/d9/d61/tutorial_py_morphological_ops.html for an introduction.
+      and http://docs.opencv.org/3.2.0/d4/d86/group__imgproc__filter.html
+
+    - Laplacian: Computes second spatial derivative of the image. Tends to amplify edges and noise. See
+      http://docs.opencv.org/3.2.0/d4/d86/group__imgproc__filter.html#gad78703e4c8fe703d479c1860d76429e6
+
+    - Bilateral: bi-lateral filter, very slow, see
+      http://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html and
+      http://docs.opencv.org/3.2.0/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed
+
+    How to use this module
+    ----------------------
+
+    - Open a video viewer on your host computer and select <b>YUYV 320x240 @@ 30 fps</b> (see \ref UserQuick)
+
+    - Open a serial communication to JeVois (see \ref UserCli)
+
+    - Start by setting the \p effect parameter to a given effect type. For example:
+      `setpar effect Median` or `setpar effect Morpho` (commands are case-sensitive).
+
+    - Then type \c help to see what additional parameters are available for each effect. For example, for Median, you
+      can adjust the kernel size (parameter \p ksize). For Morpho, you can select the type of morphological operation
+      (parameter \p op), structuring element shape (parameter \p kshape) and size (parameter \p ksize), etc.
+
+      Complete example:
+      \code
+      setpar effect Morpho
+      help
+      setpar op Open
+      setpar ksize 7 7
+      \endcode
+
     @author Laurent Itti
 
-    @videomapping YUYV 640 496 25.0 BAYER 640 480 25.0 JeVois ColorFiltering
+    @videomapping YUYV 320 240 30.0 YUYV 320 240 30.0 JeVois ColorFiltering
+    @videomapping BGR24 320 240 30.0 BAYER 320 240 30.0 JeVois ColorFiltering
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California

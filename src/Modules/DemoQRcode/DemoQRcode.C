@@ -44,6 +44,13 @@
     This module can send standardized serial messages as described in \ref UserSerialStyle. One message is issued for
     every detected QR-code or barcode, on every video frame.
 
+    - Serial message type: \b 2D
+    - `id`: type of symbol (e.g., \b QR-Code, \b ISBN13, etc).
+    - `x`, `y`, or vertices: standardized 2D coordinates of symbol center or of corners of bounding box
+      (depending on \p serstyle)
+    - `w`, `h`: standardized object size
+    - `extra`: decoded contents (e.g., URL that was in a QR-code, ISBN number from a barcode, etc)
+
     Note that when \p serstyle is \b Fine, only 4 corners are returned for each detected QR-code, but many points are
     returned all over each detected barcode. Beware to not exceed your serial bandwidth in that case.
 

@@ -46,12 +46,18 @@
       a picture of it appears near the last detected face towards the bottom-right corner of the display, and a text
       string with the digit that has been identified appears to the left of the picture of the digit.
 
-    Serial Messages
+   Serial Messages
     ---------------
 
-    This module can send standardized serial messages as described in \ref UserSerialStyle. One message is issued for on
-    every video frame at the temporally filtered attended location (green circle in the display). The \p id field in the
-    messages simply is \b salient for all messages.
+    This module can send standardized serial messages as described in \ref UserSerialStyle, where all coordinates and
+    sizes are standardized using \ref coordhelpers. One message is issued on every video frame at the temporally
+    filtered attended (most salient) location (green circle in the video display):
+
+    - Serial message type: \b 2D
+    - `id`: always \b sm (shorthand for saliency map)
+    - `x`, `y`: standardized 2D coordinates of temporally-filtered most salient point
+    - `w`, `h`: standardized size of the pink square box around each attended point
+    - `extra`: none (empty string)
 
     @author Laurent Itti
 
@@ -175,7 +181,7 @@ class DemoSalGistFaceObj : public jevois::Module
             jevois::rawimage::drawCircle(outimg, int(kfximg), int(kfyimg), 20, 1, jevois::yuyv::LightGreen);
             
             // Send saliency info to serial port (for arduino, etc):
-            sendSerialImg2D(inimg.width, inimg.height, kfximg, kfyimg, roihw * 2, roihw * 2, "salient");
+            sendSerialImg2D(inimg.width, inimg.height, kfximg, kfyimg, roihw * 2, roihw * 2, "sm");
           });
 
       // Extract a raw YUYV ROI around attended point:

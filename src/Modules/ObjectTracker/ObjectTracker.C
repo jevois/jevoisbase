@@ -102,6 +102,13 @@ JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if
     objectarea, and are only reported when the image is clean enough according to \p maxnumobj). The \p id field in the
     messages simply is \b blob for all messages.
 
+    - Serial message type: \b 2D
+    - `id`: always \b blob
+    - `x`, `y`, or vertices: standardized 2D coordinates of blob center or of corners of bounding box
+      (depending on \p serstyle)
+    - `w`, `h`: standardized object size
+    - `extra`: none (empty string)
+
     Trying it out
     -------------
 

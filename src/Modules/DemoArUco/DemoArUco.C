@@ -73,6 +73,18 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (meters), used on
 
     One message is issued for every detected ArUco, on every video frame.
 
+    2D messages when \p showpose is off:
+
+    - Serial message type: \b 2D
+    - `id`: decoded ArUco marker ID
+    - `x`, `y`, or vertices: standardized 2D coordinates of marker center or corners
+    - `w`, `h`: standardized marker size
+    - `extra`: none (empty string)
+
+    3D messages when \p showpose is on:
+
+    FIXME not implemented yet
+
     Things to try
     -------------
 

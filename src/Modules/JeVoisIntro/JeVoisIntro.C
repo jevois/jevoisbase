@@ -100,6 +100,8 @@ static ScriptItem const TheScript[] = {
 /*! This module plays an introduction movie, and then launches the equivalent of DemoSalGistFaceObj, but with some added
     text messages that explain what is going on on the screen.
 
+    Try it and follow the instructions on screen!
+
     @author Laurent Itti
 
     @displayname JeVois Intro
