@@ -27,7 +27,11 @@ namespace aruco
   static jevois::ParameterCategory const ParamCateg("ArUco Options");
 
   //! Parameter \relates ArUco
-  JEVOIS_DECLARE_PARAMETER(camparams, std::string, "Filename of camera parameters, or empty", "", ParamCateg);
+  JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera resolution "
+                           "will be appended, as well as a .yaml extension. For example, specifying 'calibration' "
+                           "here and running the camera sensor at 320x240 will attempt to load "
+                           "calibration320x240.yaml from within the module's directory.",
+                           "calibration", ParamCateg);
 
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(detparams, std::string, "Filename of detector parameters, or empty", "", ParamCateg);
@@ -65,10 +69,18 @@ namespace aruco
     To create some markers, have a look at the samples here:
     https://github.com/opencv/opencv_contrib/tree/master/modules/aruco
 
+    To make sure that the files you compile are compatible with JeVois which uses OpenCV 3.2.0 release, get that exact
+    release from GitHub as opposed to just the latest version of those files:
+    \verbatim
+    wget wget https://github.com/opencv/opencv_contrib/archive/3.2.0.tar.gz
+    tar zxvf 3.2.0.tar.gz
+    # The files referenced below are in: opencv_contrib-3.2.0/modules/aruco/samples/
+    \endverbatim
+
     To compile the sample program that can generate some ArUco markers (e.g., to be printed on paper):
     \code
-    g++ -I/usr/local/include -L/usr/local/lib create_marker.cpp -o create_marker -lopencv_core \\
-        -lopencv_imgcodecs -lopencv_highgui -lopencv_aruco
+    g++ -I/usr/share/jevois-opencv-3.2.0/include -L/usr/share/jevois-opencv-3.2.0/lib create_marker.cpp \\
+        -o create_marker -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_aruco
     \endcode
 
     Then, to make images of the markers in dictionary 0 (4x4_50):
@@ -85,16 +97,20 @@ namespace aruco
     To enable recovery of the 3D pose of a marker, you need to calibrate your camera. Again using the sample code:
 
     \code
-    g++ -I/usr/local/include -L/usr/local/lib calibrate_camera.cpp -o calibrate_camera -lopencv_core \\
-        -lopencv_imgcodecs -lopencv_highgui -lopencv_aruco -lopencv_imgproc -lopencv_videoio
+    g++ -I/usr/share/jevois-opencv-3.2.0/include -L/usr/share/jevois-opencv-3.2.0/lib create_board_charuco.cpp \\
+        -o create_board_charuco -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_aruco -lopencv_imgproc -lopencv_videoio
+
+    g++ -I/usr/share/jevois-opencv-3.2.0/include -L/usr/share/jevois-opencv-3.2.0/lib calibrate_camera_charuco.cpp \\
+        -o calibrate_camera_charuco -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_aruco -lopencv_imgproc -lopencv_videoio
     \endcode
 
     To create a ChArUco board that can be printed, using dictionary 0, and then derive the camera parameters from it
-    (set the -l and -s parameters to what you measure on your printed board):
+    (set the `--ml` and `--sl` parameters to what you measure on your printed board; below are what we measured after
+    printing the 5x8 charuco board on US Letter paper with auto scaling/rotate to fit paper):
 
     \code
     ./create_board_charuco -d=0 -h=5 -w=8 --ml=200 --sl=350 charuco.png
-    ./calibrate_camera -d=0 -h=5 -w=8 -l=.0175 -s=.00682 calibration.yaml
+    ./calibrate_camera_charuco -d=0 -h=5 -w=8 --ml=.0172 --sl=.0303 --rs --sc calibration.yaml
     \endcode
 
     \ingroup components */

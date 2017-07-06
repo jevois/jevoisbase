@@ -16,6 +16,7 @@
 /*! \file */
 
 #include <jevoisbase/Components/ArUco/ArUco.H>
+#include <string>
 
 // ##############################################################################################################
 ArUco::~ArUco()
@@ -24,25 +25,16 @@ ArUco::~ArUco()
 // ##############################################################################################################
 void ArUco::postInit()
 {
-  // Read camera parameters if any:
+  // Defer reading camera parameters to first processed frame, so we know the resolution:
   aruco::camparams::freeze();
-  std::string const cpf = aruco::camparams::get();
-  if (cpf.empty() == false)
-  {
-    cv::FileStorage fs(cpf, cv::FileStorage::READ);
-    if (fs.isOpened())
-    {
-      fs["camera_matrix"] >> itsCamMatrix;
-      fs["distortion_coefficients"] >> itsDistCoeffs;
-    }
-    else LERROR("Failed to read camera parameters from file [" << cpf << "] -- IGNORED");
-  }
+
+  // Initialize default detector parameters:
+  itsDetectorParams = cv::aruco::DetectorParameters::create();
+  itsDetectorParams->doCornerRefinement = true; // do corner refinement in markers by default
   
   // Read detector parameters if any:
   aruco::detparams::freeze();
   std::string const dpf = aruco::detparams::get();
-  itsDetectorParams.reset(new cv::aruco::DetectorParameters());
-  itsDetectorParams->doCornerRefinement = true; // do corner refinement in markers by default
   if (dpf.empty() == false)
   {
     cv::FileStorage fs(dpf, cv::FileStorage::READ);
@@ -109,6 +101,21 @@ void ArUco::postUninit()
 // ##############################################################################################################
 void ArUco::detectMarkers(cv::InputArray image, cv::OutputArray ids, cv::OutputArrayOfArrays corners)
 {
+  if (itsCamMatrix.empty())
+  {
+    std::string const cpf = absolutePath(aruco::camparams::get() + std::to_string(image.cols()) + 'x' +
+                                         std::to_string(image.rows()) + ".yaml");
+
+    cv::FileStorage fs(cpf, cv::FileStorage::READ);
+    if (fs.isOpened())
+    {
+      fs["camera_matrix"] >> itsCamMatrix;
+      fs["distortion_coefficients"] >> itsDistCoeffs;
+      LINFO("Loaded camera calibration from " << cpf);
+    }
+    else LERROR("Failed to read camera parameters from file [" << cpf << "] -- IGNORED");
+  }
+
   cv::aruco::detectMarkers(image, itsDictionary, corners, ids, itsDetectorParams);
 }
 

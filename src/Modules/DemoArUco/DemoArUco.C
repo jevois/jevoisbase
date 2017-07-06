@@ -108,11 +108,13 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (meters), used on
 
     The OpenCV ArUco module can also compute normals to each marker, which allows you to recover the marker's
     orientation and distance. The requires that the camera be calibrated, see the documentation of the ArUco component
-    in JeVois. A generic calibration that is for a JeVois camera with standard lens is included in file \b
-    calibration.yaml in the module's directory (on the MicroSD, this is
-    <b>JEVOIS:/modules/JeVois/DemoArUco/calibration.yaml</b>).
+    in JeVois. A generic calibration that is for a JeVois camera with standard lens is included in files \b
+    calibration640x480.yaml, \b calibration352x288.yaml, etc in the module's directory (on the MicroSD, this is in
+    <b>JEVOIS:/modules/JeVois/DemoArUco/</b>).
 
-    FIXME this crashes since the update to opencv 3.2, need to figure out what changed since 3.1.
+    When doing pose estimation, you should set the \p markerlen parameter to the size (width) in meters of your actual
+    physical markers. Knowing that size will allow the pose estimation algorithm to know where in the world your markers
+    are.
 
 
     @author Laurent Itti
@@ -141,7 +143,6 @@ class DemoArUco : public jevois::Module,
     DemoArUco(std::string const & instance) : jevois::Module(instance)
     {
       itsArUco = addSubComponent<ArUco>("aruco");
-      itsArUco->camparams::set("calibration.yaml"); // use camera calibration parameters in module path
     }
 
     // ####################################################################################################
