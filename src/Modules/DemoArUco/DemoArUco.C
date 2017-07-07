@@ -26,13 +26,15 @@
 #include <opencv2/calib3d.hpp> // for projectPoints()
 #include <sstream>
 
+#include <Eigen/Geometry> // for AngleAxis and Quaternion
+
 //! Parameter \relates DemoArUco
-JEVOIS_DECLARE_PARAMETER(showpose, bool, "Show pose vectors, requires a valid camera calibration matrix",
+JEVOIS_DECLARE_PARAMETER(dopose, bool, "Compute and show pose vectors, requires a valid camera calibration",
                          false, aruco::ParamCateg);
 
 //! Parameter \relates DemoArUco
-JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (meters), used only for pose estimation",
-                         0.1F, aruco::ParamCateg);
+JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (millimeters), used only for pose estimation",
+                         100.0F, aruco::ParamCateg);
 
 //! Simple demo of ArUco augmented reality markers detection and decoding
 /*! Detect and decode patterns known as ArUco markers, which are small 2D barcodes often used in augmented
@@ -69,11 +71,11 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (meters), used on
 
     This module can send standardized serial messages as described in \ref UserSerialStyle.
 
-    When \p showpose is turned on, 3D messages will be sent, otherwise 2D messages.
+    When \p dopose is turned on, 3D messages will be sent, otherwise 2D messages.
 
     One message is issued for every detected ArUco, on every video frame.
 
-    2D messages when \p showpose is off:
+    2D messages when \p dopose is off:
 
     - Serial message type: \b 2D
     - `id`: decoded ArUco marker ID
@@ -81,9 +83,16 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (meters), used on
     - `w`, `h`: standardized marker size
     - `extra`: none (empty string)
 
-    3D messages when \p showpose is on:
+    3D messages when \p dopose is on:
 
-    FIXME not implemented yet
+    - Serial message type: \b 3D
+    - `id`: decoded ArUco marker ID
+    - `x`, `y`, `z`, or vertices: 3D coordinates in millimeters of marker center or corners
+    - `w`, `h`, `d`: marker size in millimeters, a depth of 1mm is always used
+    - `extra`: none (empty string)
+
+    If you will use the quaternion data (Detail message style; see \ref UserSerialStyle), you should probably set the \p
+    serprec parameter to something non-zero to get enough accuracy in the quaternion values.
 
     Things to try
     -------------
@@ -112,9 +121,9 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (meters), used on
     calibration640x480.yaml, \b calibration352x288.yaml, etc in the module's directory (on the MicroSD, this is in
     <b>JEVOIS:/modules/JeVois/DemoArUco/</b>).
 
-    When doing pose estimation, you should set the \p markerlen parameter to the size (width) in meters of your actual
-    physical markers. Knowing that size will allow the pose estimation algorithm to know where in the world your markers
-    are.
+    When doing pose estimation, you should set the \p markerlen parameter to the size (width) in millimeters of your
+    actual physical markers. Knowing that size will allow the pose estimation algorithm to know where in the world your
+    detected markers are.
 
 
     @author Laurent Itti
@@ -134,7 +143,7 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (meters), used on
     @restrictions None
     \ingroup modules */
 class DemoArUco : public jevois::Module,
-                  public jevois::Parameter<showpose, markerlen>
+                  public jevois::Parameter<dopose, markerlen>
 {
   public: 
     // ####################################################################################################
@@ -165,26 +174,58 @@ class DemoArUco : public jevois::Module,
       std::vector<std::vector<cv::Point2f> > corners;
       itsArUco->detectMarkers(cvimg, ids, corners);
 
+      // Do pose compuattion if desired:
+      std::vector<cv::Vec3d> rvecs, tvecs;
+      if (dopose::get() && ids.empty() == false)
+        itsArUco->estimatePoseSingleMarkers(corners, markerlen::get(), rvecs, tvecs);
+      
       // Let camera know we are done processing the input image:
       inframe.done();
 
       // Send serial output:
-      sendAllSerial(ids, corners, w, h);
+      sendAllSerial(ids, corners, w, h, rvecs, tvecs);
     }
 
     // ####################################################################################################
     //! Send the serial messages
     // ####################################################################################################
     void sendAllSerial(std::vector<int> ids, std::vector<std::vector<cv::Point2f> > corners,
-                       unsigned int w, unsigned int h)
+                       unsigned int w, unsigned int h, std::vector<cv::Vec3d> const & rvecs,
+                       std::vector<cv::Vec3d> const & tvecs)
     {
-      for (size_t i = 0; i < corners.size(); ++i)
+      if (rvecs.empty() == false)
       {
-        std::vector<cv::Point2f> const & currentMarker = corners[i];
-        sendSerialContour2D(w, h, currentMarker, std::to_string(ids[i]));
+        float const siz = markerlen::get();
+        
+        // If we have rvecs and tvecs, we are doing 3D pose estimation, so send a 3D message:
+        for (size_t i = 0; i < corners.size(); ++i)
+        {
+          std::vector<cv::Point2f> const & currentMarker = corners[i];
+          cv::Vec3d const & rv = rvecs[i];
+          cv::Vec3d const & tv = tvecs[i];
+          
+          // Compute quaternion:
+          float theta = std::sqrt(rv[0] * rv[0] + rv[1] * rv[1] + rv[2] * rv[2]);
+          Eigen::Vector3f axis(rv[0], rv[1], rv[2]);
+          Eigen::Quaternion<float> q(Eigen::AngleAxis<float>(theta, axis));
+          
+          sendSerialStd3D(tv[0], tv[1], tv[2],        // position
+                          siz, siz, 1.0F,             // size
+                          q.w(), q.x(), q.y(), q.z(), // pose
+                          std::to_string(ids[i]));    // decoded ID
+        }
+      }
+      else
+      {
+        // Send one 2D message per parker:
+        for (size_t i = 0; i < corners.size(); ++i)
+        {
+          std::vector<cv::Point2f> const & currentMarker = corners[i];
+          sendSerialContour2D(w, h, currentMarker, std::to_string(ids[i]));
+        }
       }
     }
-
+    
     // ####################################################################################################
     //! Processing function with video output to USB
     // ####################################################################################################
@@ -218,7 +259,7 @@ class DemoArUco : public jevois::Module,
       std::vector<cv::Vec3d> rvecs, tvecs;
       itsArUco->detectMarkers(cvimg, ids, corners);
 
-      if (showpose::get() && ids.empty() == false)
+      if (dopose::get() && ids.empty() == false)
         itsArUco->estimatePoseSingleMarkers(corners, markerlen::get(), rvecs, tvecs);
       
       // Wait for paste to finish up:
@@ -258,12 +299,12 @@ class DemoArUco : public jevois::Module,
       }
 
       // Send serial output:
-      sendAllSerial(ids, corners, w, h);
+      sendAllSerial(ids, corners, w, h, rvecs, tvecs);
 
       // This code is like drawAxis() in cv::aruco, but for YUYV output image:
-      if (showpose::get() && ids.empty() == false)
+      if (dopose::get() && ids.empty() == false)
       {
-        float const length = markerlen::get() * 0.5F;
+        float const length = markerlen::get() * 0.4F;
         
         for (size_t i = 0; i < ids.size(); ++i)
         {
