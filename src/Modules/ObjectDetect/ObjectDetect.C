@@ -155,14 +155,14 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class ObjectDetect : public jevois::Module,
+class ObjectDetect : public jevois::StdModule,
                      public jevois::Parameter<win, showwin>
 {
   public:
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    ObjectDetect(std::string const & instance) : jevois::Module(instance), itsDist(1.0e30)
+    ObjectDetect(std::string const & instance) : jevois::StdModule(instance), itsDist(1.0e30)
     { itsMatcher = addSubComponent<ObjectMatcher>("surf"); }
 
     // ####################################################################################################

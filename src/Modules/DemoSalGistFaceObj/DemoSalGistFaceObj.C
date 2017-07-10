@@ -73,11 +73,11 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DemoSalGistFaceObj : public jevois::Module
+class DemoSalGistFaceObj : public jevois::StdModule
 {
   public:
     //! Constructor
-    DemoSalGistFaceObj(std::string const & instance) : jevois::Module(instance), itsScoresStr(" ")
+    DemoSalGistFaceObj(std::string const & instance) : jevois::StdModule(instance), itsScoresStr(" ")
     {
       itsSaliency = addSubComponent<Saliency>("saliency");
       itsFaceDetector = addSubComponent<FaceDetector>("facedetect");

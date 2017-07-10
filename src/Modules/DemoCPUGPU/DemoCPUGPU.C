@@ -83,11 +83,11 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DemoCPUGPU : public jevois::Module
+class DemoCPUGPU : public jevois::StdModule
 {
   public:
     //! Constructor
-    DemoCPUGPU(std::string const & instance) : jevois::Module(instance)
+    DemoCPUGPU(std::string const & instance) : jevois::StdModule(instance)
     {
       itsFilter = addSubComponent<FilterGPU>("gpu");
       itsSaliency = addSubComponent<Saliency>("saliency");

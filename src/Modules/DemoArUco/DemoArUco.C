@@ -52,7 +52,7 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (millimeters), us
     The implementation of ArUco used by JeVois is the one of OpenCV-Contrib, documented here:
     http://docs.opencv.org/3.2.0/d5/dae/tutorial_aruco_detection.html
 
-    ArUco markers can be created with several standard dictionaries. Different disctionaries give rise to different
+    ArUco markers can be created with several standard dictionaries. Different dictionaries give rise to different
     numbers of pixels in the markers, and to different numbers of possible symbols that can be created using the
     dictionary. The default dictionary used by JeVois is 4x4 with 50 symbols. Other dictionaries are also supported by
     setting the appropriate parameter over serial port or in a config file, up to 7x7 with 1000 symbols.
@@ -112,12 +112,12 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (millimeters), us
       \endverbatim
       and point the camera to some markers; the camera should issue messages about all the markers it identifies.
 
-    Showing the pose vectors
-    ------------------------
+    Computing and showing 3D pose
+    -----------------------------
 
-    The OpenCV ArUco module can also compute normals to each marker, which allows you to recover the marker's
-    orientation and distance. The requires that the camera be calibrated, see the documentation of the ArUco component
-    in JeVois. A generic calibration that is for a JeVois camera with standard lens is included in files \b
+    The OpenCV ArUco module can also compute the 3D location and orientation of each marker in the world when \p dopose
+    is true. The requires that the camera be calibrated, see the documentation of the \ref ArUco component in
+    JeVoisBase. A generic calibration that is for a JeVois camera with standard lens is included in files \b
     calibration640x480.yaml, \b calibration352x288.yaml, etc in the module's directory (on the MicroSD, this is in
     <b>JEVOIS:/modules/JeVois/DemoArUco/</b>).
 
@@ -142,14 +142,14 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (millimeters), us
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DemoArUco : public jevois::Module,
+class DemoArUco : public jevois::StdModule,
                   public jevois::Parameter<dopose, markerlen>
 {
   public: 
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    DemoArUco(std::string const & instance) : jevois::Module(instance)
+    DemoArUco(std::string const & instance) : jevois::StdModule(instance)
     {
       itsArUco = addSubComponent<ArUco>("aruco");
     }

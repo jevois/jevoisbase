@@ -158,13 +158,13 @@ JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class ObjectTracker : public jevois::Module,
+class ObjectTracker : public jevois::StdModule,
                       public jevois::Parameter<hrange, srange, vrange, maxnumobj, objectarea, erodesize,
                                                dilatesize, debug>
 {
   public:
     //! Default base class constructor ok
-    using jevois::Module::Module;
+    using jevois::StdModule::StdModule;
 
     //! Virtual destructor for safe inheritance
     virtual ~ObjectTracker() { }

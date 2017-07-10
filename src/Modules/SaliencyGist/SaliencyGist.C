@@ -70,11 +70,11 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class SaliencyGist : public jevois::Module
+class SaliencyGist : public jevois::StdModule
 {
   public:
     //! Constructor
-    SaliencyGist(std::string const & instance) : jevois::Module(instance)
+    SaliencyGist(std::string const & instance) : jevois::StdModule(instance)
     {
       itsSaliency = addSubComponent<Saliency>("saliency");
       itsKF = addSubComponent<Kalman2D>("kalman");

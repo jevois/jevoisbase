@@ -71,14 +71,14 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DemoQRcode : public jevois::Module
+class DemoQRcode : public jevois::StdModule
 {
   public:
     
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    DemoQRcode(std::string const & instance) : jevois::Module(instance)
+    DemoQRcode(std::string const & instance) : jevois::StdModule(instance)
     { itsQRcode = addSubComponent<QRcode>("qrcode"); }
 
     // ####################################################################################################

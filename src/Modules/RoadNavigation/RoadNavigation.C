@@ -89,14 +89,14 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class RoadNavigation : public jevois::Module
+class RoadNavigation : public jevois::StdModule
 {
   public:
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
     RoadNavigation(std::string const & instance) :
-        jevois::Module(instance), itsProcessingTimer("Processing", 30, LOG_DEBUG)
+        jevois::StdModule(instance), itsProcessingTimer("Processing", 30, LOG_DEBUG)
     {
       itsRoadFinder = addSubComponent<RoadFinder>("roadfinder");
     }

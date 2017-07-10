@@ -74,12 +74,11 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DemoSaliency : public jevois::Module
+class DemoSaliency : public jevois::StdModule
 {
   public:
     //! Constructor
-    DemoSaliency(std::string const & instance) :
-        jevois::Module(instance), itsTimer("DemoSaliency")
+    DemoSaliency(std::string const & instance) : jevois::StdModule(instance), itsTimer("DemoSaliency")
     {
       itsSaliency = addSubComponent<Saliency>("saliency");
       itsKF = addSubComponent<Kalman2D>("kalman");

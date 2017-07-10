@@ -117,11 +117,11 @@ static ScriptItem const TheScript[] = {
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class JeVoisIntro : public jevois::Module
+class JeVoisIntro : public jevois::StdModule
 {
   public:
     //! Constructor
-    JeVoisIntro(std::string const & instance) : jevois::Module(instance), itsScoresStr(" ")
+    JeVoisIntro(std::string const & instance) : jevois::StdModule(instance), itsScoresStr(" ")
     {
       itsSaliency = addSubComponent<Saliency>("saliency");
       itsFaceDetector = addSubComponent<FaceDetector>("facedetect");
