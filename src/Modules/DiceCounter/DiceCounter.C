@@ -107,7 +107,7 @@ class DiceCounter : public jevois::Module
           jevois::rawimage::paste(inimg, outimg, 0, 0);
         });
 
-      // Detect dice pits: FIrst convert input to grayscale:
+      // Detect dice pips: First convert input to grayscale:
       cv::Mat grayImage = jevois::rawimage::convertToCvGray(inimg);
 
       // filter noise
