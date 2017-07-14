@@ -49,12 +49,12 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
       blur effect on the image, more pronounced with bigger box sizes. See
       http://docs.opencv.org/3.2.0/d4/d86/group__imgproc__filter.html#ga8c45db9afe636703801b0b2e440fce37
 
-    - Median: Replaces each pixel by the median value within a box around that pixel. Tends to bur and remove
+    - Median: Replaces each pixel by the median value within a box around that pixel. Tends to blur and remove
       salt-and-peper noise from the
       image. http://docs.opencv.org/3.2.0/d4/d86/group__imgproc__filter.html#ga564869aa33e58769b4469101aac458f9
 
     - Morpho: mathematical morphology operations, see
-      http://docs.opencv.org/3.2.0/d9/d61/tutorial_py_morphological_ops.html for an introduction.
+      http://docs.opencv.org/3.2.0/d9/d61/tutorial_py_morphological_ops.html for an introduction,
       and http://docs.opencv.org/3.2.0/d4/d86/group__imgproc__filter.html
 
     - Laplacian: Computes second spatial derivative of the image. Tends to amplify edges and noise. See
