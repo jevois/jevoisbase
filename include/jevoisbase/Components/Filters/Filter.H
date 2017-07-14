@@ -38,6 +38,6 @@ class Filter : public jevois::Component
     //! Virtual destructor for safe inheritance
     virtual ~Filter();
     
-    //! Processing function: filters the image src and puts the results into dst
-    virtual void process(cv::Mat const & src, cv::Mat & dst) = 0;
+    //! Processing function: filters the image src and puts results into dst, returns string with parameter settings
+    virtual std::string process(cv::Mat const & src, cv::Mat & dst) = 0;
 };

@@ -51,5 +51,5 @@ class LaplacianFilter : public Filter,
     virtual ~LaplacianFilter();
 
     //! Processing function: filters the image src and puts the results into dst
-    virtual void process(cv::Mat const & src, cv::Mat & dst) override;
+    virtual std::string process(cv::Mat const & src, cv::Mat & dst) override;
 };

@@ -24,8 +24,10 @@ LaplacianFilter::~LaplacianFilter()
 { }
 
 // ##############################################################################################################
-void LaplacianFilter::process(cv::Mat const & src, cv::Mat & dst)
+std::string LaplacianFilter::process(cv::Mat const & src, cv::Mat & dst)
 {
-  cv::Laplacian(src, dst, 3, ksize::get(), scale::get(), delta::get());
+  cv::Laplacian(src, dst, CV_8U, ksize::get(), scale::get(), delta::get());
+
+  return "ksize=" + ksize::strget() + ", scale=" + scale::strget() + ", delta=" + delta::strget();
 }
 

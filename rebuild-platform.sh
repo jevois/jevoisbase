@@ -16,6 +16,13 @@ if [ "X$1" = "X--live" ]; then extra="-DJEVOIS_MODULES_TO_LIVE=ON"; shift; fi
 ncpu=`cat /proc/cpuinfo |grep processor|wc -l`
 if [ `cat /proc/cpuinfo | grep ARM | wc -l` -gt 0 ]; then ncpu=1; fi
 
+# For jevoisbase only: we do include the staging /usr/include very early in our CFLAGS so we can get the jevois config
+# and other jevois includes. But this means that preference will be given to the staged jevoisbase includes as well over
+# those in the current source tree. So here, nuke the staged jevoisbase includes so we will use the source tree:
+sudo rm -rf /var/lib/jevois-build/usr/include/jevoisbase
+sudo rm -f /var/lib/jevois-build/usr/lib/libjevoisbase*
+
+# Let's build it:
 sudo /bin/rm -rf pbuild \
     && mkdir pbuild \
     && cd pbuild \

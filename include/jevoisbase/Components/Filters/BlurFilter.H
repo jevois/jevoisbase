@@ -48,5 +48,5 @@ class BlurFilter : public Filter,
     virtual ~BlurFilter();
 
     //! Processing function: filters the image src and puts the results into dst
-    virtual void process(cv::Mat const & src, cv::Mat & dst) override;
+    virtual std::string process(cv::Mat const & src, cv::Mat & dst) override;
 };

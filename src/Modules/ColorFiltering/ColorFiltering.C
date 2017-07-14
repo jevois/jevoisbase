@@ -18,6 +18,7 @@
 #include <jevois/Core/Module.H>
 #include <jevois/Types/Enum.H>
 #include <jevois/Debug/Timer.H>
+#include <jevois/Image/RawImageOps.H>
 
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -66,7 +67,7 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
     How to use this module
     ----------------------
 
-    - Open a video viewer on your host computer and select <b>YUYV 320x240 @@ 30 fps</b> (see \ref UserQuick)
+    - Open a video viewer on your host computer and select <b>YUYV 640x240 @@ 30 fps</b> (see \ref UserQuick)
 
     - Open a serial communication to JeVois (see \ref UserCli)
 
@@ -87,8 +88,7 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
 
     @author Laurent Itti
 
-    @videomapping YUYV 320 240 30.0 YUYV 320 240 30.0 JeVois ColorFiltering
-    @videomapping BGR24 320 240 30.0 BAYER 320 240 30.0 JeVois ColorFiltering
+    @videomapping YUYV 640 240 30.0 YUYV 320 240 30.0 JeVois ColorFiltering
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California
@@ -115,24 +115,49 @@ class ColorFiltering : public jevois::Module,
     {
       static jevois::Timer timer("processing", 30, LOG_DEBUG);
 
-      // Wait for next available camera image, convert it to BGR, and release the camera buffer:
-      cv::Mat src = inframe.getCvBGR();
+      // Wait for next available camera image:
+      jevois::RawImage inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
+      inimg.require("input", w, h, V4L2_PIX_FMT_YUYV); // accept any image size but require YUYV pixels
 
-      // Apply the filter (if any):
       timer.start();
 
-      cv::Mat dst;
-      if (itsFilter) itsFilter->process(src, dst); else dst = src;
+      // While we process it, start a thread to wait for output frame and paste the input image into it:
+      jevois::RawImage outimg; // main thread should not use outimg until paste thread is complete
+      auto paste_fut = std::async(std::launch::async, [&]() {
+          outimg = outframe.get();
+          outimg.require("output", w * 2, h, inimg.fmt);
+          jevois::rawimage::paste(inimg, outimg, 0, 0);
+          jevois::rawimage::writeText(outimg, "JeVois Input Image", 3, 3, jevois::yuyv::White);
+        });
 
+      // Convert source image to BGR:
+      cv::Mat src = jevois::rawimage::convertToCvBGR(inimg);
+
+      // Apply the filter (if any):
+      cv::Mat dst; std::string settings;
+      if (itsFilter) settings = itsFilter->process(src, dst);
+      else dst = cv::Mat(h, w, CV_8UC3, cv::Scalar(0,0,0));
+
+      // Wait for paste to finish up:
+      paste_fut.get();
+
+      // Paste the results into our output:
+      jevois::rawimage::pasteBGRtoYUYV(dst, outimg, w, 0);
+                                       
       std::string const & fpscpu = timer.stop();
 
       // Write a few things:
       std::ostringstream oss; oss << "JeVois image filter: " << effect::get();
-      cv::putText(dst, oss.str().c_str(), cv::Point(3, 13), cv::FONT_HERSHEY_PLAIN, 1.0, cv::Scalar(255,255,255));
-      cv::putText(dst, fpscpu.c_str(), cv::Point(3, dst.rows-4), cv::FONT_HERSHEY_PLAIN, 1.0, cv::Scalar(255,255,255));
-      
-      // Send out the result image after converting it:
-      outframe.sendCvBGR(dst);
+      jevois::rawimage::writeText(outimg, oss.str(), w + 3, 3, jevois::yuyv::White);
+
+      std::vector<std::string> svec = jevois::split(settings, "\n");
+      for (size_t i = 0; i < svec.size(); ++i)
+        jevois::rawimage::writeText(outimg, svec[i], w + 3, 15 + 12 * i, jevois::yuyv::White);
+
+      jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
+
+      // Send the output image with our processing results to the host over USB:
+      outframe.send();
     }
 
   protected:

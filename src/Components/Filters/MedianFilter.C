@@ -24,8 +24,10 @@ MedianFilter::~MedianFilter()
 { }
 
 // ##############################################################################################################
-void MedianFilter::process(cv::Mat const & src, cv::Mat & dst)
+std::string MedianFilter::process(cv::Mat const & src, cv::Mat & dst)
 {
   cv::medianBlur(src, dst, ksize::get());
+
+  return "ksize=" + ksize::strget();
 }
 

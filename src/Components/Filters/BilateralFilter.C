@@ -24,8 +24,10 @@ BilateralFilter::~BilateralFilter()
 { }
 
 // ##############################################################################################################
-void BilateralFilter::process(cv::Mat const & src, cv::Mat & dst)
+std::string BilateralFilter::process(cv::Mat const & src, cv::Mat & dst)
 {
   cv::bilateralFilter(src, dst, d::get(), sigmaColor::get(), sigmaSpace::get());
+
+  return "d=" + d::strget() + ", sigmaColor=" + sigmaColor::strget() + ", sigmaSpace=" + sigmaSpace::strget();
 }
 

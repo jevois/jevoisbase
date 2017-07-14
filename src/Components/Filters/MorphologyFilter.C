@@ -24,7 +24,7 @@ MorphologyFilter::~MorphologyFilter()
 { }
 
 // ##############################################################################################################
-void MorphologyFilter::process(cv::Mat const & src, cv::Mat & dst)
+std::string MorphologyFilter::process(cv::Mat const & src, cv::Mat & dst)
 {
   cv::Mat kernel;
   
@@ -49,9 +49,11 @@ void MorphologyFilter::process(cv::Mat const & src, cv::Mat & dst)
   case morphologyfilter::MorphoOp::Gradient: mop = cv::MORPH_GRADIENT; break;
   case morphologyfilter::MorphoOp::TopHat: mop = cv::MORPH_TOPHAT; break;
   case morphologyfilter::MorphoOp::BlackHat: mop = cv::MORPH_BLACKHAT; break;
-  case morphologyfilter::MorphoOp::HitMiss: mop = cv::MORPH_HITMISS; break;
   }
   
   cv::morphologyEx(src, dst, mop, kernel, anchor::get(), iter::get());
+
+  return "op=" + op::strget() + ", kshape=" + kshape::strget() + ",\nksize=[" + ksize::strget() +
+    "], anchor=[" + anchor::strget() + "], iter=" + iter::strget();
 }
 

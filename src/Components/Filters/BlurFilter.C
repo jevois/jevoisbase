@@ -24,8 +24,10 @@ BlurFilter::~BlurFilter()
 { }
 
 // ##############################################################################################################
-void BlurFilter::process(cv::Mat const & src, cv::Mat & dst)
+std::string BlurFilter::process(cv::Mat const & src, cv::Mat & dst)
 {
   cv::blur(src, dst, ksize::get(), anchor::get());
+
+  return "ksize=[" + ksize::strget() + "], anchor=[" + anchor::strget() + ']';
 }
 

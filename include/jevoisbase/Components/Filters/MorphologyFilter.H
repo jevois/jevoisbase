@@ -26,7 +26,7 @@ namespace morphologyfilter
   static jevois::ParameterCategory const ParamCateg("Morphology Filter Parameters");
 
   //! Enum \relates MorphologyFilter
-  JEVOIS_DEFINE_ENUM_CLASS(MorphoOp, (Erode) (Dilate) (Open) (Close) (Gradient) (TopHat) (BlackHat) (HitMiss) )
+  JEVOIS_DEFINE_ENUM_CLASS(MorphoOp, (Erode) (Dilate) (Open) (Close) (Gradient) (TopHat) (BlackHat) )
 
   //! Parameter \relates MorphologyFilter
   JEVOIS_DECLARE_PARAMETER(op, MorphoOp, "Morphological operation to apply",
@@ -68,5 +68,5 @@ class MorphologyFilter : public Filter,
     virtual ~MorphologyFilter();
 
     //! Processing function: filters the image src and puts the results into dst
-    virtual void process(cv::Mat const & src, cv::Mat & dst) override;
+    virtual std::string process(cv::Mat const & src, cv::Mat & dst) override;
 };
