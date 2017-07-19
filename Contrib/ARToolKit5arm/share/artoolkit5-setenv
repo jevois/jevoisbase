@@ -1,0 +1,15 @@
+#! /bin/bash
+
+ARTOOLKIT5_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+
+echo "ARTOOLKIT5_ROOT=${ARTOOLKIT5_ROOT}; export ARTOOLKIT5_ROOT" >> ~/.profile
+if [ -f ~/.bash_profile ] ; then
+    echo "ARTOOLKIT5_ROOT=${ARTOOLKIT5_ROOT}; export ARTOOLKIT5_ROOT" >> ~/.bash_profile
+fi
+echo "setenv ARTOOLKIT5_ROOT ${ARTOOLKIT5_ROOT}" >> ~/.cshrc
+if [ "`uname`" = "Darwin" ]
+then
+	defaults write ~/.MacOSX/environment ARTOOLKIT5_ROOT -string "${ARTOOLKIT5_ROOT}"; plutil -convert xml1 ~/.MacOSX/environment.plist
+fi
+
+echo "*** Successfully set ARTOOLKIT5_ROOT to ${ARTOOLKIT5_ROOT} ***"
