@@ -36,6 +36,10 @@ JEVOIS_DECLARE_PARAMETER(dopose, bool, "Compute and show pose vectors, requires 
 JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (millimeters), used only for pose estimation",
                          100.0F, aruco::ParamCateg);
 
+//! Parameter \relates DemoArUco
+JEVOIS_DECLARE_PARAMETER(showcube, bool, "Show a 3D cube on top of each detected marker, when dopose is also true",
+                         true, aruco::ParamCateg);
+
 //! Simple demo of ArUco augmented reality markers detection and decoding
 /*! Detect and decode patterns known as ArUco markers, which are small 2D barcodes often used in augmented
     reality and robotics.
@@ -143,7 +147,7 @@ JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (millimeters), us
     @restrictions None
     \ingroup modules */
 class DemoArUco : public jevois::StdModule,
-                  public jevois::Parameter<dopose, markerlen>
+                  public jevois::Parameter<dopose, markerlen, showcube>
 {
   public: 
     // ####################################################################################################
@@ -281,12 +285,12 @@ class DemoArUco : public jevois::StdModule,
         {
           cv::Point2f const & p0 = currentMarker[j];
           cv::Point2f const & p1 = currentMarker[ (j+1) % 4 ];
-          jevois::rawimage::drawLine(outimg, int(p0.x + 0.4999F), int(p0.y + 0.4999F),
-                                     int(p1.x + 0.4999F), int(p1.y + 0.3999F), 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, int(p0.x + 0.5F), int(p0.y + 0.5F),
+                                     int(p1.x + 0.5F), int(p1.y + 0.3999F), 1, jevois::yuyv::LightGreen);
         }
         
         // draw first corner mark
-        jevois::rawimage::drawDisk(outimg, int(currentMarker[0].x + 0.4999F), int(currentMarker[0].y + 0.4999F),
+        jevois::rawimage::drawDisk(outimg, int(currentMarker[0].x + 0.5F), int(currentMarker[0].y + 0.5F),
                                    3, jevois::yuyv::LightGreen);
 
         // draw ID
@@ -294,7 +298,7 @@ class DemoArUco : public jevois::StdModule,
         {
           cv::Point2f cent(0.0F, 0.0F); for (int p = 0; p < 4; ++p) cent += currentMarker[p] * 0.25F;
           jevois::rawimage::writeText(outimg, std::string("id=") + std::to_string(ids[i]),
-                                      int(cent.x + 0.4999F), int(cent.y + 0.4999F) - 5, jevois::yuyv::LightPink);
+                                      int(cent.x + 0.5F), int(cent.y + 0.5F) - 5, jevois::yuyv::LightPink);
         }
       }
 
@@ -308,7 +312,7 @@ class DemoArUco : public jevois::StdModule,
         
         for (size_t i = 0; i < ids.size(); ++i)
         {
-          // project axis points
+          // Project axis points:
           std::vector<cv::Point3f> axisPoints;
           axisPoints.push_back(cv::Point3f(0.0F, 0.0F, 0.0F));
           axisPoints.push_back(cv::Point3f(length, 0.0F, 0.0F));
@@ -319,16 +323,55 @@ class DemoArUco : public jevois::StdModule,
           cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsArUco->itsCamMatrix,
                             itsArUco->itsDistCoeffs, imagePoints);
 
-          // draw axis lines
-          jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.4999F), int(imagePoints[0].y + 0.4999F),
-                                     int(imagePoints[1].x + 0.4999F), int(imagePoints[1].y + 0.4999F),
+          // Draw axis lines
+          jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
+                                     int(imagePoints[1].x + 0.5F), int(imagePoints[1].y + 0.5F),
                                      2, jevois::yuyv::MedPurple);
-          jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.4999F), int(imagePoints[0].y + 0.4999F),
-                                     int(imagePoints[2].x + 0.4999F), int(imagePoints[2].y + 0.4999F),
+          jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
+                                     int(imagePoints[2].x + 0.5F), int(imagePoints[2].y + 0.5F),
                                      2, jevois::yuyv::MedGreen);
-          jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.4999F), int(imagePoints[0].y + 0.4999F),
-                                     int(imagePoints[3].x + 0.4999F), int(imagePoints[3].y + 0.4999F),
+          jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
+                                     int(imagePoints[3].x + 0.5F), int(imagePoints[3].y + 0.5F),
                                      2, jevois::yuyv::MedGrey);
+
+          // Also draw a cube if requested:
+          if (showcube::get())
+          {
+            float const len = markerlen::get() * 0.5F;
+
+            std::vector<cv::Point3f> cubePoints;
+            cubePoints.push_back(cv::Point3f(-len, -len, 0.0F));
+            cubePoints.push_back(cv::Point3f(len, -len, 0.0F));
+            cubePoints.push_back(cv::Point3f(len, len, 0.0F));
+            cubePoints.push_back(cv::Point3f(-len, len, 0.0F));
+            cubePoints.push_back(cv::Point3f(-len, -len, len * 2.0F));
+            cubePoints.push_back(cv::Point3f(len, -len, len * 2.0F));
+            cubePoints.push_back(cv::Point3f(len, len, len * 2.0F));
+            cubePoints.push_back(cv::Point3f(-len, len, len * 2.0F));
+
+            std::vector<cv::Point2f> cuf;
+            cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsArUco->itsCamMatrix,
+                              itsArUco->itsDistCoeffs, cuf);
+
+            // Round all the coordinates:
+            std::vector<cv::Point> cu;
+            for (auto const & p : cuf) cu.push_back(cv::Point(int(p.x + 0.5F), int(p.y + 0.5F)));
+            
+            // Draw cube lines:
+            jevois::rawimage::drawLine(outimg, cu[0].x, cu[0].y, cu[1].x, cu[1].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[1].x, cu[1].y, cu[2].x, cu[2].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[2].x, cu[2].y, cu[3].x, cu[3].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[3].x, cu[3].y, cu[0].x, cu[0].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[4].x, cu[4].y, cu[5].x, cu[5].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[5].x, cu[5].y, cu[6].x, cu[6].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[6].x, cu[6].y, cu[7].x, cu[7].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[7].x, cu[7].y, cu[4].x, cu[4].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[0].x, cu[0].y, cu[4].x, cu[4].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[1].x, cu[1].y, cu[5].x, cu[5].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[2].x, cu[2].y, cu[6].x, cu[6].y, 2, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, cu[3].x, cu[3].y, cu[7].x, cu[7].y, 2, jevois::yuyv::LightGreen);
+          }
+          
         }
       }
 
