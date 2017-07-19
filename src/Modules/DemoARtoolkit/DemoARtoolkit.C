@@ -30,9 +30,11 @@
     @author Shixian Wen
 
     @displayname Demo ARtoolkit
-    @videomapping NONE 0 0 0 YUYV 320 240 30.0 JeVois DemoARtoolkit
-    @videomapping YUYV 320 262 30.0 YUYV 320 240 30.0 JeVois DemoARtoolkit
-    @videomapping YUYV 640 502 20.0 YUYV 640 480 20.0 JeVois DemoARtoolkit
+    @videomapping NONE 0 0 0 YUYV 320 240 60.0 JeVois DemoARtoolkit
+    @videomapping NONE 0 0 0 YUYV 640 480 30.0 JeVois DemoARtoolkit
+    @videomapping NONE 0 0 0 YUYV 1280 1024 15.0 JeVois DemoARtoolkit
+    @videomapping YUYV 320 258 60.0 YUYV 320 240 60.0 JeVois DemoARtoolkit
+    @videomapping YUYV 640 498 30.0 YUYV 640 480 30.0 JeVois DemoARtoolkit
     @email shixianw\@usc.edu
     @address University of Southern California, HNB-10A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2017 by Shixian Wen, iLab and the University of Southern California
@@ -46,44 +48,58 @@
 class DemoARtoolkit :public jevois::Module
 {
   public:
-    
+    // ####################################################################################################
     DemoARtoolkit(std::string const & instance) : jevois::Module(instance)
     {
       itsARtoolkit = addSubComponent<ARtoolkit>("artoolkit");
     }
 
+    // ####################################################################################################
     virtual ~DemoARtoolkit()
     { }
 
+    // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
-      // Wait for next available camera image:
-      jevois::RawImage const inimg = inframe.get();
-      if (!enterflag)
-      {
-        //when first enter the process mannualy init the itsARtoolkit component
-        enterflag = true;
-        unsigned int const w = inimg.width, h = inimg.height;
-        itsARtoolkit->xsize::set(w);
-        itsARtoolkit->ysize::set(h);
-        itsARtoolkit->manualinit();
-      }
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
 
-      // Convert the image to BGR and process:
-      cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
+      // Wait for next available camera image:
+      jevois::RawImage const inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
+      timer.start();
+      
+      // While we process it, start a thread to wait for out frame and paste the input into it:
+      jevois::RawImage outimg;
+      auto paste_fut = std::async(std::launch::async, [&]() {
+          outimg = outframe.get();
+          outimg.require("output", w, h + 18, inimg.fmt);
+          jevois::rawimage::paste(inimg, outimg, 0, 0);
+          jevois::rawimage::writeText(outimg, "JeVois ARtoolkit Demo", 3, 3, jevois::yuyv::White);
+          jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height - h, jevois::yuyv::Black);
+        });
+
+      // ARtoolkit component can process YUYV images directly with no conversion required:
+      itsARtoolkit->detectMarkers(inimg);
+      
+      // Wait for paste to finish up:
+      paste_fut.get();
+
+      // We are done with the input frame:
       inframe.done();
 
-      jevois::RawImage outimg = outframe.get();
-      outimg.require("output", inimg.width, inimg.height, outimg.fmt);
+      // Draw the detections:
+      itsARtoolkit->drawDetections(outimg, 3, h + 3);
 
-      itsARtoolkit->detectMarkers(imgbgr);
-      jevois::rawimage::convertCvBGRtoRawImage(imgbgr, outimg, 75 /* JPEG quality */);
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
+
+      // Send the output image with our processing results to the host over USB:
       outframe.send();
     }
 
+    // ####################################################################################################
   protected:
     std::shared_ptr<ARtoolkit> itsARtoolkit;
-    bool enterflag = false; //!< a flag to initialize itsARtoolkit
 };
 
 // Allow the module to be loaded as a shared object (.so) file:

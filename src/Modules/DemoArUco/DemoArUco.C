@@ -235,7 +235,7 @@ class DemoArUco : public jevois::StdModule,
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
-      static jevois::Timer timer("processing");
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
       
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
