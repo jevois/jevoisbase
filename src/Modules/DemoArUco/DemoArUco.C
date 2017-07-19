@@ -178,7 +178,7 @@ class DemoArUco : public jevois::StdModule,
       std::vector<std::vector<cv::Point2f> > corners;
       itsArUco->detectMarkers(cvimg, ids, corners);
 
-      // Do pose compuattion if desired:
+      // Do pose computation if desired:
       std::vector<cv::Vec3d> rvecs, tvecs;
       if (dopose::get() && ids.empty() == false)
         itsArUco->estimatePoseSingleMarkers(corners, markerlen::get(), rvecs, tvecs);

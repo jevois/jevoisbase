@@ -18,6 +18,7 @@
 #pragma once
 
 #include <jevois/Component/Component.H>
+#include <jevois/Core/Module.H>
 #include <jevois/Types/Enum.H>
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
@@ -44,8 +45,12 @@ namespace artoolkit
                            "camera_para", ParamCateg);
 
   //! Parameter \relates ARtoolkit
-  JEVOIS_DECLARE_PARAMETER(useContPoseEstimation, bool, "Use Continues pose Estimation in good quality video",
+  JEVOIS_DECLARE_PARAMETER(useContPoseEstimation, bool, "Use continuous pose estimation in good quality video",
                            true, ParamCateg);
+
+  //! Parameter \relates ARtoolkit
+  JEVOIS_DECLARE_PARAMETER(msg3d, bool, "Send 3D serial messages if true, otherwise 2D",
+                           false, ParamCateg);
 
   //! Enum for parameter \relates ARtoolkit
   //dictionary to use according to the ARtoolkit 
@@ -67,7 +72,7 @@ namespace artoolkit
     \ingroup Components */
 class ARtoolkit : public jevois::Component,
 				  public jevois::Parameter<artoolkit::camparams, artoolkit::useContPoseEstimation,
-                                           artoolkit::dictionary>
+                                           artoolkit::dictionary, artoolkit::msg3d>
 {
 	public:
 
@@ -95,16 +100,35 @@ class ARtoolkit : public jevois::Component,
     //! Draw any markers previously detected by detectMarkers()
     /*! If txtx,txty are positive, also print a text string there */
     void drawDetections(jevois::RawImage & outimg, int txtx = -1, int txty = -1);
+
+    //! Send serial messages about detections
+    /*! The module given should be the owner of this component, we will use it to actually send each serial message
+        using some variant of jevois::Module::sendSetial(). */
+    void sendSerial(jevois::StdModule * mod);
     
+    struct arresults
+    {
+        int id; //!< Marker ID
+        double width; //!< size in mm
+        double height; //!< size in mm
+        double q[4]; //!< quaternion
+        double pos[3]; //!< 3d position
+        int p2d[2]; //!< 2d position in image coords
+        std::vector<cv::Point> corners; //!< corners in standardized image coords
+    };
+
+    std::vector<arresults> itsResults; //!< Results of the last detection round
+
   protected:
     //! Manual initialization which should be run on first frame once its size is known
     /*! pixformat should be AR_PIXEL_FORMAT_BGR, AR_PIXEL_FORMAT_RGB_565, etc */
     void manualinit(int w, int h, AR_PIXEL_FORMAT pixformat);
 
+    void detectInternal(unsigned char const * data);
+    
 	// some other not important parameters related to the initialization of the ARtoolkit 
 
 	// initilization required
-    int itsNumDetected = 0;
 	ARHandle * arHandle = nullptr;
 	ARPattHandle  *arPattHandle;
 	int gARPattDetectionMode;
@@ -112,4 +136,5 @@ class ARtoolkit : public jevois::Component,
 	ARParamLT * gCparamLT = nullptr;
     ARMarkerSquare * markersSquare = nullptr;
     int markersSquareCount = 0;
+    unsigned int itsW, itsH;
 };

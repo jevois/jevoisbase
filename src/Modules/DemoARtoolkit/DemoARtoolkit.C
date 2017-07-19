@@ -45,11 +45,11 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DemoARtoolkit :public jevois::Module
+class DemoARtoolkit :public jevois::StdModule
 {
   public:
     // ####################################################################################################
-    DemoARtoolkit(std::string const & instance) : jevois::Module(instance)
+    DemoARtoolkit(std::string const & instance) : jevois::StdModule(instance)
     {
       itsARtoolkit = addSubComponent<ARtoolkit>("artoolkit");
     }
@@ -58,6 +58,26 @@ class DemoARtoolkit :public jevois::Module
     virtual ~DemoARtoolkit()
     { }
 
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe) override
+    {
+      static jevois::Timer timer("processing");
+      
+      // Wait for next available camera image:
+      jevois::RawImage const inimg = inframe.get();
+      timer.start();
+      
+      // ARtoolkit component can process YUYV images directly with no conversion required:
+      itsARtoolkit->detectMarkers(inimg);
+      
+      // We are done with the input frame:
+      inframe.done();
+
+      // Send serial messages:
+      itsARtoolkit->sendSerial(this);
+      timer.stop();
+    }
+    
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
@@ -86,9 +106,10 @@ class DemoARtoolkit :public jevois::Module
       // We are done with the input frame:
       inframe.done();
 
-      // Draw the detections:
+      // Draw the detections & send serial messages:
       itsARtoolkit->drawDetections(outimg, 3, h + 3);
-
+      itsARtoolkit->sendSerial(this);
+      
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);

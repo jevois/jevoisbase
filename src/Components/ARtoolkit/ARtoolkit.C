@@ -86,6 +86,8 @@ void ARtoolkit::manualinit(int w, int h, AR_PIXEL_FORMAT pixformat)
     arSetMatrixCodeType(arHandle, AR_MATRIX_CODE_3x3_PARITY65); break;
   default: arSetMatrixCodeType(arHandle, AR_MATRIX_CODE_3x3_PARITY65);
   }
+
+  itsW = w; itsH = h;
 }
 
 // ##############################################################################################################
@@ -106,8 +108,7 @@ void ARtoolkit::detectMarkers(jevois::RawImage const & image)
   }
 
   // Not sure why arDetectMarker() needs write access to the pixels? input pixels should be const...
-  if (arDetectMarker(arHandle, const_cast<unsigned char *>(image.pixels<unsigned char>())) < 0) itsNumDetected = 0;
-  else itsNumDetected = arGetMarkerNum(arHandle);
+  detectInternal(image.pixels<unsigned char>());
 }
 
 // ##############################################################################################################
@@ -123,27 +124,23 @@ void ARtoolkit::detectMarkers(cv::Mat const & image)
     default: LFATAL("Unsupported image format, should be CV_8UC3 for BGR or CV_8UC1 for gray");
     }
   }
-
-  // Not sure why arDetectMarker() needs write access to the pixels? input pixels should be const...
-  if (arDetectMarker(arHandle, const_cast<unsigned char *>(image.data)) < 0) itsNumDetected = 0;
-  else itsNumDetected = arGetMarkerNum(arHandle);
+  
+  detectInternal(image.data);
 }
 
 // ##############################################################################################################
-void ARtoolkit::drawDetections(jevois::RawImage & outimg, int txtx, int txty)
+void ARtoolkit::detectInternal(unsigned char const * data)
 {
-  int useContPoseEstimation = artoolkit::useContPoseEstimation::get();
-  ARdouble  err;
+  itsResults.clear();
 
-  // Show number of detections:
-  if (txtx >= 0 && txty >= 0)
-    jevois::rawimage::writeText(outimg, "Detected " + std::to_string(itsNumDetected) + " ARtoolkit markers.",
-                                txtx, txty, jevois::yuyv::White);
-
-  // If we have no detection, we are done here:
-  if (itsNumDetected == 0) return;
-
-  // Draw each detection:
+  // Not sure why arDetectMarker() needs write access to the pixels? input pixels should be const...
+  if (arDetectMarker(arHandle, const_cast<unsigned char *>(data)) < 0)
+  { LERROR("Error trying to detect markers -- IGNORED"); return; }
+  
+  int const numDetected = arGetMarkerNum(arHandle);
+  int const useContPoseEstimation = artoolkit::useContPoseEstimation::get();
+  
+  // Validate each detection:
   ARMarkerInfo * markerInfo = arGetMarker(arHandle);
 
   for (int i = 0; i < markersSquareCount; ++i)
@@ -152,7 +149,7 @@ void ARtoolkit::drawDetections(jevois::RawImage & outimg, int txtx, int txty)
     int k = -1;
     if (markersSquare[i].patt_type == AR_PATTERN_TYPE_MATRIX)
     {
-      for (int j = 0; j < itsNumDetected; ++j)
+      for (int j = 0; j < numDetected; ++j)
       {
         if (markersSquare[i].patt_id == markerInfo[j].id)
         {
@@ -166,29 +163,74 @@ void ARtoolkit::drawDetections(jevois::RawImage & outimg, int txtx, int txty)
     } 
     if (k != -1)
     {
-      markersSquare[i].valid = TRUE;
+      arresults result;
+      result.id = markerInfo[k].id;
+      result.width = markersSquare[i].marker_width;
+      result.height = markersSquare[i].marker_height;
+      result.p2d[0] = markerInfo[k].pos[0]; result.p2d[1] = markerInfo[k].pos[1];
+      
       // get the transformation matrix from the markers to camera in camera coordinate
       // rotation matrix + translation matrix
+      ARdouble  err;
       if (markersSquare[i].validPrev && useContPoseEstimation)
         err = arGetTransMatSquareCont(ar3DHandle, &(markerInfo[k]), markersSquare[i].trans,
                                       markersSquare[i].marker_width, markersSquare[i].trans);
       else
         err = arGetTransMatSquare(ar3DHandle, &(markerInfo[k]), markersSquare[i].marker_width, markersSquare[i].trans);
 
-      jevois::rawimage::drawCircle(outimg, markerInfo[k].pos[0], markerInfo[k].pos[1], 3, 2, jevois::yuyv::LightPink);
+      if (err > 1.0) continue; // forget abot this one if we cannot properly recover the 3D matrix
+      
+      arUtilMat2QuatPos(markersSquare[i].trans, result.q, result.pos);
       
       for (int i1 = 0; i1 < 4; ++i1)
       {
         auto const & v1 = markerInfo[k].vertex[i1];
-        auto const & v2 = markerInfo[k].vertex[(i1 + 1) % 4];
-        jevois::rawimage::drawLine(outimg, v1[0], v1[1], v2[0], v2[1], 2, jevois::yuyv::LightPink);
+        result.corners.push_back(cv::Point(int(v1[0] + 0.5F), int(v1[1] + 0.5F)));
       }
-      jevois::rawimage::writeText(outimg, "AR=" + std::to_string(markerInfo[k].id),
-                                  markerInfo[k].pos[0] + 5, markerInfo[k].pos[1] + 5, jevois::yuyv::LightPink);
+
+      itsResults.push_back(result);
+      markersSquare[i].valid = TRUE;
     }
-    else
-    {
-      markersSquare[i].valid = FALSE;					
-    }
+    else markersSquare[i].valid = FALSE;					
   }
+
 }
+
+// ##############################################################################################################
+void ARtoolkit::drawDetections(jevois::RawImage & outimg, int txtx, int txty)
+{
+  for (arresults const & r : itsResults)
+  {
+    jevois::rawimage::drawCircle(outimg, r.p2d[0], r.p2d[1], 3, 2, jevois::yuyv::LightPink);
+      
+    for (int i = 0; i < 4; ++i)
+    {
+      auto const & v1 = r.corners[i];
+      auto const & v2 = r.corners[(i + 1) % 4];
+      jevois::rawimage::drawLine(outimg, v1.x, v1.y, v2.x, v2.y, 2, jevois::yuyv::LightPink);
+    }
+
+    jevois::rawimage::writeText(outimg, "AR=" + std::to_string(r.id), r.p2d[0]+5, r.p2d[1]+5, jevois::yuyv::LightPink);
+  }
+
+  // Show number of good detections:
+  if (txtx >= 0 && txty >= 0)
+    jevois::rawimage::writeText(outimg, "Detected " + std::to_string(itsResults.size()) + " ARtoolkit markers.",
+                                txtx, txty, jevois::yuyv::White);
+}
+
+// ##############################################################################################################
+void ARtoolkit::sendSerial(jevois::StdModule * mod)
+{
+  if (msg3d::get())
+    for (arresults const & r : itsResults)
+      mod->sendSerialStd3D(r.pos[0], r.pos[1], r.pos[2],   // position
+                           r.width, r.height, 1.0F,        // size
+                           r.q[0], r.q[1], r.q[2], r.q[3], // pose
+                           std::to_string(r.id),           // decoded ID
+                           "AR");                          // marker type
+  else
+    for (arresults const & r : itsResults)
+      mod->sendSerialContour2D(itsW, itsH, r.corners, std::to_string(r.id), "AR");
+}
+
