@@ -18,6 +18,7 @@
 #pragma once
 
 #include <jevois/Component/Component.H>
+#include <jevois/Core/Module.H>
 #include <jevois/Types/Enum.H>
 
 #include <opencv2/aruco.hpp>
@@ -43,6 +44,18 @@ namespace aruco
   
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(dictionary, Dict, "Symbol dictionary to use", Dict::D4X4_50, ParamCateg);
+
+  //! Parameter \relates ArUco
+  JEVOIS_DECLARE_PARAMETER(dopose, bool, "Compute (and show) pose vectors, requires a valid camera calibration",
+                           false, ParamCateg);
+
+  //! Parameter \relates ArUco
+  JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (millimeters), used only for pose estimation",
+                           100.0F, ParamCateg);
+
+  //! Parameter \relates ArUco
+  JEVOIS_DECLARE_PARAMETER(showcube, bool, "Show a 3D cube on top of each detected marker, when dopose is also true",
+                           true, aruco::ParamCateg);
 }
 
 //! Simple wrapper class over the opencv_contrib ArUco augmented reality markers
@@ -115,7 +128,8 @@ namespace aruco
 
     \ingroup components */
 class ArUco : public jevois::Component,
-              public jevois::Parameter<aruco::camparams, aruco::detparams, aruco::dictionary>
+              public jevois::Parameter<aruco::camparams, aruco::detparams, aruco::dictionary,
+                                       aruco::dopose, aruco::markerlen, aruco::showcube>
 {
   public:
     //! Constructor
@@ -134,9 +148,21 @@ class ArUco : public jevois::Component,
     void detectMarkers(cv::InputArray image, cv::OutputArray ids, cv::OutputArrayOfArrays corners);
 
     //! Estimate pose of individual markers
-    void estimatePoseSingleMarkers(cv::InputArrayOfArrays corners, float markerLength,
-                                   cv::OutputArray rvecs, cv::OutputArray tvecs);
+    void estimatePoseSingleMarkers(cv::InputArrayOfArrays corners, cv::OutputArray rvecs, cv::OutputArray tvecs);
 
+    //! Draw any markers previously detected by detectMarkers()
+    /*! If txtx,txty are positive, also print a text string there */
+    void drawDetections(jevois::RawImage & outimg, int txtx, int txty, std::vector<int> ids,
+                        std::vector<std::vector<cv::Point2f> > corners, std::vector<cv::Vec3d> const & rvecs,
+                        std::vector<cv::Vec3d> const & tvecs);
+    
+    //! Send serial messages about detections
+    /*! The module given should be the owner of this component, we will use it to actually send each serial message
+        using some variant of jevois::Module::sendSetial(). */
+    void sendSerial(jevois::StdModule * mod, std::vector<int> ids, std::vector<std::vector<cv::Point2f> > corners,
+                    unsigned int w, unsigned int h, std::vector<cv::Vec3d> const & rvecs,
+                    std::vector<cv::Vec3d> const & tvecs);
+    
     //! Our current camera matrix
     cv::Mat itsCamMatrix;
 
