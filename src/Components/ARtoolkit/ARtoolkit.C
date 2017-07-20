@@ -228,10 +228,9 @@ void ARtoolkit::sendSerial(jevois::StdModule * mod)
       mod->sendSerialStd3D(r.pos[0], r.pos[1], r.pos[2],   // position
                            r.width, r.height, 1.0F,        // size
                            r.q[0], r.q[1], r.q[2], r.q[3], // pose
-                           std::to_string(r.id),           // decoded ID
-                           "AR");                          // marker type
+                           "A" + std::to_string(r.id));    // decoded ID with "A" prefix for ARtoolkit
   else
     for (arresults const & r : itsResults)
-      mod->sendSerialContour2D(itsW, itsH, r.corners, std::to_string(r.id), "AR");
+      mod->sendSerialContour2D(itsW, itsH, r.corners, "A" + std::to_string(r.id));
 }
 

@@ -5,7 +5,7 @@
 if [ "x$1" = "x-y" ]; then
     REPLY="y";
 else			   
-    read -p "Do you want to nuke, fetch and patch all contributed packages [y/N]? "
+    read -p "Do you want to nuke, fetch and patch contributed packages [y/N]? "
 fi
 
 if [ "X$REPLY" = "Xy" ]; then

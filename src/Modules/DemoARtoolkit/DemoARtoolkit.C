@@ -27,6 +27,14 @@
 /*! Detect and decode patterns known as ARtoolkit markers, which are small 2D barcodes often used in augmented
     reality and robotics.
 
+    Sample patterns
+    ---------------
+
+    This module uses by default the 3x3 patterns with parity (32 different patterns). You can download them from
+    http://jevois.org/data/ARtoolkit3x3par.zip
+
+    Also see the files in <b>jevoisbase/Contrib/ARToolKit5arm/doc/patterns/</b> for more.
+
     @author Shixian Wen
 
     @displayname Demo ARtoolkit

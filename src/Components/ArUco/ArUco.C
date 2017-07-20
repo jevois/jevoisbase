@@ -152,10 +152,10 @@ void ArUco::sendSerial(jevois::StdModule * mod, std::vector<int> ids, std::vecto
       Eigen::Vector3f axis(rv[0], rv[1], rv[2]);
       Eigen::Quaternion<float> q(Eigen::AngleAxis<float>(theta, axis));
       
-      mod->sendSerialStd3D(tv[0], tv[1], tv[2],        // position
-                           siz, siz, 1.0F,             // size
-                           q.w(), q.x(), q.y(), q.z(), // pose
-                           std::to_string(ids[i]));    // decoded ID
+      mod->sendSerialStd3D(tv[0], tv[1], tv[2],             // position
+                           siz, siz, 1.0F,                  // size
+                           q.w(), q.x(), q.y(), q.z(),      // pose
+                           "U" + std::to_string(ids[i]));   // decoded ID with "U" prefix for ArUco
     }
   }
   else
@@ -164,7 +164,7 @@ void ArUco::sendSerial(jevois::StdModule * mod, std::vector<int> ids, std::vecto
     for (size_t i = 0; i < corners.size(); ++i)
     {
       std::vector<cv::Point2f> const & currentMarker = corners[i];
-      mod->sendSerialContour2D(w, h, currentMarker, std::to_string(ids[i]));
+      mod->sendSerialContour2D(w, h, currentMarker, "U" + std::to_string(ids[i]));
     }
   }
 }
