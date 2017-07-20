@@ -166,13 +166,13 @@ void QRcode::drawDetections(jevois::RawImage & outimg, int txtx, int txty, zbar:
       for (zbar::Symbol::PointIterator pitr = symbol->point_begin(); pitr != symbol->point_end(); ++pitr)
       {
         zbar::Symbol::Point p(*pitr);
-        if (pp.x != -1000000) jevois::rawimage::drawLine(outimg, pp.x, pp.y, p.x, p.y, 1, 0xf0f0);
+        if (pp.x != -1000000) jevois::rawimage::drawLine(outimg, pp.x, pp.y, p.x, p.y, 1, jevois::yuyv::DarkPink);
         pp = p;
       }
       if (pp.x != -1000000)
       {
         zbar::Symbol::Point p = *(symbol->point_begin());
-        jevois::rawimage::drawLine(outimg, pp.x, pp.y, p.x, p.y, 1, 0xf0f0);
+        jevois::rawimage::drawLine(outimg, pp.x, pp.y, p.x, p.y, 1, jevois::yuyv::DarkPink);
       }
     }
     else
@@ -190,13 +190,13 @@ void QRcode::drawDetections(jevois::RawImage & outimg, int txtx, int txty, zbar:
       brx = std::min(int(w)-1, std::max(0, brx));
       tly = std::min(int(h)-1, std::max(0, tly));
       bry = std::min(int(h)-1, std::max(0, bry));
-      jevois::rawimage::drawRect(outimg, tlx, tly, brx - tlx, bry - tly, 1, 0xf0f0);
+      jevois::rawimage::drawRect(outimg, tlx, tly, brx - tlx, bry - tly, 1, jevois::yuyv::DarkPink);
     }
   }
   
   // Write some strings in the output video with what we found and decoded:
   if (qdata.empty())
-    jevois::rawimage::writeText(outimg, "Found no symbols.", 3, h + 3, txtcol);
+    jevois::rawimage::writeText(outimg, "Found no symbols.", txtx, txty, txtcol);
   else
   {
     txt = "Found " + std::to_string(qdata.size()) + " symbols:" + txt;

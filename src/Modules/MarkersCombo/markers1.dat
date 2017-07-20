@@ -1,0 +1,42 @@
+#the number of patterns to be recognized
+8
+
+#marker 1
+00
+SINGLE
+40.0
+
+#marker 2
+01
+SINGLE
+40.0
+
+#marker 3
+02
+SINGLE
+40.0
+
+#marker 4
+03
+SINGLE
+40.0
+
+#marker 5
+04
+SINGLE
+40.0
+
+#marker 6
+05
+SINGLE
+40.0
+
+#marker 7
+06
+SINGLE
+40.0
+
+#marker 8
+07
+SINGLE
+40.0
