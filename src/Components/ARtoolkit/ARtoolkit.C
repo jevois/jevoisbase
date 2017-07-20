@@ -17,6 +17,7 @@
 
 #include <jevoisbase/Components/ARtoolkit/ARtoolkit.H>
 #include <jevois/Image/RawImageOps.H>
+#include <jevois/Core/Module.H>
 
 // ##############################################################################################################
 ARtoolkit::~ARtoolkit()

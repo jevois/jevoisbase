@@ -18,7 +18,6 @@
 #pragma once
 
 #include <jevois/Component/Component.H>
-#include <jevois/Core/Module.H>
 #include <jevois/Types/Enum.H>
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
@@ -32,6 +31,7 @@
 // I need to define diferent camera_para.dat according to different camera size because of the limitation of the
 // original ARtoolkit library or change the original ARtoolkit library and I think its not a good way to go, makes the
 // package hard to distribute and update
+namespace jevois { class StdModule; }
 
 namespace artoolkit
 {

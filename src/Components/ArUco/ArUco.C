@@ -17,6 +17,7 @@
 
 #include <jevoisbase/Components/ArUco/ArUco.H>
 #include <jevois/Image/RawImageOps.H>
+#include <jevois/Core/Module.H>
 #include <opencv2/calib3d.hpp> // for projectPoints()
 #include <opencv2/imgproc/imgproc.hpp>
 

@@ -19,6 +19,7 @@
 
 #include <jevois/Component/Component.H>
 #include <zbar.h>
+namespace jevois { class StdModule; }
 
 namespace qrcode
 {
@@ -61,6 +62,13 @@ class QRcode : public jevois::Component,
     //! Process a greayscale image
     /*! Results will be stored in the provided vector */
     void process(zbar::Image & image, std::vector<std::string> & results);
+
+    //! Draw any markers previously detected by process()
+    /*! If txtx,txty are positive, also print a text string there */
+    void drawDetections(jevois::RawImage & outimg, int txtx, int txty, zbar::Image & zgray, int w, int h, size_t nshow);
+    
+    //! Send serial messages about our detections
+    void sendSerial(jevois::StdModule * mod, zbar::Image & img, unsigned int camw, unsigned int camh);
 
   protected:
     //! Parse symbol config strings when they change

@@ -18,10 +18,9 @@
 #pragma once
 
 #include <jevois/Component/Component.H>
-#include <jevois/Core/Module.H>
 #include <jevois/Types/Enum.H>
-
 #include <opencv2/aruco.hpp>
+namespace jevois { class StdModule; }
 
 namespace aruco
 {

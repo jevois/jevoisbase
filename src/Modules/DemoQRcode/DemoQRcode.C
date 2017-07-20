@@ -19,7 +19,6 @@
 #include <jevois/Debug/Timer.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevoisbase/Components/QRcode/QRcode.H>
-#include <linux/videodev2.h> // for v4l2 pixel types
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -88,30 +87,6 @@ class DemoQRcode : public jevois::StdModule
     { }
 
     // ####################################################################################################
-    //! Send the serial messages with what we found
-    // ####################################################################################################
-    void sendAllSerial(zbar::Image & img, unsigned int camw, unsigned int camh)
-    {
-      for (zbar::Image::SymbolIterator symbol = img.symbol_begin(); symbol != img.symbol_end(); ++symbol)
-      {
-        std::string id = symbol->get_type_name();
-        std::string extra = symbol->get_data();
-
-        std::vector<cv::Point> corners;
-        
-        // Note: For QR codes, we get 4 points at the corners, but for others we get a bunch of points all over the
-        // barcode, hopefully users will not select the Fine serial style...
-        for (zbar::Symbol::PointIterator pitr = symbol->point_begin(); pitr != symbol->point_end(); ++pitr)
-        {
-          zbar::Symbol::Point p(*pitr);
-          corners.push_back(cv::Point(p.x, p.y));
-        }
-        
-        sendSerialContour2D(camw, camh, corners, id, extra);
-      }
-    }
-    
-    // ####################################################################################################
     //! Processing function, no video output
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe) override
@@ -131,7 +106,7 @@ class DemoQRcode : public jevois::StdModule
       itsQRcode->process(zgray);
 
       // Send all the results over serial:
-      sendAllSerial(zgray, w, h);
+      itsQRcode->sendSerial(this, zgray, w, h);
 
       // Cleanup zbar image data:
       zgray.set_data(nullptr, 0);
@@ -176,63 +151,11 @@ class DemoQRcode : public jevois::StdModule
       // Let camera know we are done processing the input image:
       inframe.done();
 
-      // Show all the results:
-      std::string txt; std::vector<std::string> qdata;
-      for (zbar::Image::SymbolIterator symbol = zgray.symbol_begin(); symbol != zgray.symbol_end(); ++symbol)
-      {
-        // Build up some strings to be displayed as video overlay:
-        txt += ' ' + symbol->get_type_name();
-        qdata.push_back(std::string(symbol->get_type_name()) + ": " + symbol->get_data());
-
-        // Draw a polygon around the detected symbol: for QR codes, we get 4 points at the corners, but for others we
-        // get a bunch of points all over the barcode:
-        if (symbol->get_type() == zbar::ZBAR_QRCODE)
-        {
-          zbar::Symbol::Point pp(-1000000, -1000000);
-          for (zbar::Symbol::PointIterator pitr = symbol->point_begin(); pitr != symbol->point_end(); ++pitr)
-          {
-            zbar::Symbol::Point p(*pitr);
-            if (pp.x != -1000000) jevois::rawimage::drawLine(outimg, pp.x, pp.y, p.x, p.y, 1, 0xf0f0);
-            pp = p;
-          }
-          if (pp.x != -1000000)
-          {
-            zbar::Symbol::Point p = *(symbol->point_begin());
-            jevois::rawimage::drawLine(outimg, pp.x, pp.y, p.x, p.y, 1, 0xf0f0);
-          }
-        }
-        else
-        {
-          int tlx = w, tly = h, brx = -1, bry = -1;
-          for (zbar::Symbol::PointIterator pitr = symbol->point_begin(); pitr != symbol->point_end(); ++pitr)
-          {
-            zbar::Symbol::Point p(*pitr);
-            if (p.x < tlx) tlx = p.x;
-            if (p.x > brx) brx = p.x;
-            if (p.y < tly) tly = p.y;
-            if (p.y > bry) bry = p.y;
-          }
-          tlx = std::min(int(w)-1, std::max(0, tlx));
-          brx = std::min(int(w)-1, std::max(0, brx));
-          tly = std::min(int(h)-1, std::max(0, tly));
-          bry = std::min(int(h)-1, std::max(0, bry));
-          jevois::rawimage::drawRect(outimg, tlx, tly, brx - tlx, bry - tly, 1, 0xf0f0);
-        }
-      }
-
-      // Write some strings in the output video with what we found and decoded:
-      if (qdata.empty())
-        jevois::rawimage::writeText(outimg, "Found no symbols.", 3, h + 3, txtcol);
-      else
-      {
-        txt = "Found " + std::to_string(qdata.size()) + " symbols:" + txt;
-        jevois::rawimage::writeText(outimg, txt.c_str(), 3, h + 3, txtcol);
-        for (size_t i = 0; i < std::min(qdata.size(), nshow - 1); ++i)
-          jevois::rawimage::writeText(outimg, qdata[i].c_str(), 3, h + 3 + (i+1) * 10, txtcol);
-      }
-
+      // Draw all detections:
+      itsQRcode->drawDetections(outimg, 3, h + 3, zgray, w, h, nshow);
+      
       // Send all serial messages:
-      sendAllSerial(zgray, w, h);
+      itsQRcode->sendSerial(this, zgray, w, h);
       
       // Cleanup zbar image data:
       zgray.set_data(nullptr, 0);
