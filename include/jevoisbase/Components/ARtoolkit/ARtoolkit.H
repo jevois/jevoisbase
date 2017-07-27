@@ -37,7 +37,7 @@ namespace artoolkit
 {
   static jevois::ParameterCategory const ParamCateg("ARtoolkit Options");
 
-  //! Parameter \relates ArUco
+  //! Parameter \relates ARtoolkit
   JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera resolution "
                            "will be appended, as well as a .cfg extension. For example, specifying 'camera_para' "
                            "here and running the camera sensor at 320x240 will attempt to load "
@@ -45,7 +45,7 @@ namespace artoolkit
                            "camera_para", ParamCateg);
 
   //! Parameter \relates ARtoolkit
-  JEVOIS_DECLARE_PARAMETER(useContPoseEstimation, bool, "Use continuous pose estimation in good quality video",
+  JEVOIS_DECLARE_PARAMETER(contpose, bool, "Use continuous pose estimation in good quality video",
                            true, ParamCateg);
 
   //! Parameter \relates ARtoolkit
@@ -53,16 +53,30 @@ namespace artoolkit
                            false, ParamCateg);
 
   //! Enum for parameter \relates ARtoolkit
-  //dictionary to use according to the ARtoolkit 
-  //AR_MATRIX_CODE_3x3 support 64 markers
-  //AR_MATRIX_CODE_3x3_HAMMING63 support 7 markers
-  //AR_MATRIX_CODE_3x3_PARITY65 support 32 markers
-  //the smaller the # of marker => larger distance between markers => better performance
+  /*! dictionary to use according to the ARtoolkit 
+      AR_MATRIX_CODE_3x3 support 64 markers
+      AR_MATRIX_CODE_3x3_HAMMING63 support 7 markers
+      AR_MATRIX_CODE_3x3_PARITY65 support 32 markers
+      the smaller the # of marker => larger distance between markers => better performance */
   JEVOIS_DEFINE_ENUM_CLASS(Dict, (AR_MATRIX_CODE_3x3) (AR_MATRIX_CODE_3x3_HAMMING63) (AR_MATRIX_CODE_3x3_PARITY65));
+
+  //! ThreshMode to overcome different lighting situation  \relates ARtoolkit
+  JEVOIS_DEFINE_ENUM_CLASS(DictThreshMode, (AR_LABELING_THRESH_MODE_MANUAL) (AR_LABELING_THRESH_MODE_AUTO_MEDIAN)
+                           (AR_LABELING_THRESH_MODE_AUTO_OTSU) (AR_LABELING_THRESH_MODE_AUTO_ADAPTIVE)
+                           (AR_LABELING_THRESH_MODE_AUTO_BRACKETING));
+
+  //! Parameter \relates ARtoolkit
+  JEVOIS_DECLARE_PARAMETER(threshmode, DictThreshMode, "Dictionary threshold mode to use, affects "
+                           "robustness to varying lighting conditions",
+                           DictThreshMode::AR_LABELING_THRESH_MODE_AUTO_OTSU, ParamCateg);
 
   //! Parameter \relates ARtoolkit
   JEVOIS_DECLARE_PARAMETER(dictionary, Dict, "Symbol dictionary to use",
                            Dict::AR_MATRIX_CODE_3x3_PARITY65, ParamCateg);
+
+  //! Parameter \relates ARtoolkit
+  JEVOIS_DECLARE_PARAMETER(confthresh, double, "Minimum confidence threshold required for valid detections",
+                           0.7, jevois::Range<double>(0.0, 1.0), ParamCateg)
 }
 
 //! Augmented reality markers using ARtoolkit
@@ -71,8 +85,8 @@ namespace artoolkit
 
     \ingroup Components */
 class ARtoolkit : public jevois::Component,
-				  public jevois::Parameter<artoolkit::camparams, artoolkit::useContPoseEstimation,
-                                           artoolkit::dictionary, artoolkit::msg3d>
+				  public jevois::Parameter<artoolkit::camparams, artoolkit::contpose, artoolkit::dictionary,
+                                           artoolkit::msg3d, artoolkit::confthresh, artoolkit::threshmode>
 {
 	public:
 

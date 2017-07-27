@@ -18,7 +18,7 @@
 #include <jevoisbase/Components/ARtoolkit/ARtoolkit.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevois/Core/Module.H>
-
+//using namespace std;
 // ##############################################################################################################
 ARtoolkit::~ARtoolkit()
 { }
@@ -34,6 +34,22 @@ void ARtoolkit::postInit()
 // ##############################################################################################################
 void ARtoolkit::postUninit()
 {
+  // clean all of the initialization:
+  if (markersSquare)
+  {
+    deleteMarkers(&markersSquare, &markersSquareCount, arPattHandle);
+
+    // Tracking cleanup.
+    if (arPattHandle)
+    {
+      arPattDetach(arHandle);
+      arPattDeleteHandle(arPattHandle);
+    }
+    ar3DDeleteHandle(&ar3DHandle);
+    arDeleteHandle(arHandle);
+    arParamLTFree(&gCparamLT);
+  }
+
   camparams::unFreeze();
 }
 
@@ -77,7 +93,7 @@ void ARtoolkit::manualinit(int w, int h, AR_PIXEL_FORMAT pixformat)
 
   arSetPatternDetectionMode(arHandle, AR_MATRIX_CODE_DETECTION);
 
-  switch(dictionary::get())
+  switch (dictionary::get())
   {
   case artoolkit::Dict::AR_MATRIX_CODE_3x3:
     arSetMatrixCodeType(arHandle, AR_MATRIX_CODE_3x3); break;
@@ -89,6 +105,24 @@ void ARtoolkit::manualinit(int w, int h, AR_PIXEL_FORMAT pixformat)
   }
 
   itsW = w; itsH = h;
+
+  // Set the artoolkit thresh_mode:
+  AR_LABELING_THRESH_MODE modea;
+  switch (artoolkit::threshmode::get())
+  {
+  case artoolkit::DictThreshMode::AR_LABELING_THRESH_MODE_MANUAL:
+    modea = AR_LABELING_THRESH_MODE_MANUAL; break;
+  case artoolkit::DictThreshMode::AR_LABELING_THRESH_MODE_AUTO_MEDIAN:
+    modea = AR_LABELING_THRESH_MODE_AUTO_MEDIAN; break;
+  case artoolkit::DictThreshMode::AR_LABELING_THRESH_MODE_AUTO_OTSU:
+    modea = AR_LABELING_THRESH_MODE_AUTO_OTSU; break;
+  case artoolkit::DictThreshMode::AR_LABELING_THRESH_MODE_AUTO_ADAPTIVE:
+    modea = AR_LABELING_THRESH_MODE_AUTO_ADAPTIVE; break;
+  case artoolkit::DictThreshMode::AR_LABELING_THRESH_MODE_AUTO_BRACKETING:
+    modea = AR_LABELING_THRESH_MODE_AUTO_BRACKETING; break;
+  default: modea = AR_LABELING_THRESH_MODE_AUTO_OTSU;
+  }
+  arSetLabelingThreshMode(arHandle, modea);
 }
 
 // ##############################################################################################################
@@ -138,8 +172,9 @@ void ARtoolkit::detectInternal(unsigned char const * data)
   if (arDetectMarker(arHandle, const_cast<unsigned char *>(data)) < 0)
   { LERROR("Error trying to detect markers -- IGNORED"); return; }
   
+  double const confidence_thresh = artoolkit::confthresh::get();
   int const numDetected = arGetMarkerNum(arHandle);
-  int const useContPoseEstimation = artoolkit::useContPoseEstimation::get();
+  int const useContPoseEstimation = artoolkit::contpose::get();
   
   // Validate each detection:
   ARMarkerInfo * markerInfo = arGetMarker(arHandle);
@@ -155,15 +190,16 @@ void ARtoolkit::detectInternal(unsigned char const * data)
         if (markersSquare[i].patt_id == markerInfo[j].id)
         {
           if (k == -1)
-          {
-            if (markerInfo[j].cfPatt >= markersSquare[i].matchingThreshold) k = j; // First marker detected.
+          { 
+            if (markerInfo[j].cf >= confidence_thresh) k = j; // First marker detected.
           }
-          else if (markerInfo[j].cfPatt > markerInfo[k].cfPatt) k = j; // Higher confidence marker detected.
+          else if (markerInfo[j].cf > markerInfo[k].cf) k = j; // Higher confidence marker detected.
         }
       }
-    } 
+    }
+    // picked up the candidate markerInfo[k], I need to verify the k's confidence level at here  
     if (k != -1)
-    {
+    { 
       arresults result;
       result.id = markerInfo[k].id;
       result.width = markersSquare[i].marker_width;
@@ -178,8 +214,7 @@ void ARtoolkit::detectInternal(unsigned char const * data)
                                       markersSquare[i].marker_width, markersSquare[i].trans);
       else
         err = arGetTransMatSquare(ar3DHandle, &(markerInfo[k]), markersSquare[i].marker_width, markersSquare[i].trans);
-
-      if (err > 1.0) continue; // forget abot this one if we cannot properly recover the 3D matrix
+      if (err > 1.0) continue; // forget about this one if we cannot properly recover the 3D matrix
       
       arUtilMat2QuatPos(markersSquare[i].trans, result.q, result.pos);
       

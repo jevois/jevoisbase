@@ -63,7 +63,7 @@
     2D messages when \p dopose is off:
 
     - Serial message type: \b 2D
-    - `id`: decoded ArUco marker ID
+    - `id`: decoded ArUco marker ID, with a prefix 'U'
     - `x`, `y`, or vertices: standardized 2D coordinates of marker center or corners
     - `w`, `h`: standardized marker size
     - `extra`: none (empty string)
@@ -71,7 +71,7 @@
     3D messages when \p dopose is on:
 
     - Serial message type: \b 3D
-    - `id`: decoded ArUco marker ID
+    - `id`: decoded ArUco marker ID, with a prefix 'U'
     - `x`, `y`, `z`, or vertices: 3D coordinates in millimeters of marker center or corners
     - `w`, `h`, `d`: marker size in millimeters, a depth of 1mm is always used
     - `extra`: none (empty string)

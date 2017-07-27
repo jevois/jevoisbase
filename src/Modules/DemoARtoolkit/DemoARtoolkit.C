@@ -25,15 +25,47 @@
 
 //! Augmented reality markers using ARtoolkit
 /*! Detect and decode patterns known as ARtoolkit markers, which are small 2D barcodes often used in augmented
-    reality and robotics.
+    reality and robotics. See https://archive.artoolkit.org/ - This module uses version 5.x for now.
+
+    This algorithm is very fast. It runs at 400+ frames/s at 320x240 and can easily sustain the maximum 15 frames/s of
+    the JeVois camera sensor chip at 1280x1024. It may be interesting to combine it with other algorithms running on the
+    quad-core JeVois processor (see for example the \ref MarkersCombo module).
 
     Sample patterns
     ---------------
 
-    This module uses by default the 3x3 patterns with parity (32 different patterns). You can download them from
-    http://jevois.org/data/ARtoolkit3x3par.zip
+    This module uses by default the dictionary of 3x3 patterns with parity (32 different patterns). You can download
+    them from http://jevois.org/data/ARtoolkit3x3par.zip
 
     Also see the files in <b>jevoisbase/Contrib/ARToolKit5arm/doc/patterns/</b> for more.
+
+    Serial Messages
+    ---------------
+
+    This module can send standardized serial messages as described in \ref UserSerialStyle.
+
+    When \p msg3d is turned on, 3D messages will be sent, otherwise 2D messages.
+
+    One message is issued for every detected ArUco, on every video frame.
+
+    2D messages when \p msg3d is off:
+
+    - Serial message type: \b 2D
+    - `id`: decoded ARtoolkit marker ID, with a prefix 'A'
+    - `x`, `y`, or vertices: standardized 2D coordinates of marker center or corners
+    - `w`, `h`: standardized marker size
+    - `extra`: none (empty string)
+
+    3D messages when \p msg3d is on:
+
+    - Serial message type: \b 3D
+    - `id`: decoded ARtoolkit marker ID, with a prefix 'A'
+    - `x`, `y`, `z`, or vertices: 3D coordinates in millimeters of marker center or corners
+    - `w`, `h`, `d`: marker size in millimeters, a depth of 1mm is always used
+    - `extra`: none (empty string)
+
+    If you will use the quaternion data (Detail message style; see \ref UserSerialStyle), you should probably set the \p
+    serprec parameter to something non-zero to get enough accuracy in the quaternion values.
 
     @author Shixian Wen
 

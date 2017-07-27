@@ -41,7 +41,10 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
                                        Effect::NoEffect, Effect_Values, ParamCateg);
 
 //! Image filtering using OpenCV
-/*! This modules is to learn about basic image filtering. It implements a variety of filters using OpenCV.
+/*! This module is to learn about basic image filtering. It was developed to allow students to instantly observe the
+    effects of different filters and their parameters on live video. The module implements a variety of filters using
+    OpenCV. Each filter exposes some paremeters (e.g., kernel size) that can be set interactively to understand their
+    effects onto the filter behavior.
 
     Available filters:
 
@@ -70,6 +73,8 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
     - Open a video viewer on your host computer and select <b>YUYV 640x240 @@ 30 fps</b> (see \ref UserQuick)
 
     - Open a serial communication to JeVois (see \ref UserCli)
+
+    - Type `help` and observe the available parameter called \p effect
 
     - Start by setting the \p effect parameter to a given effect type. For example:
       `setpar effect Median` or `setpar effect Morpho` (commands are case-sensitive).
