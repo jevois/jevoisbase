@@ -30,6 +30,10 @@
 
 // icon by Dave Gandy in transport at flaticon
 
+//! Parameter \relates RoadNavigation
+JEVOIS_DECLARE_PARAMETER(vpconf, float, "Minimum vanishing point confidence required to send a serial message",
+                         0.0F, roadfinder::ParamCateg);
+
 //! Road finder demo
 /*! This algorithm detects road using a compination of edge detection and tracking, and texture analysis. The algorithm
     is an implementation of Chang, Siagian and Itti, IROS 2012, available at
@@ -56,7 +60,7 @@
 
     - Serial message type: \b 1D
     - `id`: always \b vp (shorthand for vanishing point)
-    - `x`: standardized 2D horizontal coordinate of the filtered vanishing point
+    - `x`: standardized 2D horizontal coordinate of the vanishing point
     - `w`: always 0
     - `extra`: none (empty string)
 
@@ -89,7 +93,7 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class RoadNavigation : public jevois::StdModule
+class RoadNavigation : public jevois::StdModule, jevois::Parameter<vpconf>
 {
   public:
     // ####################################################################################################
@@ -158,16 +162,16 @@ class RoadNavigation : public jevois::StdModule
       // Clear out the bottom section of the image:
       jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height-h, jevois::yuyv::Black);
 
-      // Get the filtered target point x and send to serial:
-      float const tpx = itsRoadFinder->getFilteredTargetX();
-      sendSerialImg1Dx(w, tpx, 0.0F, "vp");
+      // Get the vanishing point and send to serial:
+      std::pair<Point2D<int>, float> vp = itsRoadFinder->getCurrVanishingPoint();
+      if (vp.second >= vpconf::get()) sendSerialImg1Dx(w, vp.first.i, 0.0F, "vp");
       
       // Write some extra info about the vp:
       std::ostringstream otxt; otxt << std::fixed << std::setprecision(3);
-      auto vp = itsRoadFinder->getCurrVanishingPoint();
       otxt << "VP x=" << vp.first.i << " (" << vp.second << ") CTR=" << std::setprecision(1);
       auto cp = itsRoadFinder->getCurrCenterPoint();
       auto tp = itsRoadFinder->getCurrTargetPoint();
+      float const tpx = itsRoadFinder->getFilteredTargetX();
       otxt << cp.i << " TGT=" << tp.i << " fTPX=" << tpx;
       jevois::rawimage::writeText(outimg, otxt.str().c_str(), 3, h + 3, jevois::yuyv::White);
 
