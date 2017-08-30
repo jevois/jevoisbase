@@ -56,24 +56,24 @@ class DarknetYOLO : public jevois::Module
 
     void postInit() override
     {
-      char * datacfg = "/jevois/modules/JeVois/DarknetYOLO/cfg/coco.data";//(char *)(absolutePath("cfg/coco.data").c_str());
-      char * cfgfile = "/jevois/modules/JeVois/DarknetYOLO/cfg/tiny-yolo.cfg";//(char *)(absolutePath("cfg/tiny-yolo.cfg").c_str());
-      char * weightfile = "/jevois/modules/JeVois/DarknetYOLO/tiny-yolo.weights";(char *)(absolutePath("tiny-yolo.weights").c_str());
-      LINFO("datacfg=["<<datacfg<<']');
-      
-      list *options = read_data_cfg(datacfg);
-      char *name_list = "/jevois/modules/JeVois/DarknetYOLO/data/coco.names";//(char *)(absolutePath(option_find_str(options, "names", "data/names.list")).c_str());
-      names = get_labels(name_list);
+      // Note: darknet expects read/write pointers to the file names...
+      std::string datacfg = absolutePath("cfg/voc.data");
+      std::string cfgfile = absolutePath("cfg/tiny-yolo-voc.cfg");
+      std::string weightfile = absolutePath("tiny-yolo-voc.weights");
+
+      list * options = read_data_cfg(const_cast<char *>(datacfg.c_str()));
+      std::string name_list = absolutePath(option_find_str(options, "names", "data/names.list"));
+      names = get_labels(const_cast<char *>(name_list.c_str()));
 
       /////alphabet = load_alphabet();
-      net = parse_network_cfg(cfgfile);
-      load_weights(&net, weightfile);
+      net = parse_network_cfg(const_cast<char *>(cfgfile.c_str()));
+      load_weights(&net, const_cast<char *>(weightfile.c_str()));
       
       set_batch_network(&net, 1);
       srand(2222222);
 #ifdef NNPACK
       nnp_initialize();
-      net.threadpool = pthreadpool_create(4);
+      ///      net.threadpool = pthreadpool_create(4);
 #endif
 
     }
@@ -87,7 +87,7 @@ class DarknetYOLO : public jevois::Module
     void postUninit() override
     {
 #ifdef NNPACK
-	pthreadpool_destroy(net.threadpool);
+      /////pthreadpool_destroy(net.threadpool);
 	nnp_deinitialize();
 #endif
 
@@ -143,14 +143,15 @@ class DarknetYOLO : public jevois::Module
           }
 
       image sized = letterbox_image(im, net.w, net.h);
-
+      LINFO("sized image is " << sized.w << 'x' << sized.h);
+      
       float nms = .4;
 
       layer l = net.layers[net.n-1];
 
-      box *boxes = (box *)calloc(l.w*l.h*l.n, sizeof(box));
-      float **probs = (float **)calloc(l.w*l.h*l.n, sizeof(float *));
-      for (int j = 0; j < l.w*l.h*l.n; ++j) probs[j] = (float *)calloc(l.classes + 1, sizeof(float *));
+      box *boxes = (box *)calloc(l.w * l.h * l.n, sizeof(box));
+      float **probs = (float **)calloc(l.w * l.h * l.n, sizeof(float *));
+      for (int j = 0; j < l.w * l.h * l.n; ++j) probs[j] = (float *)calloc(l.classes + 1, sizeof(float)); // bugfix was float*
 
       float *X = sized.data;
       struct timeval start, stop;
@@ -163,21 +164,10 @@ class DarknetYOLO : public jevois::Module
       float thresh = .24;
       float hier_thresh = .5;
 
-      get_region_boxes(l, im.w, im.h, net.w, net.h, thresh, probs, boxes, 0, 0, hier_thresh, 1);
+      get_region_boxes(l, im.w, im.h, net.w, net.h, thresh, probs, boxes, nullptr, 0, nullptr, hier_thresh, 1);
 
       if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
-      //else if (nms) do_nms_sort(boxes, probs, l.w*l.h*l.n, l.classes, nms);
 
-
-      ////////draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
-
-      save_image(im, "predictions");
-
-      free_image(im);
-      free_image(sized);
-      free(boxes);
-      free_ptrs((void **)probs, l.w*l.h*l.n);
-      
       // Wait for paste to finish up:
       paste_fut.get();
 
@@ -185,10 +175,7 @@ class DarknetYOLO : public jevois::Module
       inframe.done();
 
       // Show all the results:
-      /////itsArUco->drawDetections(outimg, 3, h+5, ids, corners, rvecs, tvecs);
-
-      // Send serial output:
-      ////itsArUco->sendSerial(this, ids, corners, w, h, rvecs, tvecs);
+      drawDetections(outimg, l.w * l.h * l.n, thresh, boxes, probs, names, l.classes);
 
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
@@ -196,13 +183,46 @@ class DarknetYOLO : public jevois::Module
     
       // Send the output image with our processing results to the host over USB:
       outframe.send();
+
+      // Cleanup:
+      free_image(im);
+      free_image(sized);
+      free(boxes);
+      free_ptrs((void **)probs, l.w*l.h*l.n);
     }
 
     // ####################################################################################################
   protected:
+
+    void drawDetections(jevois::RawImage & im, int num, float thresh, box * boxes, float ** probs,
+                         char ** names, int classes)
+    {
+      //LINFO("got " << num << " detections");
+      // Adapted for YUYV image from draw_detections() in image.c of darknet
+      for (int i = 0; i < num; ++i)
+      {
+        int cls = max_index(probs[i], classes);
+        float prob = probs[i][cls];
+        // LINFO("det " << i << " prob " << prob*100 << " name " << names[cls]);
+        if (prob > thresh)
+        {
+          //printf("%d %s: %.0f%%\n", i, names[cls], prob*100);
+          printf("%s: %.0f%%\n", names[cls], prob*100);
+          box & b = boxes[i];
+
+          int left = (b.x - b.w / 2.0F) * im.width;
+          int bw = b.w * im.width;
+          int top = (b.y - b.h / 2.0F) * im.height;
+          int bh = b.h * im.height;
+
+          jevois::rawimage::drawRect(im, left, top, bw, bh, 2, jevois::yuyv::LightGreen);
+          jevois::rawimage::writeText(im, names[cls], left + 3, top + 3, jevois::yuyv::LightGreen);
+        }
+      }
+    }
+    
     network net;
     char **names;
-    image **alphabet;
  };
 
 // Allow the module to be loaded as a shared object (.so) file:

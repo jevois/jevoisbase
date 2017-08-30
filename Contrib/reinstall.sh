@@ -14,7 +14,7 @@ fi
 
 if [ "X$REPLY" = "Xy" ]; then
     /bin/rm -rf generalized-hough-tranform Ne10 NNPACK OF_DIS pixy pthreadpool tiny-dnn vlfeat ZBar NNPACK-darknet \
-	    FXdiv FP16 psimd darknet-nnpack
+	    FXdiv FP16 psimd darknet-nnpack darknet
 
     #git clone --recursive https://github.com/Maratyszcza/NNPACK.git # Accelerator for convnets
     git clone https://github.com/Maratyszcza/pthreadpool.git
@@ -52,6 +52,10 @@ if [ "X$REPLY" = "Xy" ]; then
     git clone https://github.com/Maratyszcza/FP16.git # header-only
     git clone https://github.com/Maratyszcza/psimd.git # header-only
 
+
+    # darknet original
+    git clone https://github.com/pjreddie/darknet.git
+    
     
     # Patching:
     cd OF_DIS && patch -p1 < ../OF_DIS.patch && cd ..
