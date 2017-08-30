@@ -216,7 +216,7 @@ class DarknetYOLO : public jevois::Module
           int bh = b.h * im.height;
 
           jevois::rawimage::drawRect(im, left, top, bw, bh, 2, jevois::yuyv::LightGreen);
-          jevois::rawimage::writeText(im, names[cls], left + 3, top + 3, jevois::yuyv::LightGreen);
+          jevois::rawimage::writeText(im, names[cls], left + 4, top + 4, jevois::yuyv::LightGreen);
         }
       }
     }
