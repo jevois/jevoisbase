@@ -73,7 +73,7 @@ class DarknetYOLO : public jevois::Module
       srand(2222222);
 #ifdef NNPACK
       nnp_initialize();
-      ///      net.threadpool = pthreadpool_create(4);
+      net.threadpool = pthreadpool_create(4);
 #endif
 
     }
@@ -87,8 +87,8 @@ class DarknetYOLO : public jevois::Module
     void postUninit() override
     {
 #ifdef NNPACK
-      /////pthreadpool_destroy(net.threadpool);
-	nnp_deinitialize();
+      pthreadpool_destroy(net.threadpool);
+      nnp_deinitialize();
 #endif
 
 
@@ -158,13 +158,15 @@ class DarknetYOLO : public jevois::Module
       gettimeofday(&start, 0);
       network_predict(net, X);
       gettimeofday(&stop, 0);
-      printf("Predicted in %ld ms.\n", (stop.tv_sec * 1000 + stop.tv_usec / 1000) - (start.tv_sec * 1000 + start.tv_usec / 1000));
+      LINFO("Predicted in " << (stop.tv_sec * 1000 + stop.tv_usec / 1000) -
+            (start.tv_sec * 1000 + start.tv_usec / 1000) << "ms");
 
 
       float thresh = .24;
       float hier_thresh = .5;
 
-      get_region_boxes(l, im.w, im.h, net.w, net.h, thresh, probs, boxes, nullptr, 0, nullptr, hier_thresh, 1);
+      //get_region_boxes(l, im.w, im.h, net.w, net.h, thresh, probs, boxes, nullptr, 0, nullptr, hier_thresh, 1);
+      get_region_boxes(l, im.w, im.h, net.w, net.h, thresh, probs, boxes, 0, 0, hier_thresh, 1);
 
       if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
 

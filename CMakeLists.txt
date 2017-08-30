@@ -173,10 +173,10 @@ endif(JEVOIS_PLATFORM)
 add_definitions(-DNNPACK)
 
 # Now darknet-nnpack proper:
-#include_directories(Contrib/darknet-nnpack/include)
-#set(DKNS "${JVB}/Contrib/darknet-nnpack/src")
-include_directories(Contrib/darknet/include)
-set(DKNS "${JVB}/Contrib/darknet/src")
+include_directories(Contrib/darknet-nnpack/include)
+set(DKNS "${JVB}/Contrib/darknet-nnpack/src")
+#include_directories(Contrib/darknet/include)
+#set(DKNS "${JVB}/Contrib/darknet/src")
 
 target_sources(jevoisbase PRIVATE ${DKNS}/gemm.c ${DKNS}/utils.c ${DKNS}/cuda.c ${DKNS}/deconvolutional_layer.c
   ${DKNS}/convolutional_layer.c ${DKNS}/list.c ${DKNS}/image.c ${DKNS}/activations.c ${DKNS}/im2col.c ${DKNS}/col2im.c
