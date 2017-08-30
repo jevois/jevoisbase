@@ -14,9 +14,9 @@ fi
 
 if [ "X$REPLY" = "Xy" ]; then
     /bin/rm -rf generalized-hough-tranform Ne10 NNPACK OF_DIS pixy pthreadpool tiny-dnn vlfeat ZBar NNPACK-darknet \
-	    FXdiv FP16 psimd
+	    FXdiv FP16 psimd darknet-nnpack
 
-    git clone --recursive https://github.com/Maratyszcza/NNPACK.git # Accelerator for convnets
+    #git clone --recursive https://github.com/Maratyszcza/NNPACK.git # Accelerator for convnets
     git clone https://github.com/Maratyszcza/pthreadpool.git
 
     # we get some release version of tiny-dnn as the master branch is under quite active development
@@ -45,7 +45,9 @@ if [ "X$REPLY" = "Xy" ]; then
     #tar zxvf cvEyeTracker-1.2.5.tar.gz
     #/bin/rm cvEyeTracker-1.2.5.tar.gz
 
-    git clone https://github.com/thomaspark-pkj/NNPACK-darknet.git # darknet CNNs accelerated by NNPack
+    git clone https://github.com/thomaspark-pkj/NNPACK-darknet.git # NNPACK acceleration for darknet CNNs
+    git clone https://github.com/thomaspark-pkj/darknet-nnpack.git # NNPACK-accelerated darknet CNNs
+    
     git clone https://github.com/Maratyszcza/FXdiv.git # header-only
     git clone https://github.com/Maratyszcza/FP16.git # header-only
     git clone https://github.com/Maratyszcza/psimd.git # header-only
@@ -57,3 +59,5 @@ if [ "X$REPLY" = "Xy" ]; then
     # Keep track of the last installed release:
     echo $release > .installed
 fi
+
+

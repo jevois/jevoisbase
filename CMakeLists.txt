@@ -42,8 +42,8 @@ include_directories("include")
 # Allow #include <jevoibase/Contrib/x/y> in our components and modules:
 include_directories("..")
 
-# Setup our library using the source files in src/Components and call it jevoisbase with version 1.3:
-jevois_setup_library(src/Components jevoisbase 1.3)
+# Setup our library using the source files in src/Components and call it jevoisbase with version 1.4:
+jevois_setup_library(src/Components jevoisbase 1.4)
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)
@@ -63,29 +63,136 @@ target_link_libraries(jevoisbase GLESv2 EGL)
 target_link_libraries(jevoisbase boost_regex)
 
 ########################################################################################################################
-# tiny-cnn support:
+# tiny-dnn support:
 include_directories(Contrib)
 include_directories(Contrib/tiny-dnn)
-include_directories(Contrib/NNPACK/include)
 include_directories(Contrib/pthreadpool/include)
+
+
+########################################################################################################################
+# darknet with NNPACK support: (on top of things already pulled in by tiny-dnn and NNPACK)
+
+include_directories(Contrib/NNPACK-darknet/include)
+include_directories(Contrib/NNPACK-darknet/src)
+include_directories(Contrib/FP16/include)
+include_directories(Contrib/FXdiv/include)
+include_directories(Contrib/psimd/include)
+
+# We use NNPACK-darknet fork so we can compile darknet, but it seems behind quite a bit in terms of neon support
+set(NNPS "${JVB}/Contrib/NNPACK-darknet/src")
+
+# NNPACK: Core
+target_sources(jevoisbase PRIVATE ${NNPS}/init.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/convolution-output.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/convolution-input-gradient.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/convolution-kernel-gradient.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/convolution-inference.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/fully-connected-output.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/fully-connected-inference.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/pooling-output.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/softmax-output.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/relu-output.c)
+target_sources(jevoisbase PRIVATE ${NNPS}/relu-input-gradient.c)
+
+if (JEVOIS_PLATFORM)
+  # Transformations
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-8x8.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-16x16.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
+  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3.c)
+  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3-fp16.c)
+  # ReLU and Softmax
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/relu.c)
+  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/relu.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/softmax.c)
+  # FFT block accumulation
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-block-mac.c)
+  # Tuple GEMM
+  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/h4gemm.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4gemm.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/c4gemm.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4c2gemm.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/c4gemm-conjb.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4c2gemm-conjb.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/c4gemm-conjb-transc.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4c2gemm-conjb-transc.c)
+  # Direct convolution
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/conv1x1.c)
+  # BLAS microkernels
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/sgemm.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/sdotxf.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/blas/shdotxf.c)
+  # FFT and Winograd
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-aos.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-soa.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-real.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-dualreal.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/winograd-f6k3.c)
+  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/winograd-f6k3.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/exp.c)
+
+  add_definitions(-DARM_NEON)
+  #-mfpu=neon-vfpv4 -funsafe-math-optimizations -ftree-vectorize
+
+else (JEVOIS_PLATFORM)
+
+  # NOTE: on host we just use scalar as opposed to x86 SIMD extensions
+  # Transformations
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/2d-fourier-8x8.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/2d-fourier-16x16.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/2d-winograd-8x8-3x3.c)
+  # ReLU and Softmax
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/relu.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/softmax.c)
+  # Tuple GEMM
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/s2gemm.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/s2gemm-transc.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/cgemm.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/cgemm-conjb.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/cgemm-conjb-transc.c)
+  # Direct convolution
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/conv1x1.c)
+  # BLAS microkernels
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/sgemm.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/sdotxf.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/shdotxf.c)
+  # FFT and Winograd
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-aos.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-soa.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-real.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-dualreal.c)
+  #target_sources(jevoisbase PRIVATE ${NNPS}/scalar/winograd-f6k3.c)
+    
+endif(JEVOIS_PLATFORM)
+
+add_definitions(-DNNPACK)
+
+# Now darknet-nnpack proper:
+include_directories(Contrib/darknet-nnpack/include)
+set(DKNS "${JVB}/Contrib/darknet-nnpack/src")
+
+target_sources(jevoisbase PRIVATE ${DKNS}/gemm.c ${DKNS}/utils.c ${DKNS}/cuda.c ${DKNS}/deconvolutional_layer.c
+  ${DKNS}/convolutional_layer.c ${DKNS}/list.c ${DKNS}/image.c ${DKNS}/activations.c ${DKNS}/im2col.c ${DKNS}/col2im.c
+  ${DKNS}/blas.c ${DKNS}/crop_layer.c ${DKNS}/dropout_layer.c ${DKNS}/maxpool_layer.c ${DKNS}/softmax_layer.c
+  ${DKNS}/data.c ${DKNS}/matrix.c ${DKNS}/network.c ${DKNS}/connected_layer.c ${DKNS}/cost_layer.c ${DKNS}/parser.c
+  ${DKNS}/option_list.c ${DKNS}/detection_layer.c ${DKNS}/route_layer.c ${DKNS}/box.c ${DKNS}/normalization_layer.c
+  ${DKNS}/avgpool_layer.c ${DKNS}/layer.c ${DKNS}/local_layer.c ${DKNS}/shortcut_layer.c ${DKNS}/activation_layer.c
+  ${DKNS}/rnn_layer.c ${DKNS}/gru_layer.c ${DKNS}/crnn_layer.c ${DKNS}/demo.c ${DKNS}/batchnorm_layer.c
+  ${DKNS}/region_layer.c ${DKNS}/reorg_layer.c ${DKNS}/tree.c ${DKNS}/lstm_layer.c)
 
 ########################################################################################################################
 # ZZBar barcode / QR-code source files:
 
 include_directories(Contrib/ZBar/include Contrib/ZBar/zbar)
-target_sources(jevoisbase PRIVATE ${JVB}/Contrib/ZBar/zbar/processor.c ${JVB}/Contrib/ZBar/zbar/scanner.c
-  ${JVB}/Contrib/ZBar/zbar/symbol.c ${JVB}/Contrib/ZBar/zbar/img_scanner.c ${JVB}/Contrib/ZBar/zbar/qrcode/rs.c
-  ${JVB}/Contrib/ZBar/zbar/qrcode/isaac.c ${JVB}/Contrib/ZBar/zbar/qrcode/util.c
-  ${JVB}/Contrib/ZBar/zbar/qrcode/qrdectxt.c ${JVB}/Contrib/ZBar/zbar/qrcode/bch15_5.c
-  ${JVB}/Contrib/ZBar/zbar/qrcode/binarize.c ${JVB}/Contrib/ZBar/zbar/qrcode/qrdec.c ${JVB}/Contrib/ZBar/zbar/config.c
-  ${JVB}/Contrib/ZBar/zbar/error.c ${JVB}/Contrib/ZBar/zbar/processor/posix.c ${JVB}/Contrib/ZBar/zbar/processor/lock.c
-  ${JVB}/Contrib/ZBar/zbar/processor/null.c ${JVB}/Contrib/ZBar/zbar/convert.c ${JVB}/Contrib/ZBar/zbar/decoder/i25.c
-  ${JVB}/Contrib/ZBar/zbar/decoder/qr_finder.c ${JVB}/Contrib/ZBar/zbar/decoder/code128.c
-  ${JVB}/Contrib/ZBar/zbar/decoder/codabar.c ${JVB}/Contrib/ZBar/zbar/decoder/code39.c
-  ${JVB}/Contrib/ZBar/zbar/decoder/databar.c ${JVB}/Contrib/ZBar/zbar/decoder/ean.c
-  ${JVB}/Contrib/ZBar/zbar/decoder/code93.c ${JVB}/Contrib/ZBar/zbar/image.c ${JVB}/Contrib/ZBar/zbar/refcnt.c
-  ${JVB}/Contrib/ZBar/zbar/decoder.c)
-# ${JVB}/Contrib/ZBar/zbar/decoder/pdf417.c
+set(ZBS "${JVB}/Contrib/ZBar/zbar")
+target_sources(jevoisbase PRIVATE ${ZBS}/processor.c ${ZBS}/scanner.c ${ZBS}/symbol.c ${ZBS}/img_scanner.c
+  ${ZBS}/qrcode/rs.c ${ZBS}/qrcode/isaac.c ${ZBS}/qrcode/util.c ${ZBS}/qrcode/qrdectxt.c ${ZBS}/qrcode/bch15_5.c
+  ${ZBS}/qrcode/binarize.c ${ZBS}/qrcode/qrdec.c ${ZBS}/config.c ${ZBS}/error.c ${ZBS}/processor/posix.c
+  ${ZBS}/processor/lock.c ${ZBS}/processor/null.c ${ZBS}/convert.c ${ZBS}/decoder/i25.c ${ZBS}/decoder/qr_finder.c
+  ${ZBS}/decoder/code128.c ${ZBS}/decoder/codabar.c ${ZBS}/decoder/code39.c ${ZBS}/decoder/databar.c
+  ${ZBS}/decoder/ean.c ${ZBS}/decoder/code93.c ${ZBS}/image.c ${ZBS}/refcnt.c ${ZBS}/decoder.c)
+# ${ZBS}/decoder/pdf417.c
 
 # FIXME need to debug zbar as it gives some warnings
 add_definitions(-Wparentheses -w)
