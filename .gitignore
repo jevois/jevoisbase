@@ -1,5 +1,6 @@
 modinfo.html
 modinfo.yaml
+Contrib/.installed
 Contrib/NNPACK
 Contrib/Ne10
 Contrib/OF_DIS
@@ -9,6 +10,10 @@ Contrib/pixy
 Contrib/pthreadpool
 Contrib/tiny-dnn
 Contrib/vlfeat
+Contrib/NNPACK-darknet
+Contrib/FXdiv
+Contrib/FP16
+Contrib/psimd
 /hbuild/
 /pbuild/
 /jvpkg/

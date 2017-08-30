@@ -4,13 +4,8 @@
 ncpu=`cat /proc/cpuinfo |grep processor|wc -l`
 if [ `cat /proc/cpuinfo | grep ARM | wc -l` -gt 0 ]; then ncpu=1; fi
 
-# Get the external contributed packages if they are not here:
-if [ ! -d Contrib/ZBar ]; then
-    echo "It looks like some Contrib packages are missing. Redirecting to Contrib/reinstall.sh ..."
-    cd Contrib
-    ./reinstall.sh
-    cd ..
-fi
+# Get the external contributed packages if they are not here or are outdated:
+./Contrib/check.sh
 
 /bin/rm -rf hbuild \
     && mkdir hbuild \

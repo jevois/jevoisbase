@@ -1,3 +1,8 @@
+
+# Do this only on the master repo to create some config files that will be committed to github.
+# Anyone just cloning jevoisbase from github should run reinstall.sh instead.
+# Further, reinstall.sh is run automatically by rebuild-host.sh
+
 # Get the following contribs:
 
 ######### tiny-cnn convolutional neural networks:
