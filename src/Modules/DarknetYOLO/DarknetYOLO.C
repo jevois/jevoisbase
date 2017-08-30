@@ -19,7 +19,12 @@
 #include <jevois/Debug/Timer.H>
 #include <jevois/Image/RawImageOps.H>
 #include <opencv2/core/core.hpp>
+
+#include <nnpack.h>
+
+extern "C" {
 #include <darknet.h>
+}
 
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network
 /*! 
@@ -47,15 +52,20 @@ class DarknetYOLO : public jevois::Module
     // ####################################################################################################
     DarknetYOLO(std::string const & instance) : jevois::Module(instance)
     {
-      char * datacfg = (char *)(absolutePath("cfg/coco.data").c_str());
-      char * cfgfile = (char *)(absolutePath("cfg/tiny-yolo.cfg").c_str());
-      char * weightfile = (char *)(absolutePath("tiny-yolo.weights").c_str());
+    }
+
+    void postInit() override
+    {
+      char * datacfg = "/jevois/modules/JeVois/DarknetYOLO/cfg/coco.data";//(char *)(absolutePath("cfg/coco.data").c_str());
+      char * cfgfile = "/jevois/modules/JeVois/DarknetYOLO/cfg/tiny-yolo.cfg";//(char *)(absolutePath("cfg/tiny-yolo.cfg").c_str());
+      char * weightfile = "/jevois/modules/JeVois/DarknetYOLO/tiny-yolo.weights";(char *)(absolutePath("tiny-yolo.weights").c_str());
+      LINFO("datacfg=["<<datacfg<<']');
       
       list *options = read_data_cfg(datacfg);
-      char *name_list = (char *)(absolutePath(option_find_str(options, "names", "data/names.list")).c_str());
+      char *name_list = "/jevois/modules/JeVois/DarknetYOLO/data/coco.names";//(char *)(absolutePath(option_find_str(options, "names", "data/names.list")).c_str());
       names = get_labels(name_list);
 
-      alphabet = load_alphabet();
+      /////alphabet = load_alphabet();
       net = parse_network_cfg(cfgfile);
       load_weights(&net, weightfile);
       
@@ -72,6 +82,9 @@ class DarknetYOLO : public jevois::Module
     //! Virtual destructor for safe inheritance
     // ####################################################################################################
     virtual ~DarknetYOLO()
+    { }
+
+    void postUninit() override
     {
 #ifdef NNPACK
 	pthreadpool_destroy(net.threadpool);
@@ -109,7 +122,7 @@ class DarknetYOLO : public jevois::Module
       jevois::RawImage outimg;
       auto paste_fut = std::async(std::launch::async, [&]() {
           outimg = outframe.get();
-          outimg.require("output", w, h + 20, inimg.fmt);
+          outimg.require("output", w, h + 60, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);
           jevois::rawimage::writeText(outimg, "JeVois Darknet YOLO", 3, 3, jevois::yuyv::White);
           jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height-h, jevois::yuyv::Black);
@@ -154,7 +167,9 @@ class DarknetYOLO : public jevois::Module
 
       if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
       //else if (nms) do_nms_sort(boxes, probs, l.w*l.h*l.n, l.classes, nms);
-      draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
+
+
+      ////////draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
 
       save_image(im, "predictions");
 

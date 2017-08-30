@@ -66,8 +66,10 @@ target_link_libraries(jevoisbase boost_regex)
 # tiny-dnn support:
 include_directories(Contrib)
 include_directories(Contrib/tiny-dnn)
+
 include_directories(Contrib/pthreadpool/include)
 
+target_sources(jevoisbase PRIVATE Contrib/pthreadpool/src/threadpool-pthreads.c)
 
 ########################################################################################################################
 # darknet with NNPACK support: (on top of things already pulled in by tiny-dnn and NNPACK)
@@ -163,7 +165,9 @@ else (JEVOIS_PLATFORM)
   target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-real.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-dualreal.c)
   #target_sources(jevoisbase PRIVATE ${NNPS}/scalar/winograd-f6k3.c)
-    
+
+  add_definitions(-DNNP_BACKEND_SCALAR=1)
+
 endif(JEVOIS_PLATFORM)
 
 add_definitions(-DNNPACK)
