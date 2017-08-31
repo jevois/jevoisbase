@@ -16,7 +16,7 @@
 /*! \file */
 
 #include <jevois/Core/Module.H>
-#include <jevois/Debug/Timer.H>
+#include <jevois/Debug/Profiler.H>
 #include <jevois/Image/RawImageOps.H>
 #include <opencv2/core/core.hpp>
 
@@ -107,12 +107,12 @@ class DarknetYOLO : public jevois::Module
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
-      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+      static jevois::Profiler prof("processing", 10, LOG_INFO);
 
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
 
-      timer.start();
+      prof.start();
       
       // We only handle one specific pixel format, and any image size in this module:
       unsigned int const w = inimg.width, h = inimg.height;
@@ -128,9 +128,13 @@ class DarknetYOLO : public jevois::Module
           jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height-h, jevois::yuyv::Black);
         });
 
+      prof.checkpoint("paste started");
+      
       // Convert the image to RGB and process:
       cv::Mat cvimg = jevois::rawimage::convertToCvRGB(inimg);
 
+      prof.checkpoint("convert to rgb");
+      
       int const c = 3; // color channels
       image im = make_image(w, h, c);
       for (int k = 0; k < c; ++k)
@@ -142,9 +146,19 @@ class DarknetYOLO : public jevois::Module
             im.data[dst_index] = float(cvimg.data[src_index]) / 255.0F;
           }
 
+      prof.checkpoint("rgb to float");
+      
       image sized = letterbox_image(im, net.w, net.h);
       LINFO("sized image is " << sized.w << 'x' << sized.h);
       
+      prof.checkpoint("letterbox");
+
+      // Wait for paste to finish up:
+      paste_fut.get();
+
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
       float nms = .4;
 
       layer l = net.layers[net.n-1];
@@ -154,14 +168,10 @@ class DarknetYOLO : public jevois::Module
       for (int j = 0; j < l.w * l.h * l.n; ++j) probs[j] = (float *)calloc(l.classes + 1, sizeof(float)); // bugfix was float*
 
       float *X = sized.data;
-      struct timeval start, stop;
-      gettimeofday(&start, 0);
+      prof.checkpoint("paste done");
       network_predict(net, X);
-      gettimeofday(&stop, 0);
-      LINFO("Predicted in " << (stop.tv_sec * 1000 + stop.tv_usec / 1000) -
-            (start.tv_sec * 1000 + start.tv_usec / 1000) << "ms");
-
-
+      prof.checkpoint("nn done");
+      
       float thresh = .24;
       float hier_thresh = .5;
 
@@ -170,19 +180,15 @@ class DarknetYOLO : public jevois::Module
 
       if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
 
-      // Wait for paste to finish up:
-      paste_fut.get();
-
-      // Let camera know we are done processing the input image:
-      inframe.done();
-
       // Show all the results:
       drawDetections(outimg, l.w * l.h * l.n, thresh, boxes, probs, names, l.classes);
 
       // Show processing fps:
-      std::string const & fpscpu = timer.stop();
-      jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
-    
+      //std::string const & fpscpu = timer.stop();
+      //jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
+
+      prof.checkpoint("draw done");
+      
       // Send the output image with our processing results to the host over USB:
       outframe.send();
 
@@ -191,6 +197,8 @@ class DarknetYOLO : public jevois::Module
       free_image(sized);
       free(boxes);
       free_ptrs((void **)probs, l.w*l.h*l.n);
+
+      prof.stop();
     }
 
     // ####################################################################################################

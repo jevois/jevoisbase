@@ -100,18 +100,18 @@ if (JEVOIS_PLATFORM)
   # Transformations
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-8x8.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-16x16.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
-  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3.c)
-  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3-fp16.c)
+#  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
+#  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3-fp16.c)
   # ReLU and Softmax
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/relu.c)
-  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/relu.c)
+  #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/relu.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/relu.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/softmax.c)
   # FFT block accumulation
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-block-mac.c)
+  #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-block-mac.c) ###
   # Tuple GEMM
-  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/h4gemm.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/h4gemm.c) ####
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4gemm.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/c4gemm.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4c2gemm.c)
@@ -130,12 +130,12 @@ if (JEVOIS_PLATFORM)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-soa.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-real.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-dualreal.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/winograd-f6k3.c)
-  #target_sources(jevoisbase PRIVATE ${NNPS}/neon/winograd-f6k3.c)
+  #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/winograd-f6k3.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/winograd-f6k3.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/exp.c)
 
   add_definitions(-DARM_NEON)
-  #-mfpu=neon-vfpv4 -funsafe-math-optimizations -ftree-vectorize
+#  add_definitions(-mfpu=neon-vfpv4 -funsafe-math-optimizations -ftree-vectorize -mfp16-format=ieee)
 
 else (JEVOIS_PLATFORM)
 
@@ -164,7 +164,7 @@ else (JEVOIS_PLATFORM)
   target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-soa.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-real.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-dualreal.c)
-  #target_sources(jevoisbase PRIVATE ${NNPS}/scalar/winograd-f6k3.c)
+  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/winograd-f6k3.c) ####
 
   add_definitions(-DNNP_BACKEND_SCALAR=1)
 
@@ -273,6 +273,7 @@ include_directories(Contrib/ARToolKit5arm/include)
 
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others (from pkg-config --libs opencv and deleting a few):
+
 target_link_libraries(jevoisbase ${JEVOIS_OPENCV_LIBS} opencv_stitching opencv_superres opencv_videostab
   opencv_aruco opencv_bgsegm opencv_bioinspired opencv_ccalib opencv_dnn opencv_dpm opencv_fuzzy
   opencv_line_descriptor opencv_optflow opencv_plot opencv_reg opencv_saliency opencv_stereo opencv_structured_light
@@ -280,6 +281,12 @@ target_link_libraries(jevoisbase ${JEVOIS_OPENCV_LIBS} opencv_stitching opencv_s
   opencv_shape opencv_video opencv_ximgproc opencv_calib3d opencv_features2d opencv_flann opencv_xobjdetect
   opencv_objdetect opencv_ml opencv_xphoto opencv_highgui opencv_videoio opencv_imgcodecs opencv_photo
   opencv_imgproc opencv_core)
+
+########################################################################################################################
+# Install shared resources (cascade classifiers, neural network weights, etc):
+
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/share"
+  DESTINATION "${JEVOIS_MODULES_ROOT}" COMPONENT bin)
 
 ########################################################################################################################
 # Documentation:
