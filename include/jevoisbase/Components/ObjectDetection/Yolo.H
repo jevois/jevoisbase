@@ -97,11 +97,12 @@ class Yolo : public jevois::Component,
         input dims. */
     void predict(image & im);
 
-    void computeBoxes(jevois::RawImage & im);
+
+    void computeBoxes(int inw, int inh);
 
     //void sendSerial();
 
-    void drawDetections(jevois::RawImage & im);
+    void drawDetections(jevois::RawImage & outimg, int inw, int inh, int xoff, int yoff);
 
   protected:
     network net;

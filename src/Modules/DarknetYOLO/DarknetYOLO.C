@@ -110,7 +110,11 @@ class DarknetYOLO : public jevois::Module
 
       prof.checkpoint("predicted");
 
-      itsYolo->drawDetections(outimg);
+      itsYolo->computeBoxes(w, h);
+      
+      prof.checkpoint("boxes");
+
+      itsYolo->drawDetections(outimg, w, h, 0, 0);
 
       // Show processing fps:
       //std::string const & fpscpu = timer.stop();

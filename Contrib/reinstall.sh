@@ -43,7 +43,7 @@ if [ "X$REPLY" = "Xy" ]; then
     get_github ZBar ZBar 854a5d97059e395807091ac4d80c53f7968abb8f # Barcode/QRcode detection
     cp zbar-config.h ZBar/include/config.h
 
-    # CMUcam5 (pixy) color blog tracker:
+    # CMUcam5 (pixy) color blob tracker:
     #get_github charmedlabs pixy 6ddb42dc8c15383e0bfc6951c7e1d9e1adf7fb35
 
     # ARM Neon (SIMD) open source project:
@@ -65,7 +65,7 @@ if [ "X$REPLY" = "Xy" ]; then
     #/bin/rm cvEyeTracker-1.2.5.tar.gz
 
     # NNPACK acceleration for darknet CNNs. NOTE: We also update it to a more recent upstream:
-    get_github thomaspark-pkj NNPACK-darknet fa5bddcfca788c69defdf1fcaafb31a2b6d685a7
+    get_github thomaspark-pkj NNPACK-darknet 1ecda1044d314893796b2d1c4c71d6aeda84baa2
     cd NNPACK-darknet && \
 	git pull --no-edit https://github.com/Maratyszcza/NNPACK.git master && \
 	git checkout -q 3627062907e01ba5f030730f1027dd773323e0e3 && \

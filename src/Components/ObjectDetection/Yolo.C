@@ -27,9 +27,9 @@ void Yolo::postInit()
   std::string root = dataroot::get(); if (root.empty() == false) root += '/';
   
   // Note: darknet expects read/write pointers to the file names...
-  std::string datacf = absolutePath(root + datacfg::get());
-  std::string cfgfil = absolutePath(root + cfgfile::get());
-  std::string weightfil = absolutePath(root + weightfile::get());
+  std::string const datacf = absolutePath(root + datacfg::get());
+  std::string const cfgfil = absolutePath(root + cfgfile::get());
+  std::string const weightfil = absolutePath(root + weightfile::get());
 
   list * options = read_data_cfg(const_cast<char *>(datacf.c_str()));
   std::string name_list = namefile::get();
@@ -41,12 +41,16 @@ void Yolo::postInit()
   LINFO("Using weights from " << weightfil);
   LINFO("Using names from " << name_list);
 
+  LINFO("Getting labels...");
   names = get_labels(const_cast<char *>(name_list.c_str()));
+  LINFO("Parsing network...");
   net = parse_network_cfg(const_cast<char *>(cfgfil.c_str()));
+  LINFO("Loading weights...");
   load_weights(&net, const_cast<char *>(weightfil.c_str()));
-      
+
   set_batch_network(&net, 1);
   srand(2222222);
+  LINFO("YOLO network ready");
   
 #ifdef NNPACK
   nnp_initialize();
@@ -62,7 +66,7 @@ void Yolo::postUninit()
   nnp_deinitialize();
 #endif
   if (boxes) { free(boxes); boxes = nullptr; }
-  if (probs) { layer l = net.layers[net.n-1]; free_ptrs((void **)probs, l.w * l.h * l.n); probs = nullptr; }
+  if (probs) { layer & l = net.layers[net.n-1]; free_ptrs((void **)probs, l.w * l.h * l.n); probs = nullptr; }
 }
 
 // ####################################################################################################
@@ -95,35 +99,37 @@ void Yolo::predict(image & im)
   image sized = letterbox_image(im, net.w, net.h);
   LINFO("sized image is " << sized.w << 'x' << sized.h);
       
-  layer & l = net.layers[net.n-1];
-
-  if (boxes) free(boxes);
-  boxes = (box *)calloc(l.w * l.h * l.n, sizeof(box));
-
-  if (probs) free_ptrs((void **)probs, l.w * l.h * l.n);
-  probs = (float **)calloc(l.w * l.h * l.n, sizeof(float *));
-  for (int j = 0; j < l.w * l.h * l.n; ++j) probs[j] = (float *)calloc(l.classes + 1, sizeof(float));
-
   float * X = sized.data;
 
   network_predict(net, X);
-
+  LINFO("predict done");
   free_image(sized);
 }
 
 // ####################################################################################################
-void Yolo::computeBoxes(jevois::RawImage & im)
+void Yolo::computeBoxes(int inw, int inh)
 {
   layer & l = net.layers[net.n-1];
 
-  get_region_boxes(l, im.width, im.height, net.w, net.h, thresh::get(), probs, boxes, 0, 0, hierthresh::get(), 1);
+  if (boxes == nullptr)
+    boxes = (box *)calloc(l.w * l.h * l.n, sizeof(box));
 
+  if (probs == nullptr)
+  {
+    probs = (float **)calloc(l.w * l.h * l.n, sizeof(float *));
+    for (int j = 0; j < l.w * l.h * l.n; ++j) probs[j] = (float *)calloc(l.classes + 1, sizeof(float));
+  }
+  LINFO("ok1");
+  get_region_boxes(l, inw, inh, net.w, net.h, thresh::get(), probs, boxes, 0, 0, hierthresh::get(), 1);
+
+  LINFO("ok2");
   float const nmsval = nms::get();
   if (nmsval) do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nmsval);
+  LINFO("ok3");
 }
 
 // ####################################################################################################
-void Yolo::drawDetections(jevois::RawImage & im)
+void Yolo::drawDetections(jevois::RawImage & outimg, int inw, int inh, int xoff, int yoff)
 {
   layer & l = net.layers[net.n-1];
   int const num = l.w * l.h * l.n;
@@ -140,13 +146,13 @@ void Yolo::drawDetections(jevois::RawImage & im)
     {
       box & b = boxes[i];
 
-      int left = (b.x - b.w / 2.0F) * im.width;
-      int bw = b.w * im.width;
-      int top = (b.y - b.h / 2.0F) * im.height;
-      int bh = b.h * im.height;
+      int left = xoff + (b.x - b.w / 2.0F) * inw;
+      int bw = b.w * inw;
+      int top = yoff + (b.y - b.h / 2.0F) * inh;
+      int bh = b.h * inh;
 
-      jevois::rawimage::drawRect(im, left, top, bw, bh, 2, jevois::yuyv::LightGreen);
-      jevois::rawimage::writeText(im, names[cls], left + 4, top + 4, jevois::yuyv::LightGreen);
+      jevois::rawimage::drawRect(outimg, left, top, bw, bh, 2, jevois::yuyv::LightGreen);
+      jevois::rawimage::writeText(outimg, names[cls], left + 4, top + 4, jevois::yuyv::LightGreen);
     }
   }
 }
