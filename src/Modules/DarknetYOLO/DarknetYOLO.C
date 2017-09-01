@@ -16,22 +16,57 @@
 /*! \file */
 
 #include <jevois/Core/Module.H>
-#include <jevois/Debug/Profiler.H>
+#include <jevois/Debug/Timer.H>
 #include <jevois/Image/RawImageOps.H>
 #include <opencv2/core/core.hpp>
 #include <jevoisbase/Components/ObjectDetection/Yolo.H>
 
+// icon from https://pjreddie.com/darknet/yolo/
+
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network
-/*! 
+/*! Darknet is a popular neural network framework, and YOLO is a very interesting network that detects all objects in a
+    scene in one pass. This component detects all instances of any of the objects it knows about (determined by the
+    network structure, labels, dataset used for training, and weights obtained) in the image that is given to is.
+
+    See https://pjreddie.com/darknet/yolo/
+
+    This module runs a YOLO network and shows all detections obtained. The YOLO network is currently quite slow, hence
+    it is only run once in a while. Point your camera towards some interesting scene, keep it stable, and wait for YOLO
+    to tell you what it found.
+
+    Note that by default this module runs the Pascal-VOC version of tiny-YOLO, with these object categories:
+
+    - aeroplane
+    - bicycle
+    - bird
+    - boat
+    - bottle
+    - bus
+    - car
+    - cat
+    - chair
+    - cow
+    - diningtable
+    - dog
+    - horse
+    - motorbike
+    - person
+    - pottedplant
+    - sheep
+    - sofa
+    - train
+    - tvmonitor
+
+    Sometimes it will make mistakes! The performance of tiny-yolo-voc is about 57.1% correct (mean average precision) on
+    the test set.
+
     @author Laurent Itti
 
     @displayname Darknet YOLO
-    @videomapping NONE 0 0 0 YUYV 320 240 30.0 JeVois DarknetYOLO
-    @videomapping YUYV 320 260 30.0 YUYV 320 240 30.0 JeVois DarknetYOLO
-    @videomapping YUYV 640 500 20.0 YUYV 640 480 20.0 JeVois DarknetYOLO
+    @videomapping YUYV 1280 480 15.0 YUYV 640 480 15.0 JeVois DarknetYOLO
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
-    @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California
+    @copyright Copyright (C) 2017 by Laurent Itti, iLab and the University of Southern California
     @mainurl http://jevois.org
     @supporturl http://jevois.org/doc
     @otherurl http://iLab.usc.edu
@@ -57,6 +92,14 @@ class DarknetYOLO : public jevois::Module
     { }
 
     // ####################################################################################################
+    //! Un-initialization
+    // ####################################################################################################
+    virtual void postUninit() override
+    {
+      try { itsPredictFut.get(); } catch (...) { }
+    }
+    
+    // ####################################################################################################
     //! Processing function, no video output
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe) override
@@ -69,12 +112,12 @@ class DarknetYOLO : public jevois::Module
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
-      static jevois::Profiler prof("processing", 10, LOG_INFO);
+      static jevois::Timer timer("processing", 50, LOG_DEBUG);
 
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
 
-      prof.start();
+      timer.start();
       
       // We only handle one specific pixel format, and any image size in this module:
       unsigned int const w = inimg.width, h = inimg.height;
@@ -84,53 +127,109 @@ class DarknetYOLO : public jevois::Module
       jevois::RawImage outimg;
       auto paste_fut = std::async(std::launch::async, [&]() {
           outimg = outframe.get();
-          outimg.require("output", w, h + 60, inimg.fmt);
+          outimg.require("output", w * 2, h, inimg.fmt);
+
+          // Paste the current input image:
           jevois::rawimage::paste(inimg, outimg, 0, 0);
-          jevois::rawimage::writeText(outimg, "JeVois Darknet YOLO", 3, 3, jevois::yuyv::White);
-          jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height-h, jevois::yuyv::Black);
+          jevois::rawimage::writeText(outimg, "JeVois Darknet YOLO - input", 3, 3, jevois::yuyv::White);
+
+          // Paste the latest prediction results, if any, otherwise a wait message:
+          cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
+          if (itsRawPrevOutputCv.empty() == false)
+            itsRawPrevOutputCv.copyTo(outimgcv(cv::Rect(w, 0, w, h)));
+          else
+          {
+            jevois::rawimage::drawFilledRect(outimg, w, 0, w, h, jevois::yuyv::Black);
+            jevois::rawimage::writeText(outimg, "JeVois Darknet YOLO - loading network - please wait...",
+                                        w + 3, 3, jevois::yuyv::White);
+          }
         });
 
-      prof.checkpoint("paste started");
+      // Decide on what to do based on itsPredictFut: if it is valid, we are still predicting, so check whether we are
+      // done and if so draw the results. Otherwise, start predicting using the current input frame:
+      if (itsPredictFut.valid())
+      {
+        // Are we finished predicting?
+        if (itsPredictFut.wait_for(std::chrono::milliseconds(5)) == std::future_status::ready)
+        {
+          // Do a get() on our future to free up the async thread and get any exception it might have thrown. In
+          // particular, it will throw if we are still loading the network:
+          bool success = true; float ptime = 0.0F;
+          try { ptime = itsPredictFut.get(); } catch (...) { success = false; }
+
+          // Wait for paste to finish up:
+          paste_fut.get();
+
+          // Let camera know we are done processing the input image:
+          inframe.done();
+
+          if (success)
+          {
+            cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
+
+            // Update our output image: First paste the image we have been making predictions on:
+            if (itsRawPrevOutputCv.empty()) itsRawPrevOutputCv = cv::Mat(h, w, CV_8UC2);
+            itsRawInputCv.copyTo(outimgcv(cv::Rect(w, 0, w, h)));
+
+            // Then draw the detections:
+            itsYolo->drawDetections(outimg, w, h, w, 0);
+
+            // Draw some text messages:
+            jevois::rawimage::writeText(outimg, "JeVois Darknet YOLO - predictions", w + 3, 3, jevois::yuyv::White);
+            jevois::rawimage::writeText(outimg, "YOLO predict time: " + std::to_string(int(ptime)) + "ms",
+                                        w + 3, h - 13, jevois::yuyv::White);
+
+            // Finally make a copy of these new results so we can display them again while we wait for the next round:
+            outimgcv(cv::Rect(w, 0, w, h)).copyTo(itsRawPrevOutputCv);
+          }
+        }
+        else
+        {
+          // Future is not ready, do nothing except drawings on this frame (done in paste_fut thread) and we will try
+          // again on the next one...
+          paste_fut.get();
+          inframe.done();
+        }
+      }
+      else
+      {
+        // Convert input image to RGB for predictions:
+        itsCvImg = jevois::rawimage::convertToCvRGB(inimg);
       
-      // Convert the image to RGB and process:
-      cv::Mat cvimg = jevois::rawimage::convertToCvRGB(inimg);
+        // Also make a raw YUYV copy of the input image for later displays:
+        cv::Mat inimgcv = jevois::rawimage::cvImage(inimg);
+        inimgcv.copyTo(itsRawInputCv);
 
-      prof.checkpoint("converted to rgb");
-      
-      // Wait for paste to finish up:
-      paste_fut.get();
+        // Wait for paste to finish up:
+        paste_fut.get();
 
-      // Let camera know we are done processing the input image:
-      inframe.done();
+        // Let camera know we are done processing the input image:
+        inframe.done();
 
-
-      prof.checkpoint("paste done");
-      
-      itsYolo->predict(cvimg);
-
-      prof.checkpoint("predicted");
-
-      itsYolo->computeBoxes(w, h);
-      
-      prof.checkpoint("boxes");
-
-      itsYolo->drawDetections(outimg, w, h, 0, 0);
+        // Launch the predictions:
+        itsPredictFut = std::async(std::launch::async, [&](int ww, int hh)
+                                   {
+                                     float pt = itsYolo->predict(itsCvImg);
+                                     itsYolo->computeBoxes(ww, hh);
+                                     return pt;
+                                   }, w, h);
+      }
 
       // Show processing fps:
-      //std::string const & fpscpu = timer.stop();
-      //jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
-
-      prof.checkpoint("draw done");
+      std::string const & fpscpu = timer.stop();
+      jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
       
       // Send the output image with our processing results to the host over USB:
       outframe.send();
-
-      prof.stop();
     }
 
     // ####################################################################################################
   protected:
     std::shared_ptr<Yolo> itsYolo;
+    std::future<float> itsPredictFut;
+    cv::Mat itsRawInputCv;
+    cv::Mat itsCvImg;
+    cv::Mat itsRawPrevOutputCv;
  };
 
 // Allow the module to be loaded as a shared object (.so) file:

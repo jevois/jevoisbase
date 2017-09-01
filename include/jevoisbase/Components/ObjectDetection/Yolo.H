@@ -19,6 +19,7 @@
 
 #include <jevois/Component/Component.H>
 #include <jevois/Image/RawImageOps.H>
+#include <atomic>
 
 #include <nnpack.h>
 
@@ -67,15 +68,20 @@ namespace yolo
 }
 
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network
-/*! 
+/*! Darknet is a popular neural network framework, and YOLO is a very interesting network that detects all objects in a
+    scene in one pass. This component detects all instances of any of the objects it knows about (determined by the
+    network structure, labels, dataset used for training, and weights obtained) in the image that is given to is.
+
+    See https://pjreddie.com/darknet/yolo/
+
     \ingroup Components */
 class Yolo : public jevois::Component,
              jevois::Parameter<yolo::dataroot, yolo::datacfg, yolo::cfgfile, yolo::weightfile, yolo::namefile,
                                yolo::nms, yolo::thresh, yolo::hierthresh>
 {
   public: 
-    //! Inherited constructor ok
-    using jevois::Component::Component;
+    //! Constructor
+    Yolo(std::string const & instance);
 
     //! Initialize, configure and load the network in a thread
     /*! Any call to process() will simply throw until the network is loaded and ready */
@@ -89,24 +95,32 @@ class Yolo : public jevois::Component,
 
     //! Processing function, results are stored internally in the underlying Darknet network object
     /*! This version expects an OpenCV RGB byte image which will be converted to float RGB planar, and which may be
-        letterboxed if necessary to fit network input dims. */
-    void predict(cv::Mat const & cvimg);
+        letterboxed if necessary to fit network input dims. Returns the prediction time (neural net forward pass) in
+        milliseconds. */
+    float predict(cv::Mat const & cvimg);
     
     //! Processing function, results are stored internally in the underlying Darknet network object
     /*! This version expects a Darknet image input, RGB float planar normalized to [0..1], with same dims as network
-        input dims. */
-    void predict(image & im);
+        input dims. Returns the prediction time (neural net forward pass) in milliseconds. */
+    float predict(image & im);
 
-
+    //! Compute the boxes
+    /*! You must have called predict() first for this to not violently crash. */
     void computeBoxes(int inw, int inh);
 
     //void sendSerial();
 
+    //! Draw the detections
+    /*! You must have called computeBoxes() first for this to not violently crash. */
     void drawDetections(jevois::RawImage & outimg, int inw, int inh, int xoff, int yoff);
 
-  protected:
+    // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     network net;
     char ** names = nullptr;
     box * boxes = nullptr;
     float ** probs = nullptr;
+
+  protected:
+    std::future<void> itsReadyFut;
+    std::atomic<bool> itsReady;
  };
