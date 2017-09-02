@@ -1,0 +1,113 @@
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// JeVois Smart Embedded Machine Vision Toolkit - Copyright (C) 2017 by Laurent Itti, the University of Southern
+// California (USC), and iLab at USC. See http://iLab.usc.edu and http://jevois.org for information about this project.
+//
+// This file is part of the JeVois Smart Embedded Machine Vision Toolkit.  This program is free software; you can
+// redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
+// Foundation, version 2.  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+// License for more details.  You should have received a copy of the GNU General Public License along with this program;
+// if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+//
+// Contact information: Laurent Itti - 3641 Watt Way, HNB-07A - Los Angeles, CA 90089-2520 - USA.
+// Tel: +1 213 740 3527 - itti@pollux.usc.edu - http://iLab.usc.edu - http://jevois.org
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*! \file */
+
+#pragma once
+
+#include <jevois/Component/Component.H>
+#include <jevois/Image/RawImageOps.H>
+#include <atomic>
+
+#include <nnpack.h>
+
+extern "C" {
+#include <darknet.h>
+}
+
+namespace dknet
+{
+  static jevois::ParameterCategory const ParamCateg("Darknet DKNET Options");
+
+  //! Parameter \relates Darknet
+  JEVOIS_DECLARE_PARAMETER(dataroot, std::string, "Root path for data, config, and weight files. If empty, use "
+                           "the module's path.",
+                           JEVOIS_SHARE_PATH "/darknet/single", ParamCateg);
+
+  
+  //! Parameter \relates Darknet
+  JEVOIS_DECLARE_PARAMETER(datacfg, std::string, "Data configuration file (if relative, relative to dataroot)",
+                           "cfg/imagenet1k.data", ParamCateg);
+
+  //! Parameter \relates Darknet
+  JEVOIS_DECLARE_PARAMETER(cfgfile, std::string, "Network configuration file (if relative, relative to dataroot)",
+                           "cfg/tiny.cfg", ParamCateg);
+
+  //! Parameter \relates Darknet
+  JEVOIS_DECLARE_PARAMETER(weightfile, std::string, "Network weights file (if relative, relative to dataroot)",
+                           "weights/tiny.weights", ParamCateg);
+
+  //! Parameter \relates Darknet
+  JEVOIS_DECLARE_PARAMETER(namefile, std::string, "Category names file, or empty to fetch it from the network "
+                           "config file (if relative, relative to dataroot)",
+                           "", ParamCateg);
+
+  //! Parameter \relates Darknet
+  JEVOIS_DECLARE_PARAMETER(top, int, "Number of top-scoring predictions to return",
+                           5, ParamCateg);
+}
+
+//! Identify an object using Darknet deep neural network
+/*! Darknet is a popular neural network framework. This component identifies the object in the given image crop. It
+    returns the top scoring candidates.
+
+    See https://pjreddie.com/darknet
+
+    \ingroup Components */
+class Darknet : public jevois::Component,
+             jevois::Parameter<dknet::dataroot, dknet::datacfg, dknet::cfgfile, dknet::weightfile, dknet::namefile,
+                               dknet::top>
+{
+  public: 
+    //! Constructor
+    Darknet(std::string const & instance);
+
+    //! Initialize, configure and load the network in a thread
+    /*! Any call to process() will simply throw until the network is loaded and ready */
+    void postInit() override;
+
+    //! Virtual destructor for safe inheritance
+    virtual ~Darknet();
+
+    //! Un-initialize and free resources
+    void postUninit() override;
+
+    //! Typedef for one result: score, category name
+    typedef std::pair<float, std::string> predresult;
+    
+    //! Processing function, results are stored internally in the underlying Darknet network object
+    /*! This version expects an OpenCV RGB byte image which will be converted to float RGB planar, and which must
+        already have the same dims as the input layer of the network (see indims() to help with that).  Returns the
+        prediction time (neural net forward pass) in milliseconds. */
+    float predict(cv::Mat const & cvimg, std::vector<predresult> & results);
+    
+    //! Processing function, results are stored internally in the underlying Darknet network object
+    /*! This version expects a Darknet image input, RGB float planar normalized to [0..1], with same dims as network
+        input dims. Returns the prediction time (neural net forward pass) in milliseconds. */
+    float predict(image & im, std::vector<predresult> & results);
+
+    //! Get input width, height, channels
+    void indims(int & w, int & h, int & c);
+    
+    //void sendSerial();
+
+    // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
+    network net;
+    char ** names = nullptr;
+
+  protected:
+    std::future<void> itsReadyFut;
+    std::atomic<bool> itsReady;
+ };
