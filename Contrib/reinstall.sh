@@ -27,7 +27,8 @@ if [ "X$REPLY" = "Xy" ]; then
     ###################################################################################################
     # Get the packages:
 
-    #git clone --recursive https://github.com/Maratyszcza/NNPACK.git # Accelerator for convnets
+    # Accelerator for convnets, used by tiny-dnn and darnket:
+    get_github Maratyszcza NNPACK 3627062907e01ba5f030730f1027dd773323e0e3
 
     # we get some release version of tiny-dnn as the master branch is under quite active development
     # with frequent API changes:
@@ -64,13 +65,6 @@ if [ "X$REPLY" = "Xy" ]; then
     #tar zxvf cvEyeTracker-1.2.5.tar.gz
     #/bin/rm cvEyeTracker-1.2.5.tar.gz
 
-    # NNPACK acceleration for darknet CNNs. NOTE: We also update it to a more recent upstream:
-    get_github thomaspark-pkj NNPACK-darknet 1ecda1044d314893796b2d1c4c71d6aeda84baa2
-    cd NNPACK-darknet && \
-	git pull --no-edit https://github.com/Maratyszcza/NNPACK.git master && \
-	git checkout -q 3627062907e01ba5f030730f1027dd773323e0e3 && \
-	cd ..
-    
     # NNPACK-accelerated darknet CNNs:
     get_github thomaspark-pkj darknet-nnpack fa5bddcfca788c69defdf1fcaafb31a2b6d685a7
 
@@ -92,7 +86,8 @@ if [ "X$REPLY" = "Xy" ]; then
     ###################################################################################################
     # Patching:
     cd OF_DIS && patch -p1 < ../OF_DIS.patch && cd ..
-
+    #cd NNPACK && patch -p1 < ../NNPACK.patch && cd ..
+    
     ###################################################################################################
     # Keep track of the last installed release:
     echo $release > .installed

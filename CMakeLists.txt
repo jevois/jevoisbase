@@ -74,14 +74,14 @@ target_sources(jevoisbase PRIVATE Contrib/pthreadpool/src/threadpool-pthreads.c)
 ########################################################################################################################
 # darknet with NNPACK support: (on top of things already pulled in by tiny-dnn and NNPACK)
 
-include_directories(Contrib/NNPACK-darknet/include)
-include_directories(Contrib/NNPACK-darknet/src)
+include_directories(Contrib/NNPACK/include)
+include_directories(Contrib/NNPACK/src)
 include_directories(Contrib/FP16/include)
 include_directories(Contrib/FXdiv/include)
 include_directories(Contrib/psimd/include)
 
 # We use NNPACK-darknet fork so we can compile darknet, but it seems behind quite a bit in terms of neon support
-set(NNPS "${JVB}/Contrib/NNPACK-darknet/src")
+set(NNPS "${JVB}/Contrib/NNPACK/src")
 
 # NNPACK: Core
 target_sources(jevoisbase PRIVATE ${NNPS}/init.c)
@@ -135,7 +135,6 @@ if (JEVOIS_PLATFORM)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/exp.c)
 
   add_definitions(-DARM_NEON)
-#  add_definitions(-mfpu=neon-vfpv4 -funsafe-math-optimizations -ftree-vectorize -mfp16-format=ieee)
 
 else (JEVOIS_PLATFORM)
 

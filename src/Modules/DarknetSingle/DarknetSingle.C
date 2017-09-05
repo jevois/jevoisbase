@@ -153,8 +153,10 @@ class DarknetSingle : public jevois::Module
             itsRawInputCv.copyTo(outimgcv(cv::Rect(w, 0, netw, neth)));
             jevois::rawimage::drawFilledRect(outimg, w, neth, netw, h - neth, jevois::yuyv::Black);
 
-            // Then draw the detections:
-            int y = 10;/////neth + 13;
+            // Then draw the detections: either below the detection crop if there is room, or on top of it if not enough
+            // room below:
+            int y = neth + 13;
+            if (neth + itsResults.size() * 12 > h - 10) y = 3;
             for (auto const & p : itsResults)
             {
               jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.second.c_str(), p.first),
