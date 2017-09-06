@@ -16,6 +16,7 @@
 /*! \file */
 
 #include <jevoisbase/Components/ObjectDetection/Darknet.H>
+#include <jevois/Core/Module.H>
 
 // ####################################################################################################
 Darknet::Darknet(std::string const & instance, bool show_detail_params) :
@@ -165,6 +166,7 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
 {
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   int const topn = top::get();
+  float const th = thresh::get();
   results.clear();
 
   resize_network(&net, im.w, im.h);
@@ -183,8 +185,10 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
 
   for (int i = 0; i < topn; ++i)
   {
-    int index = indexes[i];
-    results.push_back(std::make_pair(float(predictions[index]*100), std::string(names[index])));
+    int const index = indexes[i];
+    float const score = float(predictions[index] * 100);
+    if (score >= th) results.push_back(std::make_pair(score, std::string(names[index])));
+    else break;
   }
 
   return predtime;
@@ -196,4 +200,3 @@ void Darknet::indims(int & w, int & h, int & c)
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   w = net.w; h = net.h; c = net.c;
 }
-

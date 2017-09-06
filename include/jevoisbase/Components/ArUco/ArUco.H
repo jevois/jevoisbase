@@ -157,7 +157,7 @@ class ArUco : public jevois::Component,
     
     //! Send serial messages about detections
     /*! The module given should be the owner of this component, we will use it to actually send each serial message
-        using some variant of jevois::Module::sendSetial(). */
+        using some variant of jevois::Module::sendSerial(). */
     void sendSerial(jevois::StdModule * mod, std::vector<int> ids, std::vector<std::vector<cv::Point2f> > corners,
                     unsigned int w, unsigned int h, std::vector<cv::Vec3d> const & rvecs,
                     std::vector<cv::Vec3d> const & tvecs);

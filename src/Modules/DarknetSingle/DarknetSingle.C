@@ -40,10 +40,28 @@
     Sometimes it will make mistakes! The performance of tiny-yolo-voc is about 57.1% correct (mean average precision) on
     the test set.
 
+    Serial messages
+    ---------------
+
+    - On every frame, this module sends a message
+      \verbatim
+      DKF framenum
+      \endverbatim
+      where \a framenum is the frame number (starts at 0).
+    - In addition, when detections are fond which are avove threhsold, up to \p top messages will be sent, for those
+      category candidates that have scored above \a thresh:
+      \verbatim
+      DKR category score
+      \verbatim
+      where \a category is the category name (from \p namefile) and \a score is the confidence scove from 0.0 to 100.0
+
+
+
     @author Laurent Itti
 
     @displayname Darknet Single
-    @videomapping YUYV 1280 480 15.0 YUYV 640 480 15.0 JeVois DarknetSingle
+    @videomapping NONE 0 0 0.0 YUYV 320 240 2.1 JeVois DarknetSingle
+    @videomapping YUYV 544 240 15.0 YUYV 320 240 15.0 JeVois DarknetSingle
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2017 by Laurent Itti, iLab and the University of Southern California
@@ -60,7 +78,7 @@ class DarknetSingle : public jevois::Module
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    DarknetSingle(std::string const & instance) : jevois::Module(instance)
+    DarknetSingle(std::string const & instance) : jevois::Module(instance), itsFrame(0)
     {
       itsDarknet = addSubComponent<Darknet>("darknet");
     }
@@ -80,12 +98,51 @@ class DarknetSingle : public jevois::Module
     }
     
     // ####################################################################################################
+    //! Send serial messages
+    // ####################################################################################################
+    void sendAllSerial()
+    {
+      sendSerial("DKF " + std::to_string(itsFrame));
+      for (auto const & r : itsResults) sendSerial("DKR " + r.second + ' ' + std::to_string(r.first));
+    }
+    
+    // ####################################################################################################
     //! Processing function, no video output
     // ####################################################################################################
-    //virtual void process(jevois::InputFrame && inframe) override
-    // {
-    // todo
-    // }
+    virtual void process(jevois::InputFrame && inframe) override
+    {
+      // Wait for next available camera image:
+      jevois::RawImage const inimg = inframe.get();
+      unsigned int const w = inimg.width, h = inimg.height;
+
+      int netw, neth, netc; bool ready = true;
+      try { itsDarknet->indims(netw, neth, netc); } catch (std::logic_error const & e) { ready = false; }
+
+      if (ready)
+      {
+        // Take a central crop of the input:
+        int const offx = (w - netw) / 2;
+        int const offy = (h - neth) / 2;
+
+        cv::Mat cvimg = jevois::rawimage::cvImage(inimg);
+        cv::Mat crop = cvimg(cv::Rect(offx, offy, netw, neth));
+        
+        // Convert crop to RGB for predictions:
+        cv::cvtColor(crop, itsCvImg, CV_YUV2RGB_YUYV);
+        
+        // Let camera know we are done processing the input image:
+        inframe.done();
+
+        // Launch the predictions (do not catch exceptions, we already tested for network ready in this block):
+        float const ptime = itsDarknet->predict(itsCvImg, itsResults);
+        LINFO("Predicted in " << ptime << "ms");
+      }
+      else inframe.done();
+
+      // Send serial results and switch to next frame:
+      sendAllSerial();
+      ++itsFrame;
+    }
 
     // ####################################################################################################
     //! Processing function with video output to USB
@@ -93,7 +150,10 @@ class DarknetSingle : public jevois::Module
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
       static jevois::Timer timer("processing", 50, LOG_DEBUG);
-      static int const netw = 224, neth = 224; // FIXME, also we need h > neth + top*fonth
+
+      // Fetch network input dims (will not be available until network loaded and ready):
+      int netw = 0, neth = 0, netc = 0;
+      try { itsDarknet->indims(netw, neth, netc); } catch (std::logic_error const & e) { }
 
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
@@ -108,7 +168,7 @@ class DarknetSingle : public jevois::Module
       jevois::RawImage outimg;
       auto paste_fut = std::async(std::launch::async, [&]() {
           outimg = outframe.get();
-          outimg.require("output", w + netw, h, inimg.fmt);
+          if (netw) outimg.require("output", w + netw, h, inimg.fmt);
 
           // Paste the current input image:
           jevois::rawimage::paste(inimg, outimg, 0, 0);
@@ -120,7 +180,7 @@ class DarknetSingle : public jevois::Module
             itsRawPrevOutputCv.copyTo(outimgcv(cv::Rect(w, 0, netw, h)));
           else
           {
-            jevois::rawimage::drawFilledRect(outimg, w, 0, netw, h, jevois::yuyv::Black);
+            jevois::rawimage::drawFilledRect(outimg, w, 0, outimg.width - w, h, jevois::yuyv::Black);
             jevois::rawimage::writeText(outimg, "Loading network -", w + 3, 3, jevois::yuyv::White);
             jevois::rawimage::writeText(outimg, "please wait...", w + 3, 15, jevois::yuyv::White);
           }
@@ -138,11 +198,8 @@ class DarknetSingle : public jevois::Module
           bool success = true; float ptime = 0.0F;
           try { ptime = itsPredictFut.get(); } catch (std::logic_error const & e) { success = false; }
 
-          // Wait for paste to finish up:
-          paste_fut.get();
-
-          // Let camera know we are done processing the input image:
-          inframe.done();
+          // Wait for paste to finish up and let camera know we are done processing the input image:
+          paste_fut.get(); inframe.done();
 
           if (success)
           {
@@ -177,11 +234,10 @@ class DarknetSingle : public jevois::Module
         {
           // Future is not ready, do nothing except drawings on this frame (done in paste_fut thread) and we will try
           // again on the next one...
-          paste_fut.get();
-          inframe.done();
+          paste_fut.get(); inframe.done();
         }
       }
-      else
+      else if (netw) // We are not predicting but network is ready: start new predictions
       {
         // Take a central crop of the input:
         int const offx = (w - netw) / 2;
@@ -204,6 +260,10 @@ class DarknetSingle : public jevois::Module
         // Launch the predictions:
         itsPredictFut = std::async(std::launch::async, [&]() { return itsDarknet->predict(itsCvImg, itsResults); });
       }
+      else // We are not predicting and network is not ready - do nothing except drawings of paste_fut:
+      {
+        paste_fut.get(); inframe.done();
+      }
 
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
@@ -211,6 +271,10 @@ class DarknetSingle : public jevois::Module
       
       // Send the output image with our processing results to the host over USB:
       outframe.send();
+
+      // Send serial results and switch to next frame:
+      sendAllSerial();
+      ++itsFrame;
     }
 
     // ####################################################################################################
@@ -221,6 +285,7 @@ class DarknetSingle : public jevois::Module
     cv::Mat itsRawInputCv;
     cv::Mat itsCvImg;
     cv::Mat itsRawPrevOutputCv;
+    unsigned long itsFrame;
  };
 
 // Allow the module to be loaded as a shared object (.so) file:

@@ -63,8 +63,12 @@ namespace dknet
                            "", ParamCateg);
 
   //! Parameter \relates Darknet
-  JEVOIS_DECLARE_PARAMETER(top, int, "Number of top-scoring predictions to return",
+  JEVOIS_DECLARE_PARAMETER(top, unsigned int, "Max number of top-scoring predictions that score above thresh to return",
                            5, ParamCateg);
+
+  //! Parameter \relates Darknet
+  JEVOIS_DECLARE_PARAMETER(thresh, float, "Threshold (in percent confidence) above which predictions will be reported",
+                           20.0F, jevois::Range<float>(0.0F, 100.0F), ParamCateg);
 }
 
 //! Identify an object using Darknet deep neural network
@@ -76,7 +80,7 @@ namespace dknet
     \ingroup Components */
 class Darknet : public jevois::Component,
                 jevois::Parameter<dknet::netw, dknet::dataroot, dknet::datacfg, dknet::cfgfile,
-                                  dknet::weightfile, dknet::namefile, dknet::top>
+                                  dknet::weightfile, dknet::namefile, dknet::top, dknet::thresh>
 {
   public: 
     //! Constructor
@@ -114,8 +118,6 @@ class Darknet : public jevois::Component,
     /*! Throws std::logic_error if the network is still loading and not ready. */
     void indims(int & w, int & h, int & c);
     
-    //void sendSerial();
-
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     network net;
     char ** names = nullptr;
