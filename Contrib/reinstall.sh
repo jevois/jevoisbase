@@ -86,7 +86,7 @@ if [ "X$REPLY" = "Xy" ]; then
     ###################################################################################################
     # Patching:
     cd OF_DIS && patch -p1 < ../OF_DIS.patch && cd ..
-    #cd NNPACK && patch -p1 < ../NNPACK.patch && cd ..
+    cd NNPACK && patch -p1 < ../NNPACK.patch && cd ..
     
     ###################################################################################################
     # Keep track of the last installed release:

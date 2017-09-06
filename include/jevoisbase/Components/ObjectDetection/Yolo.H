@@ -96,12 +96,13 @@ class Yolo : public jevois::Component,
     //! Processing function, results are stored internally in the underlying Darknet network object
     /*! This version expects an OpenCV RGB byte image which will be converted to float RGB planar, and which may be
         letterboxed if necessary to fit network input dims. Returns the prediction time (neural net forward pass) in
-        milliseconds. */
+        milliseconds. Throws std::logic_error if the network is still loading and not ready. */
     float predict(cv::Mat const & cvimg);
     
     //! Processing function, results are stored internally in the underlying Darknet network object
     /*! This version expects a Darknet image input, RGB float planar normalized to [0..1], with same dims as network
-        input dims. Returns the prediction time (neural net forward pass) in milliseconds. */
+        input dims. Returns the prediction time (neural net forward pass) in milliseconds. Throws std::logic_error if
+        the network is still loading and not ready. */
     float predict(image & im);
 
     //! Compute the boxes

@@ -59,7 +59,9 @@ void Yolo::postInit()
   
 #ifdef NNPACK
       nnp_initialize();
+#ifdef DARKNET_NNPACK
       net.threadpool = pthreadpool_create(4);
+#endif
 #endif
       itsReady.store(true);
     });
@@ -71,7 +73,9 @@ void Yolo::postUninit()
   try { itsReadyFut.get(); } catch (...) { }
   
 #ifdef NNPACK
+#ifdef DARKNET_NNPACK
   pthreadpool_destroy(net.threadpool);
+#endif
   nnp_deinitialize();
 #endif
   if (boxes) { free(boxes); boxes = nullptr; }
@@ -81,7 +85,7 @@ void Yolo::postUninit()
 // ####################################################################################################
 float Yolo::predict(cv::Mat const & cvimg)
 {
-  if (itsReady.load() == false) throw std::runtime_error("not ready yet...");
+  if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   if (cvimg.type() != CV_8UC3) LFATAL("cvimg must have type CV_8UC3 and RGB pixels");
   
   int const c = 3; // color channels
@@ -111,10 +115,9 @@ float Yolo::predict(image & im)
   image sized = letterbox_image(im, net.w, net.h);
       
   struct timeval start, stop;
-  float * X = sized.data;
 
   gettimeofday(&start, 0);
-  network_predict(net, X);
+  network_predict(net, sized.data);
   gettimeofday(&stop, 0);
 
   float predtime = (stop.tv_sec * 1000 + stop.tv_usec / 1000) - (start.tv_sec * 1000 + start.tv_usec / 1000);
@@ -138,8 +141,12 @@ void Yolo::computeBoxes(int inw, int inh)
     for (int j = 0; j < l.w * l.h * l.n; ++j) probs[j] = (float *)calloc(l.classes + 1, sizeof(float));
   }
 
+#ifdef DARKNET_NNPACK
   get_region_boxes(l, inw, inh, net.w, net.h, thresh::get(), probs, boxes, 0, 0, hierthresh::get(), 1);
-
+#else
+  get_region_boxes(l, inw, inh, net.w, net.h, thresh::get(), probs, boxes, 0, 0, 0, hierthresh::get(), 1);
+#endif
+  
   float const nmsval = nms::get();
   if (nmsval) do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nmsval);
 }

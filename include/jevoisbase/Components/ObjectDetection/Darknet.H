@@ -19,6 +19,7 @@
 
 #include <jevois/Component/Component.H>
 #include <jevois/Image/RawImageOps.H>
+#include <jevois/Types/Enum.H>
 #include <atomic>
 
 #include <nnpack.h>
@@ -29,13 +30,20 @@ extern "C" {
 
 namespace dknet
 {
-  static jevois::ParameterCategory const ParamCateg("Darknet DKNET Options");
+  static jevois::ParameterCategory const ParamCateg("Darknet Options");
+
+  //! Enum \relates Darknet
+  JEVOIS_DEFINE_ENUM_CLASS(Net, (Reference) (Tiny) )
+
+  //! Parameter \relates Darknet
+  JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(netw, Net, "Network to load. This meta-parameter sets parameters "
+                                         "dataroot, datacfg, cfgfile, weightfile, and namefile for the chosen network.",
+                                         Net::Tiny, Net_Values, ParamCateg);
 
   //! Parameter \relates Darknet
   JEVOIS_DECLARE_PARAMETER(dataroot, std::string, "Root path for data, config, and weight files. If empty, use "
                            "the module's path.",
                            JEVOIS_SHARE_PATH "/darknet/single", ParamCateg);
-
   
   //! Parameter \relates Darknet
   JEVOIS_DECLARE_PARAMETER(datacfg, std::string, "Data configuration file (if relative, relative to dataroot)",
@@ -67,12 +75,14 @@ namespace dknet
 
     \ingroup Components */
 class Darknet : public jevois::Component,
-             jevois::Parameter<dknet::dataroot, dknet::datacfg, dknet::cfgfile, dknet::weightfile, dknet::namefile,
-                               dknet::top>
+                jevois::Parameter<dknet::netw, dknet::dataroot, dknet::datacfg, dknet::cfgfile,
+                                  dknet::weightfile, dknet::namefile, dknet::top>
 {
   public: 
     //! Constructor
-    Darknet(std::string const & instance);
+    /*! if show_detail_params is false, the parameters dataroot, datacfg, cfgfile, weightfile, and namefile are hidden
+        and users can just use the parameter network to set various predefined networks. */
+    Darknet(std::string const & instance, bool show_detail_params = false);
 
     //! Initialize, configure and load the network in a thread
     /*! Any call to process() will simply throw until the network is loaded and ready */
@@ -90,15 +100,18 @@ class Darknet : public jevois::Component,
     //! Processing function, results are stored internally in the underlying Darknet network object
     /*! This version expects an OpenCV RGB byte image which will be converted to float RGB planar, and which must
         already have the same dims as the input layer of the network (see indims() to help with that).  Returns the
-        prediction time (neural net forward pass) in milliseconds. */
+        prediction time (neural net forward pass) in milliseconds. Throws std::logic_error if the network is still
+        loading and not ready. */
     float predict(cv::Mat const & cvimg, std::vector<predresult> & results);
     
     //! Processing function, results are stored internally in the underlying Darknet network object
     /*! This version expects a Darknet image input, RGB float planar normalized to [0..1], with same dims as network
-        input dims. Returns the prediction time (neural net forward pass) in milliseconds. */
+        input dims. Returns the prediction time (neural net forward pass) in milliseconds. Throws std::logic_error if
+        the network is still loading and not ready. */
     float predict(image & im, std::vector<predresult> & results);
 
     //! Get input width, height, channels
+    /*! Throws std::logic_error if the network is still loading and not ready. */
     void indims(int & w, int & h, int & c);
     
     //void sendSerial();
@@ -108,6 +121,8 @@ class Darknet : public jevois::Component,
     char ** names = nullptr;
 
   protected:
+    void onParamChange(dknet::netw const & param, dknet::Net const & newval);
     std::future<void> itsReadyFut;
     std::atomic<bool> itsReady;
+    bool const itsShowDetailParams;
  };

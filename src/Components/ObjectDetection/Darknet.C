@@ -18,12 +18,64 @@
 #include <jevoisbase/Components/ObjectDetection/Darknet.H>
 
 // ####################################################################################################
-Darknet::Darknet(std::string const & instance) : jevois::Component(instance), itsReady(false)
-{ }
+Darknet::Darknet(std::string const & instance, bool show_detail_params) :
+    jevois::Component(instance), itsReady(false), itsShowDetailParams(show_detail_params)
+{
+  if (itsShowDetailParams == false)
+  {
+    dataroot::freeze();
+    datacfg::freeze();
+    cfgfile::freeze();
+    weightfile::freeze();
+    namefile::freeze();
+  }
+}
 
 // ####################################################################################################
 Darknet::~Darknet()
 { }
+
+// ####################################################################################################
+void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval)
+{
+  if (itsShowDetailParams == false)
+  {
+    dataroot::unFreeze();
+    datacfg::unFreeze();
+    cfgfile::unFreeze();
+    weightfile::unFreeze();
+    namefile::unFreeze();
+  }
+
+  switch (newval)
+  {
+  case dknet::Net::Reference:
+    dataroot::set(JEVOIS_SHARE_PATH "/darknet/single");
+    datacfg::set("cfg/imagenet1k.data");
+    cfgfile::set("cfg/darknet.cfg");
+    weightfile::set("weights/darknet.weights");
+    namefile::set("");
+    break;
+
+  case dknet::Net::Tiny:
+    dataroot::set(JEVOIS_SHARE_PATH "/darknet/single");
+    datacfg::set("cfg/imagenet1k.data");
+    cfgfile::set("cfg/tiny.cfg");
+    weightfile::set("weights/tiny.weights");
+    namefile::set("");
+    break;
+  }
+  
+  if (itsShowDetailParams == false)
+  {
+    dataroot::freeze();
+    datacfg::freeze();
+    cfgfile::freeze();
+    weightfile::freeze();
+    namefile::freeze();
+  }
+
+}
 
 // ####################################################################################################
 void Darknet::postInit()
@@ -59,7 +111,9 @@ void Darknet::postInit()
   
 #ifdef NNPACK
       nnp_initialize();
+#ifdef DARKNET_NNPACK
       net.threadpool = pthreadpool_create(4);
+#endif
 #endif
       itsReady.store(true);
     });
@@ -71,7 +125,9 @@ void Darknet::postUninit()
   try { itsReadyFut.get(); } catch (...) { }
   
 #ifdef NNPACK
+#ifdef DARKNET_NNPACK
   pthreadpool_destroy(net.threadpool);
+#endif
   nnp_deinitialize();
 #endif
 }
@@ -79,7 +135,7 @@ void Darknet::postUninit()
 // ####################################################################################################
 float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
 {
-  if (itsReady.load() == false) throw std::runtime_error("not ready yet...");
+  if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   if (cvimg.type() != CV_8UC3) LFATAL("cvimg must have type CV_8UC3 and RGB pixels");
   
   int const c = 3; // color channels
@@ -107,15 +163,15 @@ float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
 // ####################################################################################################
 float Darknet::predict(image & im, std::vector<predresult> & results)
 {
-  if (itsReady.load() == false) throw std::runtime_error("not ready yet...");
+  if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   int const topn = top::get();
   results.clear();
-  
-  float * X = im.data;
+
+  resize_network(&net, im.w, im.h);
 
   struct timeval start, stop;
   gettimeofday(&start, 0);
-  float * predictions = network_predict(net, X);
+  float * predictions = network_predict(net, im.data);
   gettimeofday(&stop, 0);
 
   float predtime = (stop.tv_sec * 1000 + stop.tv_usec / 1000) - (start.tv_sec * 1000 + start.tv_usec / 1000);
@@ -137,7 +193,7 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
 // ####################################################################################################
 void Darknet::indims(int & w, int & h, int & c)
 {
-  if (itsReady.load() == false) throw std::runtime_error("not ready yet...");
+  if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   w = net.w; h = net.h; c = net.c;
 }
 

@@ -174,6 +174,9 @@ add_definitions(-DNNPACK)
 # Now darknet-nnpack proper:
 include_directories(Contrib/darknet-nnpack/include)
 set(DKNS "${JVB}/Contrib/darknet-nnpack/src")
+add_definitions(-DDARKNET_NNPACK)
+
+# or use the baseline darknet instead:
 #include_directories(Contrib/darknet/include)
 #set(DKNS "${JVB}/Contrib/darknet/src")
 

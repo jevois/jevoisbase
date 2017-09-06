@@ -134,9 +134,9 @@ class DarknetSingle : public jevois::Module
         if (itsPredictFut.wait_for(std::chrono::milliseconds(5)) == std::future_status::ready)
         {
           // Do a get() on our future to free up the async thread and get any exception it might have thrown. In
-          // particular, it will throw if we are still loading the network:
+          // particular, it will throw a logic_error if we are still loading the network:
           bool success = true; float ptime = 0.0F;
-          try { ptime = itsPredictFut.get(); } catch (...) { success = false; }
+          try { ptime = itsPredictFut.get(); } catch (std::logic_error const & e) { success = false; }
 
           // Wait for paste to finish up:
           paste_fut.get();
@@ -191,7 +191,7 @@ class DarknetSingle : public jevois::Module
         
         // Convert crop to RGB for predictions:
         cv::cvtColor(crop, itsCvImg, CV_YUV2RGB_YUYV);
-      
+        
         // Also make a raw YUYV copy of the crop for later displays:
         crop.copyTo(itsRawInputCv);
 
