@@ -20,7 +20,7 @@
 
 // ####################################################################################################
 Darknet::Darknet(std::string const & instance, bool show_detail_params) :
-    jevois::Component(instance), itsReady(false), itsShowDetailParams(show_detail_params)
+    jevois::Component(instance), itsReady(false), itsShowDetailParams(show_detail_params), itsNeedReload(false)
 {
   if (itsShowDetailParams == false)
   {
@@ -79,8 +79,48 @@ void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval
 }
 
 // ####################################################################################################
+void Darknet::onParamChange(dknet::dataroot const & param, std::string const & newval) { itsNeedReload.store(true); }
+void Darknet::onParamChange(dknet::datacfg const & param, std::string const & newval) { itsNeedReload.store(true); }
+void Darknet::onParamChange(dknet::cfgfile const & param, std::string const & newval) { itsNeedReload.store(true); }
+void Darknet::onParamChange(dknet::weightfile const & param, std::string const & newval) { itsNeedReload.store(true); }
+void Darknet::onParamChange(dknet::namefile const & param, std::string const & newval) { itsNeedReload.store(true); }
+
+// ####################################################################################################
 void Darknet::postInit()
 {
+  // Get NNPACK ready to rock:
+#ifdef NNPACK
+  nnp_initialize();
+#endif
+
+  // Start a thread to load the desired network:
+  loadNet();
+}
+
+// ####################################################################################################
+void Darknet::loadNet()
+{
+  // Users will neet to wait until last load is done before they load again:
+  if (itsReadyFut.valid())
+  {
+    if (itsReadyFut.wait_for(std::chrono::milliseconds(5)) == std::future_status::ready)
+      try { itsReadyFut.get(); } catch (...) { }
+    else
+      throw std::logic_error("Loading already in progress. Attempt to load again rejected");  
+  }
+  
+  // Flip itsNeedReload to false so we do not get called several times for the same need to reload:
+  itsNeedReload.store(false);
+  
+  // We are not ready anymore:
+  itsReady.store(false);
+
+#ifdef DARKNET_NNPACK
+  if (net.threadpool) pthreadpool_destroy(net.threadpool);
+#endif
+
+  // Since loading big networks can take a while, do it in a thread so we can keep streaming video in the
+  // meantime. itsReady will flip to true when the load is complete.
   itsReadyFut = std::async(std::launch::async, [&]() {
       std::string root = dataroot::get(); if (root.empty() == false) root += '/';
   
@@ -108,14 +148,12 @@ void Darknet::postInit()
       
       set_batch_network(&net, 1);
       srand(2222222);
+
+#ifdef DARKNET_NNPACK
+      net.threadpool = pthreadpool_create(8);
+#endif
       LINFO("Darknet network ready");
   
-#ifdef NNPACK
-      nnp_initialize();
-#ifdef DARKNET_NNPACK
-      net.threadpool = pthreadpool_create(4);
-#endif
-#endif
       itsReady.store(true);
     });
 }
@@ -136,6 +174,7 @@ void Darknet::postUninit()
 // ####################################################################################################
 float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
 {
+  if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   if (cvimg.type() != CV_8UC3) LFATAL("cvimg must have type CV_8UC3 and RGB pixels");
   
@@ -164,6 +203,7 @@ float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
 // ####################################################################################################
 float Darknet::predict(image & im, std::vector<predresult> & results)
 {
+  if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   int const topn = top::get();
   float const th = thresh::get();
@@ -195,7 +235,7 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
 }
 
 // ####################################################################################################
-void Darknet::indims(int & w, int & h, int & c)
+void Darknet::getInDims(int & w, int & h, int & c)
 {
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   w = net.w; h = net.h; c = net.c;

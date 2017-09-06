@@ -41,26 +41,30 @@ namespace dknet
                                          Net::Tiny, Net_Values, ParamCateg);
 
   //! Parameter \relates Darknet
-  JEVOIS_DECLARE_PARAMETER(dataroot, std::string, "Root path for data, config, and weight files. If empty, use "
-                           "the module's path.",
-                           JEVOIS_SHARE_PATH "/darknet/single", ParamCateg);
+  JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(dataroot, std::string, "Root path for data, config, and weight files. "
+                                         "If empty, use the module's path.",
+                                         JEVOIS_SHARE_PATH "/darknet/single", ParamCateg);
   
   //! Parameter \relates Darknet
-  JEVOIS_DECLARE_PARAMETER(datacfg, std::string, "Data configuration file (if relative, relative to dataroot)",
-                           "cfg/imagenet1k.data", ParamCateg);
+  JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(datacfg, std::string, "Data configuration file (if relative, relative to "
+                                         "dataroot)",
+                                         "cfg/imagenet1k.data", ParamCateg);
 
   //! Parameter \relates Darknet
-  JEVOIS_DECLARE_PARAMETER(cfgfile, std::string, "Network configuration file (if relative, relative to dataroot)",
-                           "cfg/tiny.cfg", ParamCateg);
+  JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(cfgfile, std::string, "Network configuration file (if relative, relative to "
+                                         "dataroot)",
+                                         "cfg/tiny.cfg", ParamCateg);
 
   //! Parameter \relates Darknet
-  JEVOIS_DECLARE_PARAMETER(weightfile, std::string, "Network weights file (if relative, relative to dataroot)",
-                           "weights/tiny.weights", ParamCateg);
+  JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(weightfile, std::string, "Network weights file (if relative, relative to "
+                                         "dataroot)",
+                                         "weights/tiny.weights", ParamCateg);
 
   //! Parameter \relates Darknet
-  JEVOIS_DECLARE_PARAMETER(namefile, std::string, "Category names file, or empty to fetch it from the network "
-                           "config file (if relative, relative to dataroot)",
-                           "", ParamCateg);
+  JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(namefile, std::string, "Category names file, or empty to fetch it from the "
+                                         "network "
+                                         "config file (if relative, relative to dataroot)",
+                                         "", ParamCateg);
 
   //! Parameter \relates Darknet
   JEVOIS_DECLARE_PARAMETER(top, unsigned int, "Max number of top-scoring predictions that score above thresh to return",
@@ -116,7 +120,7 @@ class Darknet : public jevois::Component,
 
     //! Get input width, height, channels
     /*! Throws std::logic_error if the network is still loading and not ready. */
-    void indims(int & w, int & h, int & c);
+    void getInDims(int & w, int & h, int & c);
     
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     network net;
@@ -124,7 +128,15 @@ class Darknet : public jevois::Component,
 
   protected:
     void onParamChange(dknet::netw const & param, dknet::Net const & newval);
+    void onParamChange(dknet::dataroot const & param, std::string const & newval);
+    void onParamChange(dknet::datacfg const & param, std::string const & newval);
+    void onParamChange(dknet::cfgfile const & param, std::string const & newval);
+    void onParamChange(dknet::weightfile const & param, std::string const & newval);
+    void onParamChange(dknet::namefile const & param, std::string const & newval);
+    void loadNet();
+    
     std::future<void> itsReadyFut;
     std::atomic<bool> itsReady;
     bool const itsShowDetailParams;
+    std::atomic<bool> itsNeedReload;
  };

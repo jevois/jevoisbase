@@ -22,7 +22,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <jevoisbase/Components/ObjectDetection/Darknet.H>
 
-// icon from https://pjreddie.com/darknet/yolo/
+// icon from https://pjreddie.com/darknet/
 
 //! Identify objects using Darknet deep neural network
 /*! Darknet is a popular neural network framework. This component identifies the object in box in the center of the
@@ -30,15 +30,17 @@
 
     See https://pjreddie.com/darknet
 
-    This module runs a Darknet network and shows the top-scoring results. The network is currently quite slow, hence it
-    is only run once in a while. Point your camera towards some interesting object, make the object fit in the grey box,
-    keep it stable, and wait for Darknet to tell you what it found.
+    This module runs a Darknet network and shows the top-scoring results. The network is currently a bit slow, hence it
+    is only run once in a while. Point your camera towards some interesting object, make the object fit in the picture
+    shown at right (which will be fed to the neural network), keep it stable, and wait for Darknet to tell you what it
+    found.
 
-    Note that by default this module runs the Imagenet1k tiny Darknet. There are 1000 different kinds of objects (object
-    classes) that this network can recognize (too long to list here).
+    Note that by default this module runs the Imagenet1k tiny Darknet (it can also run the slightly slower but a bit
+    more accurate Darknet Reference network; see parameters). There are 1000 different kinds of objects (object classes)
+    that this network can recognize (too long to list here).
 
-    Sometimes it will make mistakes! The performance of tiny-yolo-voc is about 57.1% correct (mean average precision) on
-    the test set.
+    Sometimes it will make mistakes! The performance of darknet-tiny is about 58.7% correct (mean average precision) on
+    the test set, and Draknet Reference is about 61.1% correct on the test set.
 
     Serial messages
     ---------------
@@ -52,7 +54,7 @@
       category candidates that have scored above \a thresh:
       \verbatim
       DKR category score
-      \verbatim
+      \endverbatim
       where \a category is the category name (from \p namefile) and \a score is the confidence scove from 0.0 to 100.0
 
 
@@ -116,7 +118,7 @@ class DarknetSingle : public jevois::Module
       unsigned int const w = inimg.width, h = inimg.height;
 
       int netw, neth, netc; bool ready = true;
-      try { itsDarknet->indims(netw, neth, netc); } catch (std::logic_error const & e) { ready = false; }
+      try { itsDarknet->getInDims(netw, neth, netc); } catch (std::logic_error const & e) { ready = false; }
 
       if (ready)
       {
@@ -153,7 +155,8 @@ class DarknetSingle : public jevois::Module
 
       // Fetch network input dims (will not be available until network loaded and ready):
       int netw = 0, neth = 0, netc = 0;
-      try { itsDarknet->indims(netw, neth, netc); } catch (std::logic_error const & e) { }
+      try { itsDarknet->getInDims(netw, neth, netc); }
+      catch (std::logic_error const & e) { itsRawPrevOutputCv.release(); }
 
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
