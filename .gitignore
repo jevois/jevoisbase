@@ -10,10 +10,11 @@ Contrib/pixy
 Contrib/pthreadpool
 Contrib/tiny-dnn
 Contrib/vlfeat
-Contrib/NNPACK-darknet
 Contrib/FXdiv
 Contrib/FP16
 Contrib/psimd
+Contrib/darknet
+Contrib/darknet-nnpack
 /hbuild/
 /pbuild/
 /jvpkg/

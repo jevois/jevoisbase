@@ -74,14 +74,14 @@ target_sources(jevoisbase PRIVATE Contrib/pthreadpool/src/threadpool-pthreads.c)
 ########################################################################################################################
 # darknet with NNPACK support: (on top of things already pulled in by tiny-dnn and NNPACK)
 
-include_directories(Contrib/NNPACK-darknet/include)
-include_directories(Contrib/NNPACK-darknet/src)
+include_directories(Contrib/NNPACK/include)
+include_directories(Contrib/NNPACK/src)
 include_directories(Contrib/FP16/include)
 include_directories(Contrib/FXdiv/include)
 include_directories(Contrib/psimd/include)
 
 # We use NNPACK-darknet fork so we can compile darknet, but it seems behind quite a bit in terms of neon support
-set(NNPS "${JVB}/Contrib/NNPACK-darknet/src")
+set(NNPS "${JVB}/Contrib/NNPACK/src")
 
 # NNPACK: Core
 target_sources(jevoisbase PRIVATE ${NNPS}/init.c)
@@ -100,18 +100,15 @@ if (JEVOIS_PLATFORM)
   # Transformations
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-8x8.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-16x16.c)
-#  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
-#  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3-fp16.c)
   # ReLU and Softmax
-  #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/relu.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/relu.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/softmax.c)
   # FFT block accumulation
   #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-block-mac.c) ###
   # Tuple GEMM
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/h4gemm.c) ####
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/h4gemm.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4gemm.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/c4gemm.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4c2gemm.c)
@@ -130,12 +127,10 @@ if (JEVOIS_PLATFORM)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-soa.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-real.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-dualreal.c)
-  #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/winograd-f6k3.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/winograd-f6k3.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/exp.c)
 
   add_definitions(-DARM_NEON)
-#  add_definitions(-mfpu=neon-vfpv4 -funsafe-math-optimizations -ftree-vectorize -mfp16-format=ieee)
 
 else (JEVOIS_PLATFORM)
 
@@ -175,6 +170,9 @@ add_definitions(-DNNPACK)
 # Now darknet-nnpack proper:
 include_directories(Contrib/darknet-nnpack/include)
 set(DKNS "${JVB}/Contrib/darknet-nnpack/src")
+add_definitions(-DDARKNET_NNPACK)
+
+# Or use the baseline darknet instead (much slower):
 #include_directories(Contrib/darknet/include)
 #set(DKNS "${JVB}/Contrib/darknet/src")
 
