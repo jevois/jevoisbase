@@ -27,6 +27,8 @@ extern "C" {
 #include <darknet.h>
 }
 
+namespace jevois { class StdModule; }
+
 namespace yolo
 {
   static jevois::ParameterCategory const ParamCateg("Darknet YOLO Options");
@@ -55,16 +57,16 @@ namespace yolo
                            "", ParamCateg);
 
   //! Parameter \relates Yolo
-  JEVOIS_DECLARE_PARAMETER(nms, float, "Non-maximum suppression",
-                           0.4F, ParamCateg);
+  JEVOIS_DECLARE_PARAMETER(nms, float, "Non-maximum suppression in percent confidence",
+                           40.0F, jevois::Range<float>(0.0F, 100.0F), ParamCateg);
 
   //! Parameter \relates Yolo
-  JEVOIS_DECLARE_PARAMETER(thresh, float, "Detection threshold",
-                           0.24F, ParamCateg);
+  JEVOIS_DECLARE_PARAMETER(thresh, float, "Detection threshold in percent confidence",
+                           24.0F, jevois::Range<float>(0.0F, 100.0F), ParamCateg);
 
   //! Parameter \relates Yolo
-  JEVOIS_DECLARE_PARAMETER(hierthresh, float, "Hierarchical detection threshold",
-                           0.5F, ParamCateg);
+  JEVOIS_DECLARE_PARAMETER(hierthresh, float, "Hierarchical detection threshold in percent confidence",
+                           50.0F, jevois::Range<float>(0.0F, 100.0F), ParamCateg);
 }
 
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network
@@ -109,18 +111,23 @@ class Yolo : public jevois::Component,
     /*! You must have called predict() first for this to not violently crash. */
     void computeBoxes(int inw, int inh);
 
-    //void sendSerial();
-
     //! Draw the detections
     /*! You must have called computeBoxes() first for this to not violently crash. */
     void drawDetections(jevois::RawImage & outimg, int inw, int inh, int xoff, int yoff);
+
+    //! Send serial messages about detections
+    /*! You must have called computeBoxes() first for this to not violently crash. The module given should be the owner
+        of this component, we will use it to actually send each serial message using some variant of
+        jevois::Module::sendSerial(). */
+    void sendSerial(jevois::StdModule * mod, int inw, int inh, unsigned long frame);
 
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     network net;
     char ** names = nullptr;
     box * boxes = nullptr;
     float ** probs = nullptr;
-
+    int classes;
+    
   protected:
     std::future<void> itsReadyFut;
     std::atomic<bool> itsReady;

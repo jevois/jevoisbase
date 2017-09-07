@@ -60,6 +60,22 @@
     Sometimes it will make mistakes! The performance of tiny-yolo-voc is about 57.1% correct (mean average precision) on
     the test set.
 
+    Serial messages
+    ---------------
+
+    - On every frame where detection results were obtained, this module sends a message
+      \verbatim
+      DKY framenum
+      \endverbatim
+      where \a framenum is the frame number (starts at 0).
+    - In addition, when detections are found which are avove threhsold, one message will be sent for each detected
+      object (i.e., for each box that gets drawn when USB outputs are used), using a standardized 2D message:
+      + Serial message type: \b 2D
+      + `id`: the category name of the recognized object
+      + `x`, `y`, or vertices: standardized 2D coordinates of object center or corners
+      + `w`, `h`: standardized object size
+      + `extra`: recognition score (in percent confidence)
+
     @author Laurent Itti
 
     @displayname Darknet YOLO
@@ -74,13 +90,13 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DarknetYOLO : public jevois::Module
+class DarknetYOLO : public jevois::StdModule
 {
   public: 
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    DarknetYOLO(std::string const & instance) : jevois::Module(instance)
+    DarknetYOLO(std::string const & instance) : jevois::StdModule(instance), itsFrame(0)
     {
       itsYolo = addSubComponent<Yolo>("yolo");
     }
@@ -104,9 +120,34 @@ class DarknetYOLO : public jevois::Module
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe) override
     {
-      // todo
-    }
+      int ready = true; float ptime = 0.0F;
 
+      // Wait for next available camera image:
+      jevois::RawImage const inimg = inframe.get();
+      unsigned int const w = inimg.width, h = inimg.height;
+
+      // Convert input image to RGB for predictions:
+      itsCvImg = jevois::rawimage::convertToCvRGB(inimg);
+      
+      // Launch the predictions, will throw logic_error if we are still loading the network:
+      try { ptime =  itsYolo->predict(itsCvImg); } catch (std::logic_error const & e) { ready = false; }
+
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      if (ready)
+      {
+        LINFO("Predicted in " << ptime << "ms");
+
+        // Compute the boxes:
+        itsYolo->computeBoxes(w, h);
+
+        // Send serial results and switch to next frame:
+        itsYolo->sendSerial(this, w, h, itsFrame);
+        ++itsFrame;
+      }
+    }
+    
     // ####################################################################################################
     //! Processing function with video output to USB
     // ####################################################################################################
@@ -174,6 +215,9 @@ class DarknetYOLO : public jevois::Module
             // Then draw the detections:
             itsYolo->drawDetections(outimg, w, h, w, 0);
 
+            // Send serial messages:
+            itsYolo->sendSerial(this, w, h, itsFrame);
+            
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "JeVois Darknet YOLO - predictions", w + 3, 3, jevois::yuyv::White);
             jevois::rawimage::writeText(outimg, "YOLO predict time: " + std::to_string(int(ptime)) + "ms",
@@ -181,6 +225,9 @@ class DarknetYOLO : public jevois::Module
 
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
             outimgcv(cv::Rect(w, 0, w, h)).copyTo(itsRawPrevOutputCv);
+
+            // Switch to next frame:
+            ++itsFrame;
           }
         }
         else
@@ -230,7 +277,8 @@ class DarknetYOLO : public jevois::Module
     cv::Mat itsRawInputCv;
     cv::Mat itsCvImg;
     cv::Mat itsRawPrevOutputCv;
- };
+    unsigned long itsFrame;
+};
 
 // Allow the module to be loaded as a shared object (.so) file:
 JEVOIS_REGISTER_MODULE(DarknetYOLO);

@@ -125,7 +125,8 @@ class Darknet : public jevois::Component,
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     network net;
     char ** names = nullptr;
-
+    int classes;
+    
   protected:
     void onParamChange(dknet::netw const & param, dknet::Net const & newval);
     void onParamChange(dknet::dataroot const & param, std::string const & newval);

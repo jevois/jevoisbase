@@ -145,7 +145,8 @@ void Darknet::loadNet()
       net = parse_network_cfg(const_cast<char *>(cfgfil.c_str()));
       LINFO("Loading weights...");
       load_weights(&net, const_cast<char *>(weightfil.c_str()));
-      
+      classes = option_find_int(options, "classes", 2);
+
       set_batch_network(&net, 1);
       srand(2222222);
 
@@ -153,7 +154,8 @@ void Darknet::loadNet()
       net.threadpool = pthreadpool_create(8);
 #endif
       LINFO("Darknet network ready");
-  
+
+      free_list(options);
       itsReady.store(true);
     });
 }
@@ -162,7 +164,10 @@ void Darknet::loadNet()
 void Darknet::postUninit()
 {
   try { itsReadyFut.get(); } catch (...) { }
-  
+
+  free_network(net);
+  free_ptrs((void**)names, classes);
+
 #ifdef NNPACK
 #ifdef DARKNET_NNPACK
   pthreadpool_destroy(net.threadpool);

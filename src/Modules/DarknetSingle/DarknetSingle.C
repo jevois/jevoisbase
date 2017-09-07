@@ -45,19 +45,17 @@
     Serial messages
     ---------------
 
-    - On every frame, this module sends a message
+    - On every frame where detection results were obtained, this module sends a message
       \verbatim
       DKF framenum
       \endverbatim
       where \a framenum is the frame number (starts at 0).
-    - In addition, when detections are fond which are avove threhsold, up to \p top messages will be sent, for those
+    - In addition, when detections are found which are avove threhsold, up to \p top messages will be sent, for those
       category candidates that have scored above \a thresh:
       \verbatim
       DKR category score
       \endverbatim
       where \a category is the category name (from \p namefile) and \a score is the confidence scove from 0.0 to 100.0
-
-
 
     @author Laurent Itti
 
@@ -105,7 +103,7 @@ class DarknetSingle : public jevois::Module
     void sendAllSerial()
     {
       sendSerial("DKF " + std::to_string(itsFrame));
-      for (auto const & r : itsResults) sendSerial("DKR " + r.second + ' ' + std::to_string(r.first));
+      for (auto const & r : itsResults) sendSerial("DKR " + r.second + ' ' + jevois::sformat("%.1f", r.first));
     }
     
     // ####################################################################################################
@@ -138,12 +136,12 @@ class DarknetSingle : public jevois::Module
         // Launch the predictions (do not catch exceptions, we already tested for network ready in this block):
         float const ptime = itsDarknet->predict(itsCvImg, itsResults);
         LINFO("Predicted in " << ptime << "ms");
+
+        // Send serial results and switch to next frame:
+        sendAllSerial();
+        ++itsFrame;
       }
       else inframe.done();
-
-      // Send serial results and switch to next frame:
-      sendAllSerial();
-      ++itsFrame;
     }
 
     // ####################################################################################################
@@ -224,6 +222,9 @@ class DarknetSingle : public jevois::Module
               y += 12;
             }
 
+            // Send serial results:
+            sendAllSerial();
+
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "Darknet predictions", w + 3, neth + 13, jevois::yuyv::White);
             jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
@@ -231,6 +232,9 @@ class DarknetSingle : public jevois::Module
 
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
             outimgcv(cv::Rect(w, 0, netw, h)).copyTo(itsRawPrevOutputCv);
+
+            // Switch to next frame:
+            ++itsFrame;
           }
         }
         else
@@ -274,10 +278,6 @@ class DarknetSingle : public jevois::Module
       
       // Send the output image with our processing results to the host over USB:
       outframe.send();
-
-      // Send serial results and switch to next frame:
-      sendAllSerial();
-      ++itsFrame;
     }
 
     // ####################################################################################################
