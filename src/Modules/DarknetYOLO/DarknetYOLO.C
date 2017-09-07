@@ -79,6 +79,7 @@
     @author Laurent Itti
 
     @displayname Darknet YOLO
+    @videomapping NONE 0 0 0.0 YUYV 640 480 0.4 JeVois DarknetYOLO
     @videomapping YUYV 1280 480 15.0 YUYV 640 480 15.0 JeVois DarknetYOLO
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA

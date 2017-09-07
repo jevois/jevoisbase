@@ -100,18 +100,15 @@ if (JEVOIS_PLATFORM)
   # Transformations
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-8x8.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-16x16.c)
-#  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
-#  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-winograd-8x8-3x3.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3-fp16.c)
   # ReLU and Softmax
-  #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/relu.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/relu.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/softmax.c)
   # FFT block accumulation
   #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-block-mac.c) ###
   # Tuple GEMM
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/h4gemm.c) ####
+  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/h4gemm.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4gemm.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/c4gemm.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4c2gemm.c)
@@ -130,7 +127,6 @@ if (JEVOIS_PLATFORM)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-soa.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-real.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-dualreal.c)
-  #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/winograd-f6k3.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/neon/winograd-f6k3.c)
   target_sources(jevoisbase PRIVATE ${NNPS}/psimd/exp.c)
 
@@ -176,7 +172,7 @@ include_directories(Contrib/darknet-nnpack/include)
 set(DKNS "${JVB}/Contrib/darknet-nnpack/src")
 add_definitions(-DDARKNET_NNPACK)
 
-# or use the baseline darknet instead:
+# Or use the baseline darknet instead (much slower):
 #include_directories(Contrib/darknet/include)
 #set(DKNS "${JVB}/Contrib/darknet/src")
 
