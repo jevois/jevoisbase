@@ -60,6 +60,8 @@
     Sometimes it will make mistakes! The performance of tiny-yolo-voc is about 57.1% correct (mean average precision) on
     the test set.
 
+    \youtube{d5CfljT5kec}
+
     Serial messages
     ---------------
 

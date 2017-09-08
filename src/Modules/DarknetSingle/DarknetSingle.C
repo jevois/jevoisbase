@@ -42,6 +42,8 @@
     Sometimes it will make mistakes! The performance of darknet-tiny is about 58.7% correct (mean average precision) on
     the test set, and Draknet Reference is about 61.1% correct on the test set.
 
+    \youtube{d5CfljT5kec}
+
     Serial messages
     ---------------
 
