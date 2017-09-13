@@ -35,7 +35,7 @@ void ArUco::postInit()
 
   // Initialize default detector parameters:
   itsDetectorParams = cv::aruco::DetectorParameters::create();
-  itsDetectorParams->doCornerRefinement = true; // do corner refinement in markers by default
+  itsDetectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
   
   // Read detector parameters if any:
   aruco::detparams::freeze();
@@ -55,7 +55,7 @@ void ArUco::postInit()
       fs["minCornerDistanceRate"] >> itsDetectorParams->minCornerDistanceRate;
       fs["minDistanceToBorder"] >> itsDetectorParams->minDistanceToBorder;
       fs["minMarkerDistanceRate"] >> itsDetectorParams->minMarkerDistanceRate;
-      fs["doCornerRefinement"] >> itsDetectorParams->doCornerRefinement;
+      fs["cornerRefinementMethod"] >> itsDetectorParams->cornerRefinementMethod;
       fs["cornerRefinementWinSize"] >> itsDetectorParams->cornerRefinementWinSize;
       fs["cornerRefinementMaxIterations"] >> itsDetectorParams->cornerRefinementMaxIterations;
       fs["cornerRefinementMinAccuracy"] >> itsDetectorParams->cornerRefinementMinAccuracy;
