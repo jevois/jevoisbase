@@ -20,11 +20,24 @@
 
 // ####################################################################################################
 Yolo::Yolo(std::string const & instance) : jevois::Component(instance), itsReady(false)
-{ }
+{
+#ifdef DARKNET_NNPACK
+  net.threadpool = 0;
+#endif
+  
+  // Get NNPACK ready to rock:
+#ifdef NNPACK
+  nnp_initialize();
+#endif
+}
 
 // ####################################################################################################
 Yolo::~Yolo()
-{ }
+{
+#ifdef NNPACK
+  nnp_deinitialize();
+#endif
+}
 
 // ####################################################################################################
 void Yolo::postInit()
@@ -59,11 +72,8 @@ void Yolo::postInit()
       srand(2222222);
       LINFO("YOLO network ready");
   
-#ifdef NNPACK
-      nnp_initialize();
 #ifdef DARKNET_NNPACK
       net.threadpool = pthreadpool_create(4);
-#endif
 #endif
       free_list(options);
       itsReady.store(true);
@@ -75,12 +85,10 @@ void Yolo::postUninit()
 {
   try { itsReadyFut.get(); } catch (...) { }
 
-#ifdef NNPACK
 #ifdef DARKNET_NNPACK
   pthreadpool_destroy(net.threadpool);
 #endif
-  nnp_deinitialize();
-#endif
+
   if (boxes) { free(boxes); boxes = nullptr; }
   if (probs) { layer & l = net.layers[net.n-1]; free_ptrs((void **)probs, l.w * l.h * l.n); probs = nullptr; }
   free_ptrs((void**)names, classes);

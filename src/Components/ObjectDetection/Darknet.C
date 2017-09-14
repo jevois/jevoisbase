@@ -22,8 +22,10 @@
 Darknet::Darknet(std::string const & instance, bool show_detail_params) :
     jevois::Component(instance), itsReady(false), itsShowDetailParams(show_detail_params), itsNeedReload(false)
 {
+#ifdef DARKNET_NNPACK
   net.threadpool = 0;
-
+#endif
+  
   // Get NNPACK ready to rock:
 #ifdef NNPACK
   nnp_initialize();
