@@ -22,6 +22,14 @@
 Darknet::Darknet(std::string const & instance, bool show_detail_params) :
     jevois::Component(instance), itsReady(false), itsShowDetailParams(show_detail_params), itsNeedReload(false)
 {
+  net.threadpool = 0;
+
+  // Get NNPACK ready to rock:
+#ifdef NNPACK
+  nnp_initialize();
+#endif
+
+  // Possibly hide some parameters:
   if (itsShowDetailParams == false)
   {
     dataroot::freeze();
@@ -34,7 +42,11 @@ Darknet::Darknet(std::string const & instance, bool show_detail_params) :
 
 // ####################################################################################################
 Darknet::~Darknet()
-{ }
+{
+#ifdef NNPACK
+  nnp_deinitialize();
+#endif
+}
 
 // ####################################################################################################
 void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval)
@@ -88,11 +100,6 @@ void Darknet::onParamChange(dknet::namefile const & param, std::string const & n
 // ####################################################################################################
 void Darknet::postInit()
 {
-  // Get NNPACK ready to rock:
-#ifdef NNPACK
-  nnp_initialize();
-#endif
-
   // Start a thread to load the desired network:
   loadNet();
 }
@@ -168,11 +175,8 @@ void Darknet::postUninit()
   free_network(net);
   free_ptrs((void**)names, classes);
 
-#ifdef NNPACK
 #ifdef DARKNET_NNPACK
   pthreadpool_destroy(net.threadpool);
-#endif
-  nnp_deinitialize();
 #endif
 }
 
