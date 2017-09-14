@@ -46,11 +46,11 @@ void ObjectRecognition<NetType>::postInit()
   try
   {
     net->load(wpath);
-    LINFO("Loaded pre-trained weights from " << wpath);
+    LINFO("Loaded pre-trained weights and model from " << wpath);
   }
   catch (...)
   {
-    LINFO("Could not load pre-trained weights from " << wpath);
+    LINFO("Could not load pre-trained weights and model from " << wpath);
 
     // First define the network (implemented in derived classes):
     this->define();
