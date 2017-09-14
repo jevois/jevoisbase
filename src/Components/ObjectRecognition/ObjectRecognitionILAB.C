@@ -44,21 +44,27 @@ ObjectRecognitionILAB::~ObjectRecognitionILAB()
 // ####################################################################################################
 void ObjectRecognitionILAB::define()
 {
-  typedef tiny_dnn::convolutional_layer<tiny_dnn::activation::identity> conv;
-  typedef tiny_dnn::max_pooling_layer<tiny_dnn::activation::relu> pool;
+  using conv    = tiny_dnn::convolutional_layer;
+  using pool    = tiny_dnn::max_pooling_layer;
+  using fc      = tiny_dnn::fully_connected_layer;
+  using relu    = tiny_dnn::relu_layer;
+  using softmax = tiny_dnn::softmax_layer;
 
-  int const n_fmaps = 10; // base number of feature maps
-  int const n_fc = 64; // number of hidden units in fully-connected layer
+  const size_t n_fmaps  = 10;  ///< number of feature maps for upper layer
+  const size_t n_fc = 64;  ///< number of hidden units in fully-connected layer
   int const n_categ = 5; // number of object categories
-  
-  (*net) << conv(32, 32, 5, 3, n_fmaps, tiny_dnn::padding::same)
-         << pool(32, 32, n_fmaps, 2)
-         << conv(16, 16, 5, n_fmaps, n_fmaps * 2, tiny_dnn::padding::same)
-         << pool(16, 16, n_fmaps * 2, 2)
-         << conv(8, 8, 5, n_fmaps * 2, n_fmaps * 4, tiny_dnn::padding::same)
-         << pool(8, 8, n_fmaps * 4, 2)
-         << tiny_dnn::fully_connected_layer<tiny_dnn::activation::identity>(4 * 4 * n_fmaps * 4, n_fc)
-         << tiny_dnn::fully_connected_layer<tiny_dnn::activation::softmax>(n_fc, n_categ);
+
+  (*net) << conv(32, 32, 5, 3, n_fmaps, tiny_dnn::padding::same)             // C1
+         << pool(32, 32, n_fmaps, 2)                                         // P2
+         << relu(16, 16, n_fmaps)                                            // activation
+         << conv(16, 16, 5, n_fmaps, n_fmaps * 2, tiny_dnn::padding::same)   // C3
+         << pool(16, 16, n_fmaps * 2, 2)                                     // P4
+         << relu(8, 8, n_fmaps)                                              // activation
+         << conv(8, 8, 5, n_fmaps * 2, n_fmaps * 4, tiny_dnn::padding::same) // C5
+         << pool(8, 8, n_fmaps * 4, 2)                                       // P6
+         << relu(4, 4, n_fmaps * 42)                                         // activation
+         << fc(4 * 4 * n_fmaps * 4, n_fc)                                    // FC7
+         << fc(n_fc, n_categ) << softmax(n_categ);                           // FC10
 }
 
 // ####################################################################################################

@@ -41,7 +41,7 @@ template <typename NetType>
 void ObjectRecognition<NetType>::postInit()
 {
   // Load from file, if available, otherwise trigger training:
-  std::string const wpath = absolutePath("tiny-dnn/" + instanceName() + "/weights.tnn");
+  std::string const wpath = JEVOIS_SHARE_PATH "/tiny-dnn/" + instanceName() + "/weights.tnn";
 
   try
   {
@@ -56,7 +56,7 @@ void ObjectRecognition<NetType>::postInit()
     this->define();
 
     // Then train it:
-    this->train(absolutePath("tiny-dnn/" + instanceName()));
+    this->train(JEVOIS_SHARE_PATH "/tiny-dnn/" + instanceName());
 
     // Finally save:
     LINFO("Saving trained weights to " << wpath);
@@ -72,8 +72,7 @@ ObjectRecognition<NetType>::~ObjectRecognition()
 
 // ####################################################################################################
 template <typename NetType>
-typename tiny_dnn::index3d<tiny_dnn::serial_size_t>
-ObjectRecognition<NetType>::insize() const
+typename tiny_dnn::index3d<size_t> ObjectRecognition<NetType>::insize() const
 { return (*net)[0]->in_shape()[0]; }
 
 // ####################################################################################################

@@ -30,9 +30,8 @@ FaceDetector::~FaceDetector()
 // ####################################################################################################
 void FaceDetector::postInit()
 {
-  LINFO("my path is " << absolutePath());
   std::string const & facename = facedetector::face_cascade::get();
-  if (facename.empty()) LFATAL("face_cascade paremeter cannot be empty");
+  if (facename.empty()) LFATAL("face_cascade parameter cannot be empty");
   std::string const facefile = absolutePath(facename);
   itsFaceCascade.reset(new cv::CascadeClassifier(facefile));
   if (itsFaceCascade->empty()) LFATAL("Error loading face cascade file " << facefile);

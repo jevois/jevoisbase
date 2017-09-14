@@ -23,6 +23,7 @@
 // Defines used to optimize tiny-dnn:
 #define CNN_USE_TBB
 #undef CNN_USE_DOUBLE
+//#define CNN_USE_NNPACK  // This still yieds compilation errors inside tiny-dnn and is not ready yet upstream
 
 #include <tiny-dnn/tiny_dnn/config.h> // for float_t, etc. this does not include much code
 #include <tiny-dnn/tiny_dnn/util/aligned_allocator.h> // for aligned_allocator
@@ -59,7 +60,7 @@ class ObjectRecognitionBase : public jevois::Component
     virtual void define() = 0;
 
     //! Get the input size for the current network, useful to prepare inputs to process()
-    virtual tiny_dnn::index3d<tiny_dnn::serial_size_t> insize() const = 0;
+    virtual tiny_dnn::index3d<size_t> insize() const = 0;
       
     //! Train the network
     /*! Derived classes must implement this function. */
@@ -88,7 +89,7 @@ class ObjectRecognition : public ObjectRecognitionBase
     virtual ~ObjectRecognition();
     
     //! Get the input size for the current network, useful to prepare inputs to process()
-    virtual tiny_dnn::index3d<tiny_dnn::serial_size_t> insize() const override;
+    virtual tiny_dnn::index3d<size_t> insize() const override;
 
     //! Process an image, results are confidence for each category
     vec_t process(cv::Mat const & img, bool normalize = true) override;
