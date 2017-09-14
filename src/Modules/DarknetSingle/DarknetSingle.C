@@ -228,7 +228,6 @@ class DarknetSingle : public jevois::Module
             sendAllSerial();
 
             // Draw some text messages:
-            jevois::rawimage::writeText(outimg, "Darknet predictions", w + 3, neth + 13, jevois::yuyv::White);
             jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
                                         w + 3, h - 13, jevois::yuyv::White);
 

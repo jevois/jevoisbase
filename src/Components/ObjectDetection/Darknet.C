@@ -17,6 +17,7 @@
 
 #include <jevoisbase/Components/ObjectDetection/Darknet.H>
 #include <jevois/Core/Module.H>
+#include <opencv2/imgproc/imgproc.hpp>
 
 // ####################################################################################################
 Darknet::Darknet(std::string const & instance, bool show_detail_params) :
@@ -78,7 +79,24 @@ void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval
     cfgfile::set("cfg/tiny.cfg");
     weightfile::set("weights/tiny.weights");
     namefile::set("");
+
+    /* FIXME: need to implement depthwise convolutions first
+  case dknet::Net::MobileNet:
+    dataroot::set(JEVOIS_SHARE_PATH "/darknet/single");
+    datacfg::set("cfg/imagenet1k.data");
+    cfgfile::set("cfg/mobilenet.cfg");
+    weightfile::set("weights/mobilenet.weights");
+    namefile::set("");
     break;
+
+  case dknet::Net::CompMobileNet:
+    dataroot::set(JEVOIS_SHARE_PATH "/darknet/single");
+    datacfg::set("cfg/imagenet1k.data");
+    cfgfile::set("cfg/compressmobilenet_0.1.cfg");
+    weightfile::set("weights/compressmobilenet_0.1.weights");
+    namefile::set("");
+    break;
+    */
   }
   
   if (itsShowDetailParams == false)
@@ -189,11 +207,15 @@ float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   if (cvimg.type() != CV_8UC3) LFATAL("cvimg must have type CV_8UC3 and RGB pixels");
   
-  int const c = 3; // color channels
-  int const w = cvimg.cols;
-  int const h = cvimg.rows;
-  if (w != net.w || h != net.h) LFATAL("Input image must be " << net.w << 'x' << net.h);
+  cv::Mat rescaled;
+  if (cvimg.cols != net.w || cvimg.rows != net.h)
+    cv::resize(cvimg, rescaled, cv::Size(net.w, net.h), 0, 0, (net.w < cvimg.cols) ? cv::INTER_AREA : cv::INTER_LINEAR);
+  else
+    rescaled = cvimg;
   
+  int const c = 3; // color channels
+  int const w = rescaled.cols;
+  int const h = rescaled.rows;
   image im = make_image(w, h, c);
   for (int k = 0; k < c; ++k)
     for (int j = 0; j < h; ++j)
@@ -201,7 +223,7 @@ float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
       {
         int dst_index = i + w*j + w*h*k;
         int src_index = k + c*i + c*w*j;
-        im.data[dst_index] = float(cvimg.data[src_index]) / 255.0F;
+        im.data[dst_index] = float(rescaled.data[src_index]) / 255.0F;
       }
 
   float predtime = predict(im, results);
