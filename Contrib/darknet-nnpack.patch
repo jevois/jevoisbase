@@ -1,8 +1,8 @@
 diff --git a/src/network.c b/src/network.c
-index 424057b..38a9f35 100644
+index 424057b..225aae6 100644
 --- a/src/network.c
 +++ b/src/network.c
-@@ -182,9 +182,19 @@ network make_network(int n)
+@@ -182,6 +182,11 @@ network make_network(int n)
  void forward_network(network net)
  {
      int i;
@@ -14,16 +14,12 @@ index 424057b..38a9f35 100644
      for(i = 0; i < net.n; ++i){
          net.index = i;
          layer l = net.layers[i];
-+
+@@ -193,8 +198,12 @@ void forward_network(network net)
+         if(l.truth) {
+             net.truth = l.output;
+         }
 +        snprintf(tmp, 255, "%3d - %s", i, get_layer_string(l.type)); // JEVOIS
 +        jevois_darknet_profiler_checkpoint(tmp); // JEVOIS
-+        
-+        
-         if(l.delta){
-             fill_cpu(l.outputs * l.batch, 0, l.delta, 1);
-         }
-@@ -195,6 +205,8 @@ void forward_network(network net)
-         }
      }
      calc_network_cost(net);
 +
