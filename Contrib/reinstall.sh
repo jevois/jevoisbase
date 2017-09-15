@@ -6,17 +6,27 @@
 # this reinstall script:
 release=`cat RELEASE`
 
+###################################################################################################
 function get_github # owner, repo, revision
 {
     git clone --recursive "https://github.com/${1}/${2}.git"
     if [ "X${3}" != "X" ]; then cd "${2}" ; git checkout -q ${3}; cd .. ; fi
 }
 
+###################################################################################################
+function patchit # directory
+{
+    if [ ! -d ${1} ]; then echo "Ooops cannot patch ${1} because directory is missing"; fi
+    cd ${1} && patch -p1 < ../${1}.patch && cd ..
+}
+
+###################################################################################################
 if [ "x$1" = "x-y" ]; then
     REPLY="y";
 else			   
     read -p "Do you want to nuke, fetch and patch contributed packages [y/N]? "
 fi
+
 
 if [ "X$REPLY" = "Xy" ]; then
     ###################################################################################################
@@ -81,9 +91,10 @@ if [ "X$REPLY" = "Xy" ]; then
     
     ###################################################################################################
     # Patching:
-    cd OF_DIS && patch -p1 < ../OF_DIS.patch && cd ..
-    cd NNPACK && patch -p1 < ../NNPACK.patch && cd ..
-    cd FXdiv && patch -p1 < ../FXdiv.patch && cd ..
+    patchit OF_DIS
+    patchit NNPACK
+    patchit FXdiv
+    patchit darknet-nnpack
     
     ###################################################################################################
     # Keep track of the last installed release:
