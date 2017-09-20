@@ -178,7 +178,7 @@ void Darknet::loadNet()
       srand(2222222);
 
 #ifdef DARKNET_NNPACK
-      net.threadpool = pthreadpool_create(8);
+      net.threadpool = pthreadpool_create(threads::get());
 #endif
       LINFO("Darknet network ready");
 

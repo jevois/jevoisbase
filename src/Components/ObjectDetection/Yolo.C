@@ -73,7 +73,7 @@ void Yolo::postInit()
       LINFO("YOLO network ready");
   
 #ifdef DARKNET_NNPACK
-      net.threadpool = pthreadpool_create(4);
+      net.threadpool = pthreadpool_create(threads::get());
 #endif
       free_list(options);
       itsReady.store(true);
