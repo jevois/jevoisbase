@@ -38,7 +38,7 @@ JEVOIS_DEFINE_ENUM_CLASS(Effect, (NoEffect) (Blur) (Median) (Morpho) (Laplacian)
 
 //! Parameter \relates ColorFiltering
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect to apply",
-                                       Effect::NoEffect, Effect_Values, ParamCateg);
+                                       Effect::Morpho, Effect_Values, ParamCateg);
 
 //! Image filtering using OpenCV
 /*! This module is to learn about basic image filtering. It was developed to allow students to instantly observe the

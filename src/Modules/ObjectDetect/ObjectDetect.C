@@ -59,7 +59,7 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
 
     The algorithm comes by default with one training image, for the Priority Mail logo of the U.S. Postal
     Service. Search for "USPS priority mail" on the web and point JeVois to a picture of the logo on your screen to
-    recognize it. See the screenshot of this module for an example of how it looks.
+    recognize it. See the screenshots of this module for examples of how that logo looks.
 
     Offline training
     ----------------
