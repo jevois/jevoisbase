@@ -129,6 +129,7 @@ static void byteswap( ARParamd *param )
 {
     ARParamd  wparam;
     int      i, j;
+    int const siz = 9;///arParamVersionInfo[param->dist_function_version - 1].dist_factor_num;
 
     byteSwapInt( &(param->xsize), &(wparam.xsize) );
     byteSwapInt( &(param->ysize), &(wparam.ysize) );
@@ -139,7 +140,7 @@ static void byteswap( ARParamd *param )
         }
     }
 
-    for( i = 0; i < arParamVersionInfo[param->dist_function_version - 1].dist_factor_num; i++ ) {
+    for( i = 0; i < siz; i++ ) {
         byteSwapDouble( &(param->dist_factor[i]), &(wparam.dist_factor[i]) );
     }
 	wparam.dist_function_version = param->dist_function_version;

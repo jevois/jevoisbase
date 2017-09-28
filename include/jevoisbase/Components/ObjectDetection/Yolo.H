@@ -67,6 +67,10 @@ namespace yolo
   //! Parameter \relates Yolo
   JEVOIS_DECLARE_PARAMETER(hierthresh, float, "Hierarchical detection threshold in percent confidence",
                            50.0F, jevois::Range<float>(0.0F, 100.0F), ParamCateg);
+
+  //! Parameter \relates Yolo
+  JEVOIS_DECLARE_PARAMETER(threads, int, "Number of parallel computation threads",
+                           6, jevois::Range<int>(1, 1024), ParamCateg);
 }
 
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network
@@ -76,10 +80,16 @@ namespace yolo
 
     See https://pjreddie.com/darknet/yolo/
 
+    Darknet is a great, bare-metal deep learning and deep neural network framework. It is great for embedded systems
+    like the small JeVois camera because it has a very small footprint and fewer dependencies than other deep neural
+    network frameworks like Tensorflow, MXNet, Theano, Keras, PyTorch, etc. In addition, the port of Darknet to JeVois
+    includes acceleration using the ARM NEON multimedia instructions through the popular NNPACK neural network
+    acceleration package.
+
     \ingroup Components */
 class Yolo : public jevois::Component,
              jevois::Parameter<yolo::dataroot, yolo::datacfg, yolo::cfgfile, yolo::weightfile, yolo::namefile,
-                               yolo::nms, yolo::thresh, yolo::hierthresh>
+                               yolo::nms, yolo::thresh, yolo::hierthresh, yolo::threads>
 {
   public: 
     //! Constructor

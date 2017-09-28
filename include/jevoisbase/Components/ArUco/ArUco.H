@@ -46,7 +46,7 @@ namespace aruco
 
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(dopose, bool, "Compute (and show) pose vectors, requires a valid camera calibration",
-                           false, ParamCateg);
+                           true, ParamCateg);
 
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (millimeters), used only for pose estimation",

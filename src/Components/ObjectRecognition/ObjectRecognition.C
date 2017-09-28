@@ -40,28 +40,65 @@ ObjectRecognition<NetType>::ObjectRecognition(std::string const & instance) :
 template <typename NetType>
 void ObjectRecognition<NetType>::postInit()
 {
-  // Load from file, if available, otherwise trigger training:
-  std::string const wpath = absolutePath("tiny-dnn/" + instanceName() + "/weights.tnn");
-
+  // Load from file, if available, otherwise trigger training: NOTE: With tiny-dnn as of September 2017, saving a binary
+  // archive on amd64 host and then loading it back on 32-bit ARM platform fails. So we here save as portable json as
+  // well as binary with a suffix for host vs platform. The first time the platform tries to load the binary, it will
+  // fail, and we will load the json and then overwrite the binary. */
+#ifdef JEVOIS_PLATFORM
+  std::string const wpath = JEVOIS_SHARE_PATH "/tiny-dnn/" + instanceName() + "/weights.tnn.platform";
+#else
+  std::string const wpath = JEVOIS_SHARE_PATH "/tiny-dnn/" + instanceName() + "/weights.tnn.host";
+#endif
+  std::string const jpath = JEVOIS_SHARE_PATH "/tiny-dnn/" + instanceName() + ".json";
+  
   try
   {
     net->load(wpath);
-    LINFO("Loaded pre-trained weights from " << wpath);
+    LINFO("Loaded pre-trained weights and model from " << wpath);
   }
   catch (...)
   {
-    LINFO("Could not load pre-trained weights from " << wpath);
+    try
+    {
+      net->load(jpath, tiny_dnn::content_type::weights_and_model, tiny_dnn::file_format::json);
+      net->save(wpath);
+      LINFO("Converted and loaded pre-trained weights and model from " << wpath);
+    }
+    catch (...)
+    {
+      jevois::warnAndIgnoreException();
+      LINFO("Could not load pre-trained weights and model from " << wpath << " -- start training...");
+    
+      // First define the network (implemented in derived classes):
+      this->define();
 
-    // First define the network (implemented in derived classes):
-    this->define();
+      // Then train it:
+      this->train(JEVOIS_SHARE_PATH "/tiny-dnn/" + instanceName());
 
-    // Then train it:
-    this->train(absolutePath("tiny-dnn/" + instanceName()));
-
-    // Finally save:
-    LINFO("Saving trained weights to " << wpath);
-    net->save(wpath);
-    LINFO("Weights saved. Network ready to work.");
+      // Finally save:
+      LINFO("Saving trained weights to " << wpath);
+      try
+      {
+        net->save(wpath);
+        net->save(jpath, tiny_dnn::content_type::weights_and_model, tiny_dnn::file_format::json);
+        LINFO("Weights saved -- Network ready to work.");
+      }
+      catch (...)
+      {
+        // On host, user may have forgotten to give permissions to /jevois, or to run jevois-daemon as root for
+        // training. Try to save to /tmp instead:
+        jevois::warnAndIgnoreException();
+        LINFO("Saving weights to " << wpath << " failed -- trying /tmp/weights.tnn");
+        try
+        {
+          net->save("/tmp/weights.tnn");
+          net->save("/tmp/weights.tnn.json", tiny_dnn::content_type::weights_and_model,
+                    tiny_dnn::file_format::json);
+          LINFO("Weights saved to /tmp/weights.tnn -- Network ready to work.");
+        }
+        catch (...) { jevois::warnAndIgnoreException(); LERROR("Could not save weights..."); }
+      }
+    }
   }
 }
 
@@ -72,8 +109,7 @@ ObjectRecognition<NetType>::~ObjectRecognition()
 
 // ####################################################################################################
 template <typename NetType>
-typename tiny_dnn::index3d<tiny_dnn::serial_size_t>
-ObjectRecognition<NetType>::insize() const
+typename tiny_dnn::index3d<size_t> ObjectRecognition<NetType>::insize() const
 { return (*net)[0]->in_shape()[0]; }
 
 // ####################################################################################################

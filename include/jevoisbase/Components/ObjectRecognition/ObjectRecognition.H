@@ -23,6 +23,7 @@
 // Defines used to optimize tiny-dnn:
 #define CNN_USE_TBB
 #undef CNN_USE_DOUBLE
+//#define CNN_USE_NNPACK  // This still yieds compilation errors inside tiny-dnn and is not ready yet upstream
 
 #include <tiny-dnn/tiny_dnn/config.h> // for float_t, etc. this does not include much code
 #include <tiny-dnn/tiny_dnn/util/aligned_allocator.h> // for aligned_allocator
@@ -40,6 +41,47 @@ namespace tiny_dnn { template <typename NetType> class network; }
 
     To create a new object recognition component, one would usually derive from the ObjectRecognition class template as
     opposed to deriving directly from ObjectRecognitionBase.
+
+    Training
+    --------
+
+    Training is automatically launched if a pre-trained weight file is not found. Thus, typical workflow is, assuming
+    \jvversion{1.4} or later:
+
+    - create a new derived class and implement define(), train(), prcess(), etc in there. See ObjectRecognitionMNIST for
+      example.
+
+    - create a directory <b>/jevois/share/tiny-dnn/NAME/</b> where \a NAME is the instance name you give to your derived
+      object.
+
+    - copy the training data to that directory (as required by your implementation of train() in your derived class)
+
+    - run `jevois-daemon` on host, make sure it has write permission to the directory you created. It will fail to load
+      the pre-trained weights and will initiate training.
+
+    - when training is complete, trained weights will be saved as <b>/jevois/share/tiny-dnn/NAME/weights.tnn</b> (for
+      \jvversion{1.4} or earlier) or as <b>/jevois/share/tiny-dnn/NAME/weights.tnn.host</b> (for \jvversion{1.5} or
+      later).
+
+    Starting with \jvversion{1.5}, tiny-dnn has been updated to a recent version which uses \b cereal as a back-end to
+    save networks and weights. This yields efficient loading of pre-trained networks but the binary archive format is
+    not portable between Intel x64 hosts and ARM platform. Hence, you should proceed as follows:
+
+    - run the above steps. Two files will be saved: \b weights.tnn.host (binary) and \b weights.tnn.json (portable text
+      file).
+
+    - copy \b weights.tnn.json to microSD in <b>JEVOIS:/share//tiny-dnn/NAME/</b> where \a NAME is the instance name you
+      give to your derived object.
+
+    - insert microSD into JeVois camera and launch the machine vision mode that uses your network.
+
+    - ObjectRecognition::load() will fail to load the missing \b weights.tnn.platform (binary) and will thus revert to
+      loading \b weights.tnn.json instead. It will then save \b weights.tnn.platform to microSD. Because this was done
+      by the JeVois camera, \b weights.tnn.platform will now be in ARM binary format.
+
+    - You can now copy \b weights.tnn.platform out of your microSD to <b>~/jevoisbase/share/tiny-dnn/NAME/</b> so that
+      it will be flashed to microSD next time you make one using `jevois-flash-card` and you will avoid having to
+      convert again next time JeVois starts.
 
     \ingroup components */
 class ObjectRecognitionBase : public jevois::Component
@@ -59,7 +101,7 @@ class ObjectRecognitionBase : public jevois::Component
     virtual void define() = 0;
 
     //! Get the input size for the current network, useful to prepare inputs to process()
-    virtual tiny_dnn::index3d<tiny_dnn::serial_size_t> insize() const = 0;
+    virtual tiny_dnn::index3d<size_t> insize() const = 0;
       
     //! Train the network
     /*! Derived classes must implement this function. */
@@ -88,7 +130,7 @@ class ObjectRecognition : public ObjectRecognitionBase
     virtual ~ObjectRecognition();
     
     //! Get the input size for the current network, useful to prepare inputs to process()
-    virtual tiny_dnn::index3d<tiny_dnn::serial_size_t> insize() const override;
+    virtual tiny_dnn::index3d<size_t> insize() const override;
 
     //! Process an image, results are confidence for each category
     vec_t process(cv::Mat const & img, bool normalize = true) override;

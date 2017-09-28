@@ -27,11 +27,11 @@ namespace facedetector
 
   //! Parameter \relates FaceDetector
   JEVOIS_DECLARE_PARAMETER(face_cascade, std::string, "File name of the face cascade",
-                           "facedetector/haarcascade_frontalface_alt.xml", ParamCateg);
+                           JEVOIS_SHARE_PATH "/facedetector/haarcascade_frontalface_alt.xml", ParamCateg);
 
   //! Parameter \relates FaceDetector
   JEVOIS_DECLARE_PARAMETER(eye_cascade, std::string, "File name of the eye cascade, or empty to not detect eyes",
-                           "facedetector/haarcascade_eye_tree_eyeglasses.xml", ParamCateg);
+                           JEVOIS_SHARE_PATH "/facedetector/haarcascade_eye_tree_eyeglasses.xml", ParamCateg);
 }
 
 //! Face detection using OpenCV

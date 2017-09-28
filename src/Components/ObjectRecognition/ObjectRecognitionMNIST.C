@@ -53,24 +53,33 @@ void ObjectRecognitionMNIST::define()
   tiny_dnn::core::backend_t backend_type = tiny_dnn::core::default_engine();
     
   // Construct network:
-  (*net) << tiny_dnn::convolutional_layer<tiny_dnn::activation::tan_h>
-    (32, 32, 5, 1, 6, tiny_dnn::padding::valid, true, 1, 1, backend_type) // C1, 1@32x32-in, 6@28x28-out
-    
-         << tiny_dnn::average_pooling_layer<tiny_dnn::activation::tan_h>
-    (28, 28, 6, 2) // S2, 6@28x28-in, 6@14x14-out
-    
-         << tiny_dnn::convolutional_layer<tiny_dnn::activation::tan_h>
-    (14, 14, 5, 6, 16, tiny_dnn::core::connection_table(tbl, 6, 16),
-     tiny_dnn::padding::valid, true, 1, 1, backend_type ) // C3, 6@14x14-in, 16@10x10-in
+// construct nets
+  //
+  // C : convolution
+  // S : sub-sampling
+  // F : fully connected
+  // clang-format off
+  using fc = tiny_dnn::layers::fc;
+  using conv = tiny_dnn::layers::conv;
+  using ave_pool = tiny_dnn::layers::ave_pool;
+  using tanh = tiny_dnn::activation::tanh;
 
-         << tiny_dnn::average_pooling_layer<tiny_dnn::activation::tan_h>
-    (10, 10, 16, 2) // S4, 16@10x10-in, 16@5x5-out
-    
-         << tiny_dnn::convolutional_layer<tiny_dnn::activation::tan_h>
-    (5, 5, 5, 16, 120, tiny_dnn::padding::valid, true, 1, 1, backend_type) // C5, 16@5x5-in, 120@1x1-out
+  using tiny_dnn::core::connection_table;
+  using padding = tiny_dnn::padding;
 
-         << tiny_dnn::fully_connected_layer<tiny_dnn::activation::tan_h>
-    (120, 10, true, backend_type); // F6, 120-in, 10-out
+  (*net) << conv(32, 32, 5, 1, 6, padding::valid, true, 1, 1, backend_type)    // C1, 1@32x32-in, 6@28x28-out
+         << tanh()
+         << ave_pool(28, 28, 6, 2)   // S2, 6@28x28-in, 6@14x14-out
+         << tanh()
+         << conv(14, 14, 5, 6, 16, connection_table(tbl, 6, 16),
+                 padding::valid, true, 1, 1, backend_type)    // C3, 6@14x14-in, 16@10x10-out
+         << tanh()
+         << ave_pool(10, 10, 16, 2)  // S4, 16@10x10-in, 16@5x5-out
+         << tanh()
+         << conv(5, 5, 5, 16, 120, padding::valid, true, 1, 1, backend_type)  // C5, 16@5x5-in, 120@1x1-out
+         << tanh()
+         << fc(120, 10, true, backend_type)  // F6, 120-in, 10-out
+         << tanh();
 }
 
 // ####################################################################################################

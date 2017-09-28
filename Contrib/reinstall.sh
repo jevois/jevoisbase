@@ -6,17 +6,27 @@
 # this reinstall script:
 release=`cat RELEASE`
 
+###################################################################################################
 function get_github # owner, repo, revision
 {
     git clone --recursive "https://github.com/${1}/${2}.git"
     if [ "X${3}" != "X" ]; then cd "${2}" ; git checkout -q ${3}; cd .. ; fi
 }
 
+###################################################################################################
+function patchit # directory
+{
+    if [ ! -d ${1} ]; then echo "Ooops cannot patch ${1} because directory is missing"; fi
+    cd ${1} && patch -p1 < ../${1}.patch && cd ..
+}
+
+###################################################################################################
 if [ "x$1" = "x-y" ]; then
     REPLY="y";
 else			   
     read -p "Do you want to nuke, fetch and patch contributed packages [y/N]? "
 fi
+
 
 if [ "X$REPLY" = "Xy" ]; then
     ###################################################################################################
@@ -30,12 +40,8 @@ if [ "X$REPLY" = "Xy" ]; then
     # Accelerator for convnets, used by tiny-dnn and darnket:
     get_github Maratyszcza NNPACK 3627062907e01ba5f030730f1027dd773323e0e3
 
-    # we get some release version of tiny-dnn as the master branch is under quite active development
-    # with frequent API changes:
-    wget https://github.com/tiny-dnn/tiny-dnn/archive/v1.0.0a3.tar.gz
-    tar zxvf v1.0.0a3.tar.gz 
-    /bin/rm v1.0.0a3.tar.gz
-    mv tiny-dnn-1.0.0a3 tiny-dnn
+    # No new release in a while on tiny-dnn; fetch current state as of Sept 14, 2017:
+    get_github tiny-dnn tiny-dnn dd906fed8c8aff8dc837657c42f9d55f8b793b0e
 
     #git clone https://github.com/tiny-dnn/tiny-dnn.git  # Convolutional neural networks
     # To avoid surprises, checkout a specific version of tiny-dnn (since it has been a while since the last release):
@@ -85,9 +91,10 @@ if [ "X$REPLY" = "Xy" ]; then
     
     ###################################################################################################
     # Patching:
-    cd OF_DIS && patch -p1 < ../OF_DIS.patch && cd ..
-    cd NNPACK && patch -p1 < ../NNPACK.patch && cd ..
-    cd FXdiv && patch -p1 < ../FXdiv.patch && cd ..
+    patchit OF_DIS
+    patchit NNPACK
+    patchit FXdiv
+    patchit darknet-nnpack
     
     ###################################################################################################
     # Keep track of the last installed release:

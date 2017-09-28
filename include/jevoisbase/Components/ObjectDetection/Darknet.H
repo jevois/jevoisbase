@@ -73,6 +73,10 @@ namespace dknet
   //! Parameter \relates Darknet
   JEVOIS_DECLARE_PARAMETER(thresh, float, "Threshold (in percent confidence) above which predictions will be reported",
                            20.0F, jevois::Range<float>(0.0F, 100.0F), ParamCateg);
+
+  //! Parameter \relates Darknet
+  JEVOIS_DECLARE_PARAMETER(threads, int, "Number of parallel computation threads",
+                           6, jevois::Range<int>(1, 1024), ParamCateg);
 }
 
 //! Identify an object using Darknet deep neural network
@@ -81,10 +85,16 @@ namespace dknet
 
     See https://pjreddie.com/darknet
 
+    Darknet is a great, bare-metal deep learning and deep neural network framework. It is great for embedded systems
+    like the small JeVois camera because it has a very small footprint and fewer dependencies than other deep neural
+    network frameworks like Tensorflow, MXNet, Theano, Keras, PyTorch, etc. In addition, the port of Darknet to JeVois
+    includes acceleration using the ARM NEON multimedia instructions through the popular NNPACK neural network
+    acceleration package.
+
     \ingroup Components */
 class Darknet : public jevois::Component,
                 jevois::Parameter<dknet::netw, dknet::dataroot, dknet::datacfg, dknet::cfgfile,
-                                  dknet::weightfile, dknet::namefile, dknet::top, dknet::thresh>
+                                  dknet::weightfile, dknet::namefile, dknet::top, dknet::thresh, dknet::threads>
 {
   public: 
     //! Constructor
