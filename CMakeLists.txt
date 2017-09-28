@@ -284,7 +284,7 @@ target_link_libraries(jevoisbase ${JEVOIS_OPENCV_LIBS} opencv_stitching opencv_s
 # Install shared resources (cascade classifiers, neural network weights, etc):
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/share"
-  DESTINATION "${JEVOIS_MODULES_ROOT}" COMPONENT bin)
+  DESTINATION "${JEVOIS_INSTALL_ROOT}" COMPONENT bin)
 
 ########################################################################################################################
 # Documentation:
