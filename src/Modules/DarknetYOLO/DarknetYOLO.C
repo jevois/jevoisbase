@@ -70,7 +70,7 @@
       DKY framenum
       \endverbatim
       where \a framenum is the frame number (starts at 0).
-    - In addition, when detections are found which are avove threhsold, one message will be sent for each detected
+    - In addition, when detections are found which are avove threshold, one message will be sent for each detected
       object (i.e., for each box that gets drawn when USB outputs are used), using a standardized 2D message:
       + Serial message type: \b 2D
       + `id`: the category name of the recognized object

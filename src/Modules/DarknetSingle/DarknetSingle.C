@@ -52,7 +52,7 @@
       DKF framenum
       \endverbatim
       where \a framenum is the frame number (starts at 0).
-    - In addition, when detections are found which are avove threhsold, up to \p top messages will be sent, for those
+    - In addition, when detections are found which are avove threshold, up to \p top messages will be sent, for those
       category candidates that have scored above \a thresh:
       \verbatim
       DKR category score
