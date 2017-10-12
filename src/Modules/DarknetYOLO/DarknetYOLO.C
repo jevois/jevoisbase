@@ -19,9 +19,18 @@
 #include <jevois/Debug/Timer.H>
 #include <jevois/Image/RawImageOps.H>
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <jevoisbase/Components/ObjectDetection/Yolo.H>
 
 // icon from https://pjreddie.com/darknet/yolo/
+
+static jevois::ParameterCategory const ParamCateg("Darknet YOLO Options");
+
+//! Parameter \relates DarknetYOLO
+JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the neural network input layer, or [0 0] "
+                         "to make it match camera frame size.",
+                         cv::Size(0, 0), ParamCateg);
+
 
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network
 /*! Darknet is a popular neural network framework, and YOLO is a very interesting network that detects all objects in a
@@ -60,6 +69,21 @@
     Sometimes it will make mistakes! The performance of tiny-yolo-voc is about 57.1% correct (mean average precision) on
     the test set.
 
+    Speed and network size
+    ----------------------
+
+    The parameter \p netin allows you to rescale the neural network to the specified size. Beware that this will only
+    work if the network used is fully convolutional (as is the case of the default tiny-yolo network). This not only
+    allows you to adjust processing speed (and, conversely, accuracy), but also to better match the network to the input
+    images (e.g., the defaultsize for tiny-yolo is 426x416, and, thus, passing it a input image of size 640x480 will
+    result in first scaling that input to 416x312, then letterboxing it by adding grey borders on top and bottom so that
+    the finaly input to the network is 416x416).
+
+    Here are expected processing speeds:
+    - when netin = [0 0], proceses letterboxed 416x416 inputs, about 2450ms/image
+    - when netin = [320 240], processes 320x240 inputs, about 1350ms/image
+    - when netin = [160 120], processes 320x240 inputs, about 695ms/image
+
     \youtube{d5CfljT5kec}
 
     Serial messages
@@ -93,7 +117,8 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DarknetYOLO : public jevois::StdModule
+class DarknetYOLO : public jevois::StdModule,
+                    public jevois::Parameter<netin>
 {
   public: 
     // ####################################################################################################
@@ -130,13 +155,30 @@ class DarknetYOLO : public jevois::StdModule
       unsigned int const w = inimg.width, h = inimg.height;
 
       // Convert input image to RGB for predictions:
-      itsCvImg = jevois::rawimage::convertToCvRGB(inimg);
-      
-      // Launch the predictions, will throw logic_error if we are still loading the network:
-      try { ptime =  itsYolo->predict(itsCvImg); } catch (std::logic_error const & e) { ready = false; }
+      cv::Mat cvimg = jevois::rawimage::convertToCvRGB(inimg);
 
+      // Resize the network if desired:
+      cv::Size nsz = netin::get();
+      if (nsz.width != 0 && nsz.height != 0)
+      {
+        itsYolo->resizeInDims(nsz.width, nsz.height);
+
+        if (nsz.width == cvimg.cols && nsz.height == cvimg.rows)
+          itsNetInput = cvimg;
+        else if (nsz.width > cvimg.cols || nsz.height > cvimg.rows)
+          cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_LINEAR);
+        else
+          cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_AREA);
+      }
+      else itsNetInput = cvimg;
+
+      cvimg.release();
+      
       // Let camera know we are done processing the input image:
       inframe.done();
+
+      // Launch the predictions, will throw logic_error if we are still loading the network:
+      try { ptime =  itsYolo->predict(itsNetInput); } catch (std::logic_error const & e) { ready = false; }
 
       if (ready)
       {
@@ -244,12 +286,29 @@ class DarknetYOLO : public jevois::StdModule
       else
       {
         // Convert input image to RGB for predictions:
-        itsCvImg = jevois::rawimage::convertToCvRGB(inimg);
+        cv::Mat cvimg = jevois::rawimage::convertToCvRGB(inimg);
       
         // Also make a raw YUYV copy of the input image for later displays:
         cv::Mat inimgcv = jevois::rawimage::cvImage(inimg);
         inimgcv.copyTo(itsRawInputCv);
 
+        // Resize the network if desired:
+        cv::Size nsz = netin::get();
+        if (nsz.width != 0 && nsz.height != 0)
+        {
+          itsYolo->resizeInDims(nsz.width, nsz.height);
+
+          if (nsz.width == cvimg.cols && nsz.height == cvimg.rows)
+            itsNetInput = cvimg;
+          else if (nsz.width > cvimg.cols || nsz.height > cvimg.rows)
+            cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_LINEAR);
+          else
+            cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_AREA);
+        }
+        else itsNetInput = cvimg;
+
+        cvimg.release();
+         
         // Wait for paste to finish up:
         paste_fut.get();
 
@@ -259,7 +318,7 @@ class DarknetYOLO : public jevois::StdModule
         // Launch the predictions:
         itsPredictFut = std::async(std::launch::async, [&](int ww, int hh)
                                    {
-                                     float pt = itsYolo->predict(itsCvImg);
+                                     float pt = itsYolo->predict(itsNetInput);
                                      itsYolo->computeBoxes(ww, hh);
                                      return pt;
                                    }, w, h);
@@ -278,8 +337,8 @@ class DarknetYOLO : public jevois::StdModule
     std::shared_ptr<Yolo> itsYolo;
     std::future<float> itsPredictFut;
     cv::Mat itsRawInputCv;
-    cv::Mat itsCvImg;
     cv::Mat itsRawPrevOutputCv;
+    cv::Mat itsNetInput;
     unsigned long itsFrame;
 };
 

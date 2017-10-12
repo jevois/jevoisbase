@@ -125,7 +125,8 @@ float Yolo::predict(cv::Mat const & cvimg)
 // ####################################################################################################
 float Yolo::predict(image & im)
 {
-  image sized = letterbox_image(im, net.w, net.h);
+  image sized; bool need_free = false;
+  if (im.w == net.w && im.h == net.h) sized = im; else { sized = letterbox_image(im, net.w, net.h); need_free = true; }
       
   struct timeval start, stop;
 
@@ -135,7 +136,7 @@ float Yolo::predict(image & im)
 
   float predtime = (stop.tv_sec * 1000 + stop.tv_usec / 1000) - (start.tv_sec * 1000 + start.tv_usec / 1000);
 
-  free_image(sized);
+  if (need_free) free_image(sized);
 
   return predtime;
 }
@@ -224,3 +225,16 @@ void Yolo::sendSerial(jevois::StdModule * mod, int inw, int inh, unsigned long f
   }
 }
 
+// ####################################################################################################
+void Yolo::resizeInDims(int w, int h)
+{
+  if (itsReady.load() == false) throw std::logic_error("not ready yet...");
+  resize_network(&net, w, h);
+}
+
+// ####################################################################################################
+void Yolo::getInDims(int & w, int & h, int & c) const
+{
+  if (itsReady.load() == false) throw std::logic_error("not ready yet...");
+  w = net.w; h = net.h; c = net.c;
+}

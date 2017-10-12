@@ -131,6 +131,17 @@ class Yolo : public jevois::Component,
         jevois::Module::sendSerial(). */
     void sendSerial(jevois::StdModule * mod, int inw, int inh, unsigned long frame);
 
+    //! Resize the network's input image dims
+    /*! This will prepare the network to receive inputs of the specified size. It is optional and will be called
+        automatically by predict() if the given image size does not match the current network input size. Note that this
+        only works with fully convolutional networks. Note that the number of channels cannot be changed at this
+        time. Throws std::logic_error if the network is still loading and not ready. */
+    void resizeInDims(int w, int h);
+    
+    //! Get input width, height, channels
+    /*! Throws std::logic_error if the network is still loading and not ready. */
+    void getInDims(int & w, int & h, int & c) const;
+
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     network net;
     char ** names = nullptr;

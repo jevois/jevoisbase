@@ -30,7 +30,7 @@ static jevois::ParameterCategory const ParamCateg("Darknet Saliency Options");
 //! Parameter \relates DarknetSaliency
 JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the focus of attention. "
                          "This is the size of the image crop that is taken around the most salient "
-                         "location in each frame.",
+                         "location in each frame. The foa size must fit within the camera input frame size.",
                          cv::Size(128, 128), ParamCateg);
 
 //! Parameter \relates DarknetSaliency
@@ -80,7 +80,9 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     Finally note that, when using video mappings with USB output, irrespective of \p foa and \p netin, the crop around
     the most salient image region (with size given by \p foa) will always be rescaled so that, when placed to the right
     of the input image, it fills the desired USB output dims. For example, if camera mode is 320x240 and USB output size
-    is 544x240, then the attended and recognized object will be rescaled to 224x224 (since 224 = 544-320).
+    is 544x240, then the attended and recognized object will be rescaled to 224x224 (since 224 = 544-320) for display
+    purposes only. This is so that one does not need to change USB video resolution while playing with diffrent values
+    of \p foa and \p netin live.
 
     Serial messages
     ---------------
@@ -88,9 +90,12 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     - On every frame where detection results were obtained, this module sends a message
       \verbatim
       DKF framenum
+      T2 x y
       \endverbatim
-      where \a framenum is the frame number (starts at 0).
-    - In addition, when detections are found which are avove threshold, up to \p top messages will be sent, for those
+      where \a framenum is the frame number (starts at 0). The T2 message is a standardized message about the location
+      and size of the salient region of interest in which the object was found. The message can be customized, see \ref
+      UserSerialStyle.
+    - In addition, when detections are found which are above threshold, up to \p top messages will be sent, for those
       category candidates that have scored above \a thresh:
       \verbatim
       DKR category score
@@ -100,9 +105,10 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     @author Laurent Itti
 
     @displayname Darknet Saliency
-    @videomapping NONE 0 0 0.0 YUYV 320 240 2.1 JeVois DarknetSaliency
-    @videomapping YUYV 544 240 15.0 YUYV 320 240 15.0 JeVois DarknetSaliency
-    @videomapping YUYV 448 240 15.0 YUYV 320 240 15.0 JeVois DarknetSaliency
+    @videomapping NONE 0 0 0.0 YUYV 320 240 5.0 JeVois DarknetSaliency
+    @videomapping YUYV 460 240 15.0 YUYV 320 240 15.0 JeVois DarknetSaliency
+    @videomapping YUYV 560 240 15.0 YUYV 320 240 15.0 JeVois DarknetSaliency
+    @videomapping YUYV 880 480 15.0 YUYV 640 480 15.0 JeVois DarknetSaliency # set foa param to 256 256
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2017 by Laurent Itti, iLab and the University of Southern California
@@ -186,8 +192,6 @@ class DarknetSaliency : public jevois::StdModule,
       rx = std::max(0, std::min(rx, w - rw));
       ry = std::max(0, std::min(ry, h - rh));
       rx &= ~1; ry &= ~1;
-
-      LINFO("attention "<<rx<<','<<ry<<" siz"<<rw<<'x'<<rh);
     }
     
     // ####################################################################################################

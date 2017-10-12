@@ -46,7 +46,7 @@ namespace aruco
 
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(dopose, bool, "Compute (and show) pose vectors, requires a valid camera calibration",
-                           true, ParamCateg);
+                           false, ParamCateg);
 
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(markerlen, float, "Marker side length (millimeters), used only for pose estimation",
@@ -54,7 +54,7 @@ namespace aruco
 
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(showcube, bool, "Show a 3D cube on top of each detected marker, when dopose is also true",
-                           true, aruco::ParamCateg);
+                           false, aruco::ParamCateg);
 }
 
 //! Simple wrapper class over the opencv_contrib ArUco augmented reality markers
