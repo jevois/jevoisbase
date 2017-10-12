@@ -54,9 +54,9 @@ JEVOIS_DECLARE_PARAMETER(quality, int, "Compression quality for MJPEG", 75, jevo
     Things to try
     -------------
 
-    Edit \b videomappings.cfg on your MicroSD card (see \ref VideoMapping) and try to add some new convert mappings. Not
-    all of the thousands of possible convert mappings have been included in the card to avoid having too many of these
-    simple conversion mappings in the base software distribution. For example,
+    Edit <b>JEVOIS:/config/videomappings.cfg</b> on your MicroSD card (see \ref VideoMapping) and try to add some new
+    convert mappings. Not all of the thousands of possible convert mappings have been included in the card to avoid
+    having too many of these simple conversion mappings in the base software distribution. For example,
 
     \verbatim
     YUYV 176 144 115.0 BAYER 176 144 115.0 JeVois Convert

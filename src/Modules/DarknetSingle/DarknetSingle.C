@@ -25,10 +25,22 @@
 // icon from https://pjreddie.com/darknet/
 
 //! Identify objects using Darknet deep neural network
-/*! Darknet is a popular neural network framework. This module identifies the object in the center of the camera field
-    of view. It returns the top scoring candidates.
+/*! Darknet is a popular neural network framework. This module identifies the object in a square region in the center
+    of the camera field of view using a deep convolutional neural network. The deep network analyzes the image by
+    filtering it using many different filter kernels, and several passes (network layers). This essentially amounts to
+    detecting the presence of both simple and complex parts of known objects in the image (e.g., detecting edges in
+    lower layers to detecting car wheels or even whole cars in higher layers). The last layer of the network is reduced
+    to vector with one entry per known kind of object (object class). This module returns the class names of the top
+    scoring candidates in the outut vector which (if any) have scored above a minimum confidence threshold.
 
-    See https://pjreddie.com/darknet
+    Darknet is a great alternative to popular neural network frameworks like Caffe, TensorFlow, MxNet, pyTorch, Theano,
+    etc as it features: 1) small footprint which is great for small embedded systems; 2) hardware acceleration using ARM
+    NEON instructions; 3) support for large GPUs when compiled on expensive servers, which is useful to train the
+    neural networks on big servers, then copying the trained weights directly to JeVois for use with live video.
+
+    See https://pjreddie.com/darknet for more details about darknet.
+
+    \youtube{d5CfljT5kec}
 
     This module runs a Darknet network and shows the top-scoring results. The network is currently a bit slow, hence it
     is only run once in a while. Point your camera towards some interesting object, make the object fit in the picture
@@ -37,12 +49,15 @@
 
     Note that by default this module runs the Imagenet1k tiny Darknet (it can also run the slightly slower but a bit
     more accurate Darknet Reference network; see parameters). There are 1000 different kinds of objects (object classes)
-    that this network can recognize (too long to list here).
+    that this network can recognize (too long to list here). The input layer of these two networks is 224x224
+    pixels. This modules takes a crop at the center of the video image, with size determined by the network input
+    size. With the defult network parameters, this module hence requires at least 320x240 camera sensor resolution. The
+    networks provided on the JeVois microSD image have been trained on large clusters of GPUs, typically using 1.2
+    million training images from the ImageNet dataset.
 
-    Sometimes it will make mistakes! The performance of darknet-tiny is about 58.7% correct (mean average precision) on
-    the test set, and Darknet Reference is about 61.1% correct on the test set.
-
-    \youtube{d5CfljT5kec}
+    Sometimes this module will make mistakes! The performance of darknet-tiny is about 58.7% correct (mean average
+    precision) on the test set, and Darknet Reference is about 61.1% correct on the test set, using the default 224x224
+    network input layer size.
 
     Neural network size and speed
     -----------------------------
@@ -72,12 +87,13 @@
       DKF framenum
       \endverbatim
       where \a framenum is the frame number (starts at 0).
-    - In addition, when detections are found which are avove threshold, up to \p top messages will be sent, for those
-      category candidates that have scored above \a thresh:
+    - In addition, when detections are found, up to \p top messages will be sent, for those category candidates
+      that have scored above \p thresh:
       \verbatim
       DKR category score
       \endverbatim
       where \a category is the category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0
+
 
     @author Laurent Itti
 

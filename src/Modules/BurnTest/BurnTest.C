@@ -46,7 +46,7 @@
     - launch two instances of dhrystone (integer benchmark test) running in the background
     - grab frames from the camera sensor
     - run the quad-core visual attention algorithm
-    - in parallel, run the NEON demo
+    - in parallel, run the NEON demo tht blurs the video frames using NEON accelerated processor instructions
     - in parallel, run the GPU demo that processes the video through 4 image filters (shaders)
     - stream attention video results over USB
     - issue messages over the serial port
