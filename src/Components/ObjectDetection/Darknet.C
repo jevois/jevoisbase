@@ -138,7 +138,7 @@ void Darknet::loadNet()
   
   // Flip itsNeedReload to false so we do not get called several times for the same need to reload:
   itsNeedReload.store(false);
-  
+
   // We are not ready anymore:
   itsReady.store(false);
 
@@ -183,6 +183,8 @@ void Darknet::loadNet()
       LINFO("Darknet network ready");
 
       free_list(options);
+
+      // We are ready to rock:
       itsReady.store(true);
     });
 }
@@ -201,29 +203,27 @@ void Darknet::postUninit()
 }
 
 // ####################################################################################################
+bool Darknet::ready() const
+{ return (itsReady.load() == true && itsNeedReload.load() == false); }
+
+// ####################################################################################################
 float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
 {
   if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   if (cvimg.type() != CV_8UC3) LFATAL("cvimg must have type CV_8UC3 and RGB pixels");
   
-  cv::Mat rescaled;
-  if (cvimg.cols != net.w || cvimg.rows != net.h)
-    cv::resize(cvimg, rescaled, cv::Size(net.w, net.h), 0, 0, (net.w < cvimg.cols) ? cv::INTER_AREA : cv::INTER_LINEAR);
-  else
-    rescaled = cvimg;
-  
   int const c = 3; // color channels
-  int const w = rescaled.cols;
-  int const h = rescaled.rows;
+  int const w = cvimg.cols;
+  int const h = cvimg.rows;
   image im = make_image(w, h, c);
   for (int k = 0; k < c; ++k)
     for (int j = 0; j < h; ++j)
       for (int i = 0; i < w; ++i)
       {
-        int dst_index = i + w*j + w*h*k;
-        int src_index = k + c*i + c*w*j;
-        im.data[dst_index] = float(rescaled.data[src_index]) / 255.0F;
+        int const dst_index = i + w*j + w*h*k;
+        int const src_index = k + c*i + c*w*j;
+        im.data[dst_index] = float(cvimg.data[src_index]) * (1.0F / 255.0F);
       }
 
   float predtime = predict(im, results);
@@ -242,8 +242,10 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
   float const th = thresh::get();
   results.clear();
 
+  // Resize the network if needed:
   resize_network(&net, im.w, im.h);
 
+  // Run the predictions:
   struct timeval start, stop;
   gettimeofday(&start, 0);
   float * predictions = network_predict(net, im.data);
@@ -253,6 +255,7 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
 
   if (net.hierarchy) hierarchy_predictions(predictions, net.outputs, net.hierarchy, 1, 1);
 
+  // Get the top scoring predictions and push them into results:
   int indexes[topn];
   top_k(predictions, net.outputs, topn, indexes);
 
@@ -268,7 +271,14 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
 }
 
 // ####################################################################################################
-void Darknet::getInDims(int & w, int & h, int & c)
+void Darknet::resizeInDims(int w, int h)
+{
+  if (itsReady.load() == false) throw std::logic_error("not ready yet...");
+  resize_network(&net, w, h);
+}
+
+// ####################################################################################################
+void Darknet::getInDims(int & w, int & h, int & c) const
 {
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   w = net.w; h = net.h; c = net.c;

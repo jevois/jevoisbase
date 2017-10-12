@@ -114,23 +114,34 @@ class Darknet : public jevois::Component,
 
     //! Typedef for one result: score, category name
     typedef std::pair<float, std::string> predresult;
+
+    //! Return true if th enetwork is ready (i.e., not loading)
+    bool ready() const;
     
     //! Processing function, results are stored internally in the underlying Darknet network object
-    /*! This version expects an OpenCV RGB byte image which will be converted to float RGB planar, and which must
-        already have the same dims as the input layer of the network (see indims() to help with that).  Returns the
-        prediction time (neural net forward pass) in milliseconds. Throws std::logic_error if the network is still
-        loading and not ready. */
+    /*! This version expects an OpenCV RGB byte image which will be converted to float RGB planar. If the image dims do
+        not match the network's input layer dims, we here resize the network (beware that this only works if the network
+        is fully convolutional).  Returns the prediction time (neural net forward pass) in milliseconds. Throws
+        std::logic_error if the network is still loading and not ready. */
     float predict(cv::Mat const & cvimg, std::vector<predresult> & results);
     
     //! Processing function, results are stored internally in the underlying Darknet network object
-    /*! This version expects a Darknet image input, RGB float planar normalized to [0..1], with same dims as network
-        input dims. Returns the prediction time (neural net forward pass) in milliseconds. Throws std::logic_error if
-        the network is still loading and not ready. */
+    /*! This version expects a Darknet image input, RGB float planar normalized to [0..1]. If the image dims do not
+        match the network's input layer dims, we here resize the network (beware that this only works if the network is
+        fully convolutional). Returns the prediction time (neural net forward pass) in milliseconds. Throws
+        std::logic_error if the network is still loading and not ready. */
     float predict(image & im, std::vector<predresult> & results);
 
+    //! Resize the network's input image dims
+    /*! This will prepare the network to receive inputs of the specified size. It is optional and will be called
+        automatically by predict() if the given image size does not match the current network input size. Note that this
+        only works with fully convolutional networks. Note that the number of channels cannot be changed at this
+        time. Throws std::logic_error if the network is still loading and not ready. */
+    void resizeInDims(int w, int h);
+    
     //! Get input width, height, channels
     /*! Throws std::logic_error if the network is still loading and not ready. */
-    void getInDims(int & w, int & h, int & c);
+    void getInDims(int & w, int & h, int & c) const;
     
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     network net;

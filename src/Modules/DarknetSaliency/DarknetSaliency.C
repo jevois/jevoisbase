@@ -21,48 +21,66 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <jevoisbase/Components/ObjectDetection/Darknet.H>
+#include <jevoisbase/Components/Saliency/Saliency.H>
 
 // icon from https://pjreddie.com/darknet/
 
-//! Identify objects using Darknet deep neural network
-/*! Darknet is a popular neural network framework. This module identifies the object in the center of the camera field
-    of view. It returns the top scoring candidates.
+static jevois::ParameterCategory const ParamCateg("Darknet Saliency Options");
 
-    See https://pjreddie.com/darknet
+//! Parameter \relates DarknetSaliency
+JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the focus of attention. "
+                         "This is the size of the image crop that is taken around the most salient "
+                         "location in each frame.",
+                         cv::Size(128, 128), ParamCateg);
 
-    This module runs a Darknet network and shows the top-scoring results. The network is currently a bit slow, hence it
-    is only run once in a while. Point your camera towards some interesting object, make the object fit in the picture
-    shown at right (which will be fed to the neural network), keep it stable, and wait for Darknet to tell you what it
-    found.
+//! Parameter \relates DarknetSaliency
+JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the neural network input "
+                         "layer. This is the size to which the image crop taken around the most salient "
+                         "location in each frame will be rescaled before feeding to the neural network.",
+                         cv::Size(128, 128), ParamCateg);
+
+
+//! Detect salient objects and identify them using Darknet deep neural network
+/*! Darknet is a popular neural network framework. This module first finds the most conspicuous (salient) object in the
+    scene, then identifies it using a deep neural network. It returns the top scoring candidates.
+
+    See http://ilab.usc.edu/bu/ for more information about saliency detection, and https://pjreddie.com/darknet for more
+    information about the Darknet deep neural network framework.
+
+    This module runs a Darknet network on an image window around the most salient point and shows the top-scoring
+    results. The network is currently a bit slow, hence it is only run once in a while. Point your camera towards some
+    interesting object, and wait for Darknet to tell you what it found.
 
     Note that by default this module runs the Imagenet1k tiny Darknet (it can also run the slightly slower but a bit
     more accurate Darknet Reference network; see parameters). There are 1000 different kinds of objects (object classes)
     that this network can recognize (too long to list here).
 
     Sometimes it will make mistakes! The performance of darknet-tiny is about 58.7% correct (mean average precision) on
-    the test set, and Darknet Reference is about 61.1% correct on the test set.
+    the test set, and Darknet Reference is about 61.1% correct on the test set. This is when running these networks at
+    224x224 network input resolution (see parameter \p netin).
 
-    \youtube{d5CfljT5kec}
+    \youtube{FIXME}
 
     Neural network size and speed
     -----------------------------
 
-    When using a video mapping with USB output, the network is automatically resized to a square size that is the
-    difference between the USB output video width and the camera input width (e.g., when USB video mode is 544x240 and
-    camera sensor mode is 320x240, the network will be resized to 224x224 where 224 is 544-320).
+    When using networks that are fully convolutional (as is the case for the default networks provided with this
+    module), one can resize the network to any desired input size.  The network size direcly affects both speed and
+    accuracy. Larger networks run slower but are more accurate.
 
-    The network size direcly affects both speed and accuracy. Larger networks run slower but are more accurate.
+    This module provides two parameters that allow you to adjust this tradeoff:
+    - \p foa determines the size of a region of interest that is cropped around the most salient location
+    - \p netin determines the size to which that region of interest is rescaled and fed to the neural network
 
     For example:
 
-    - with USB output 544x240 (network size 224x224), this module runs at about 450ms/prediction.
-    - with USB output 448x240 (network size 128x128), this module runs at about 180ms/prediction.
+    - with netin = (224 224), this module runs at about 450ms/prediction.
+    - with netin = (128 128), this module runs at about 180ms/prediction.
 
-    When using a videomapping with no USB output, the network is not resized (since we would not know what to resize it
-    to). You can still change its native size by changing the network's config file, for example, change the width and
-    height fields in <b>JEVOIS:/share/darknet/single/cfg/tiny.cfg</b>.
-
-    Note that network dims must always be such that they fit inside the camera input image.
+    Finally note that, when using video mappings with USB output, irrespective of \p foa and \p netin, the crop around
+    the most salient image region (with size given by \p foa) will always be rescaled so that, when placed to the right
+    of the input image, it fills the desired USB output dims. For example, if camera mode is 320x240 and USB output size
+    is 544x240, then the attended and recognized object will be rescaled to 224x224 (since 224 = 544-320).
 
     Serial messages
     ---------------
@@ -81,10 +99,10 @@
 
     @author Laurent Itti
 
-    @displayname Darknet Single
-    @videomapping NONE 0 0 0.0 YUYV 320 240 2.1 JeVois DarknetSingle
-    @videomapping YUYV 544 240 15.0 YUYV 320 240 15.0 JeVois DarknetSingle
-    @videomapping YUYV 448 240 15.0 YUYV 320 240 15.0 JeVois DarknetSingle
+    @displayname Darknet Saliency
+    @videomapping NONE 0 0 0.0 YUYV 320 240 2.1 JeVois DarknetSaliency
+    @videomapping YUYV 544 240 15.0 YUYV 320 240 15.0 JeVois DarknetSaliency
+    @videomapping YUYV 448 240 15.0 YUYV 320 240 15.0 JeVois DarknetSaliency
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2017 by Laurent Itti, iLab and the University of Southern California
@@ -95,21 +113,23 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DarknetSingle : public jevois::Module
+class DarknetSaliency : public jevois::StdModule,
+                        public jevois::Parameter<foa, netin>
 {
   public: 
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    DarknetSingle(std::string const & instance) : jevois::Module(instance), itsFrame(0)
+    DarknetSaliency(std::string const & instance) : jevois::StdModule(instance), itsFrame(0)
     {
+      itsSaliency = addSubComponent<Saliency>("saliency");
       itsDarknet = addSubComponent<Darknet>("darknet");
     }
 
     // ####################################################################################################
     //! Virtual destructor for safe inheritance
     // ####################################################################################################
-    virtual ~DarknetSingle()
+    virtual ~DarknetSaliency()
     { }
 
     // ####################################################################################################
@@ -123,10 +143,51 @@ class DarknetSingle : public jevois::Module
     // ####################################################################################################
     //! Send serial messages
     // ####################################################################################################
-    void sendAllSerial()
+    void sendAllSerial(int inw, int inh, int salx, int saly, int roiw, int roih)
     {
+      // Send frame marker:
       sendSerial("DKF " + std::to_string(itsFrame));
+
+      // Send saliency info to serial port (for arduino, etc):
+      sendSerialImg2D(inw, inh, salx, saly, roiw, roih, "sm");
+
+      // Send all detections:
       for (auto const & r : itsResults) sendSerial("DKR " + r.second + ' ' + jevois::sformat("%.1f", r.first));
+    }
+
+    // ####################################################################################################
+    //! Helper function: compute saliency ROI in a thread, return top-left corner and size
+    // ####################################################################################################
+    virtual void getSalROI(jevois::RawImage const & inimg, int & rx, int & ry, int & rw, int & rh)
+    {
+      int const w = inimg.width, h = inimg.height;
+
+      // Check whether the input image size is small, in which case we will scale the maps up one notch:
+      if (w < 170) { itsSaliency->centermin::set(1); itsSaliency->smscale::set(3); }
+      else { itsSaliency->centermin::set(2); itsSaliency->smscale::set(4); }
+
+      // Find the most salient location, no gist for now:
+      itsSaliency->process(inimg, false);
+
+      // Get some info from the saliency computation:
+      int const smlev = itsSaliency->smscale::get();
+      int const smfac = (1 << smlev);
+
+      // Find most salient point:
+      int mx, my; intg32 msal; itsSaliency->getSaliencyMax(mx, my, msal);
+  
+      // Compute attended ROI (note: coords must be even to avoid flipping U/V when we later paste):
+      cv::Size roisiz = foa::get(); rw = roisiz.width; rh = roisiz.height;
+      rw = std::min(rw, w); rh = std::min(rh, h); rw &= ~1; rh &= ~1;
+      unsigned int const dmx = (mx << smlev) + (smfac >> 2);
+      unsigned int const dmy = (my << smlev) + (smfac >> 2);
+      rx = int(dmx + 1 + smfac / 4) - rw / 2;
+      ry = int(dmy + 1 + smfac / 4) - rh / 2;
+      rx = std::max(0, std::min(rx, w - rw));
+      ry = std::max(0, std::min(ry, h - rh));
+      rx &= ~1; ry &= ~1;
+
+      LINFO("attention "<<rx<<','<<ry<<" siz"<<rw<<'x'<<rh);
     }
     
     // ####################################################################################################
@@ -145,26 +206,39 @@ class DarknetSingle : public jevois::Module
         itsDarknet->getInDims(netw, neth, netc);
         if (netw > w) netw = w;
         if (neth > h) neth = h;
-        
-        // Take a central crop of the input:
-        int const offx = (w - netw) / 2;
-        int const offy = (h - neth) / 2;
 
-        cv::Mat cvimg = jevois::rawimage::cvImage(inimg);
-        cv::Mat crop = cvimg(cv::Rect(offx, offy, netw, neth));
-        
-        // Convert crop to RGB for predictions:
-        cv::cvtColor(crop, itsCvImg, CV_YUV2RGB_YUYV);
-        
+        // Find the most salient location, no gist for now:
+        int rx, ry, rw, rh;
+        getSalROI(inimg, rx, ry, rw, rh);
+
+        // Extract a raw YUYV ROI around attended point:
+        cv::Mat rawimgcv = jevois::rawimage::cvImage(inimg);
+        cv::Mat rawroi = rawimgcv(cv::Rect(rx, ry, rw, rh));
+
+        // Convert the ROI to RGB:
+        cv::Mat rgbroi;
+        cv::cvtColor(rawroi, rgbroi, CV_YUV2RGB_YUYV);
+
         // Let camera know we are done processing the input image:
         inframe.done();
 
+        // Scale the ROI if needed:
+        cv::Size scaledsize = netin::get();
+        cv::Mat scaledroi;
+        if (scaledsize.width == rw && scaledsize.height == rh)
+          scaledroi = rgbroi;
+        else if (scaledsize.width > rw || scaledsize.height > rh)
+          cv::resize(rgbroi, scaledroi, scaledsize, 0, 0, cv::INTER_LINEAR);
+        else
+          cv::resize(rgbroi, scaledroi, scaledsize, 0, 0, cv::INTER_AREA);
+
         // Launch the predictions (do not catch exceptions, we already tested for network ready in this block):
-        float const ptime = itsDarknet->predict(itsCvImg, itsResults);
+        float const ptime = itsDarknet->predict(scaledroi, itsResults);
         LINFO("Predicted in " << ptime << "ms");
 
         // Send serial results and switch to next frame:
-        sendAllSerial();
+        sendAllSerial(w, h, rx + rw/2, ry + rh/2, rw, rh);
+
         ++itsFrame;
       }
       else inframe.done();
@@ -185,21 +259,25 @@ class DarknetSingle : public jevois::Module
       jevois::RawImage const inimg = inframe.get();
 
       timer.start();
-      
+
       // We only handle one specific pixel format, but any image size in this module:
       unsigned int const w = inimg.width, h = inimg.height;
       inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
+      
+      // Launch the saliency computation in a thread:
+      int rx, ry, rw, rh;
+      auto sal_fut = std::async(std::launch::async, [&](){ this->getSalROI(inimg, rx, ry, rw, rh); });
 
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
       auto paste_fut = std::async(std::launch::async, [&]() {
           outimg = outframe.get();
           outimg.require("output", outimg.width, outimg.height, V4L2_PIX_FMT_YUYV);
-
+          
           // Paste the current input image:
           jevois::rawimage::paste(inimg, outimg, 0, 0);
-          jevois::rawimage::writeText(outimg, "JeVois Darknet Single - input", 3, 3, jevois::yuyv::White);
-
+          jevois::rawimage::writeText(outimg, "JeVois Darknet Saliency", 3, 3, jevois::yuyv::White);
+          
           // Paste the latest prediction results, if any, otherwise a wait message:
           cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
           if (itsRawPrevOutputCv.empty() == false)
@@ -229,17 +307,17 @@ class DarknetSingle : public jevois::Module
 
           if (success)
           {
-            int const netw = itsRawInputCv.cols, neth = itsRawInputCv.rows;
+            int const dispw = itsRawInputCv.cols, disph = itsRawInputCv.rows;
             cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
             
             // Update our output image: First paste the image we have been making predictions on:
-            if (itsRawPrevOutputCv.empty()) itsRawPrevOutputCv = cv::Mat(h, netw, CV_8UC2);
-            itsRawInputCv.copyTo(outimgcv(cv::Rect(w, 0, netw, neth)));
-            jevois::rawimage::drawFilledRect(outimg, w, neth, netw, h - neth, jevois::yuyv::Black);
+            if (itsRawPrevOutputCv.empty()) itsRawPrevOutputCv = cv::Mat(h, dispw, CV_8UC2);
+            itsRawInputCv.copyTo(outimgcv(cv::Rect(w, 0, dispw, disph)));
+            jevois::rawimage::drawFilledRect(outimg, w, disph, dispw, h - disph, jevois::yuyv::Black);
 
             // Then draw the detections: either below the detection crop if there is room, or on top of it if not enough
             // room below:
-            int y = neth + 13; if (neth + itsResults.size() * 12 > h - 10) y = 3;
+            int y = disph + 13; if (disph + itsResults.size() * 12 > h - 10) y = 3;
 
             for (auto const & p : itsResults)
             {
@@ -249,14 +327,15 @@ class DarknetSingle : public jevois::Module
             }
 
             // Send serial results:
-            sendAllSerial();
+            sal_fut.get();
+            sendAllSerial(w, h, rx + rw/2, ry + rh/2, rw, rh);
 
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
                                         w + 3, h - 13, jevois::yuyv::White);
 
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
-            outimgcv(cv::Rect(w, 0, netw, h)).copyTo(itsRawPrevOutputCv);
+            outimgcv(cv::Rect(w, 0, dispw, h)).copyTo(itsRawPrevOutputCv);
 
             // Switch to next frame:
             ++itsFrame;
@@ -266,48 +345,64 @@ class DarknetSingle : public jevois::Module
         {
           // Future is not ready, do nothing except drawings on this frame (done in paste_fut thread) and we will try
           // again on the next one...
-          paste_fut.get(); inframe.done();
+          paste_fut.get(); sal_fut.get(); inframe.done();
         }
       }
       else if (netready) // We are not predicting but network is ready: start new predictions
       {
-        // Wait for paste to finish up:
-        paste_fut.get();
+        // Wait for paste to finish up. Also wait for saliency to finish up so that rx, ry, rw, rh are available:
+        paste_fut.get(); sal_fut.get();
+        
+        // Extract a raw YUYV ROI around attended point:
+        cv::Mat rawimgcv = jevois::rawimage::cvImage(inimg);
+        cv::Mat rawroi = rawimgcv(cv::Rect(rx, ry, rw, rh));
 
-        // In this module, we use square crops for the network, with size given by USB width - camera width:
-        if (outimg.width < inimg.width) LFATAL("USB output image must be larger than camera input");
-        int const netw = outimg.width - inimg.width;
-        int const neth = netw; // square crop
-        
-        // Check input vs network dims:
-        if (netw > w || neth > h) LFATAL("Network input window must fit within camera frame");
-
-        // Take a central crop of the input:
-        int const offx = (w - netw) / 2;
-        int const offy = (h - neth) / 2;
-        cv::Mat cvimg = jevois::rawimage::cvImage(inimg);
-        cv::Mat crop = cvimg(cv::Rect(offx, offy, netw, neth));
-        
-        // Convert crop to RGB for predictions:
-        cv::cvtColor(crop, itsCvImg, CV_YUV2RGB_YUYV);
-        
-        // Also make a raw YUYV copy of the crop for later displays:
-        crop.copyTo(itsRawInputCv);
+        // Convert the ROI to RGB:
+        cv::Mat rgbroi;
+        cv::cvtColor(rawroi, rgbroi, CV_YUV2RGB_YUYV);
 
         // Let camera know we are done processing the input image:
         inframe.done();
+
+        // Scale the ROI if needed to the desired network input dims:
+        cv::Size scaledsize = netin::get();
+        if (scaledsize.width == rw && scaledsize.height == rh)
+          itsCvImg = rgbroi;
+        else if (scaledsize.width > rw || scaledsize.height > rh)
+          cv::resize(rgbroi, itsCvImg, scaledsize, 0, 0, cv::INTER_LINEAR);
+        else
+          cv::resize(rgbroi, itsCvImg, scaledsize, 0, 0, cv::INTER_AREA);
+
+        // Also scale the ROI to the desired output size, i.e., USB width - camera width:
+        float fac = float(outimg.width - w) / float(rgbroi.cols);
+        cv::Size displaysize(outimg.width - w, int(rgbroi.rows * fac + 0.4999F));
+        cv::Mat displayroi;
+        if (displaysize.width == rw && displaysize.height == rh)
+          displayroi = rgbroi;
+        else if (displaysize.width > rw || displaysize.height > rh)
+          cv::resize(rgbroi, displayroi, displaysize, 0, 0, cv::INTER_LINEAR);
+        else
+          cv::resize(rgbroi, displayroi, displaysize, 0, 0, cv::INTER_AREA);
+
+        // Convert back the display ROI to YUYV and store for later display, while we are still computing the network
+        // predictions on that ROI:
+        jevois::rawimage::convertCvRGBtoCvYUYV(displayroi, itsRawInputCv);
 
         // Launch the predictions:
         itsPredictFut = std::async(std::launch::async, [&]() { return itsDarknet->predict(itsCvImg, itsResults); });
       }
       else // We are not predicting and network is not ready - do nothing except drawings of paste_fut:
       {
-        paste_fut.get(); inframe.done();
+        paste_fut.get(); sal_fut.get(); inframe.done();
       }
 
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
+
+      // Show attended location:
+      jevois::rawimage::drawFilledRect(outimg, rx + rw/2 - 4, ry + rh/2 - 4, 8, 8, jevois::yuyv::LightPink);
+      jevois::rawimage::drawRect(outimg, rx, ry, rw, rh, 2, jevois::yuyv::LightPink);
       
       // Send the output image with our processing results to the host over USB:
       outframe.send();
@@ -315,6 +410,7 @@ class DarknetSingle : public jevois::Module
 
     // ####################################################################################################
   protected:
+    std::shared_ptr<Saliency> itsSaliency;
     std::shared_ptr<Darknet> itsDarknet;
     std::vector<Darknet::predresult> itsResults;
     std::future<float> itsPredictFut;
@@ -325,4 +421,4 @@ class DarknetSingle : public jevois::Module
  };
 
 // Allow the module to be loaded as a shared object (.so) file:
-JEVOIS_REGISTER_MODULE(DarknetSingle);
+JEVOIS_REGISTER_MODULE(DarknetSaliency);

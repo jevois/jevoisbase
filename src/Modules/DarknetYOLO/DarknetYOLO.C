@@ -25,8 +25,8 @@
 
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network
 /*! Darknet is a popular neural network framework, and YOLO is a very interesting network that detects all objects in a
-    scene in one pass. This component detects all instances of any of the objects it knows about (determined by the
-    network structure, labels, dataset used for training, and weights obtained) in the image that is given to is.
+    scene in one pass. This module detects all instances of any of the objects it knows about (determined by the
+    network structure, labels, dataset used for training, and weights obtained) in the image that is given to it.
 
     See https://pjreddie.com/darknet/yolo/
 
@@ -70,7 +70,7 @@
       DKY framenum
       \endverbatim
       where \a framenum is the frame number (starts at 0).
-    - In addition, when detections are found which are avove threshold, one message will be sent for each detected
+    - In addition, when detections are found which are above threshold, one message will be sent for each detected
       object (i.e., for each box that gets drawn when USB outputs are used), using a standardized 2D message:
       + Serial message type: \b 2D
       + `id`: the category name of the recognized object
