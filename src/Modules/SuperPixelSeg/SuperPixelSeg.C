@@ -29,9 +29,31 @@
 // icon by Freepik in interface at flaticon
 
 //! Segment an image using super-pixels
-/*! Segment an image into regions with somewhat uniform appearance, using the SuperPixel algorithms of OpenCV. The
-    result is an image with a reduced number of grey levels, where each grey level represents the label or ID of a given
-    region (so, all pixels with a given grey value belong to a given region in the image).
+/*! Segment an image into regions with somewhat uniform appearance, using the SuperPixel algorithms of OpenCV.
+
+    The result is an image with a reduced number of grey levels, where each grey level represents the label or ID of a
+    given region (so, all pixels with a given grey value belong to a given region in the image).
+
+    How to use this module
+    ----------------------
+
+    When you run this algorithm and obtain a low number of clusters, those may not be well visible to the human eye. For
+    example, if you end up with 10 clusters, they will be take grayscale value 0 to 9, which all look completely black
+    (on a standard monitor where 0 is black and 255 is white). To get started with this module, you may hence want to
+    change the parameters a bit. For example:
+
+    \verbatim
+    setpar algo SEEDS
+    setpar output Labels
+    setpar numpix 255
+    \endverbatim
+    and you should now see something.
+
+    To work with a smaller number of super-pixels, you would usually want to first create some software that runs on the
+    host computer and which will grab the greyscale frames from JeVois, then will assign colors to the regions somehow,
+    and finally will display the superpixels in color. For testing, you may want to just capture and save some frames
+    from JeVois (which may look all black) and then use some paint program to change color 0, color 1, etc to more
+    visible colors than very similar shades of black.
 
     @author Laurent Itti
 

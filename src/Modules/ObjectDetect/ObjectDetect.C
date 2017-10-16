@@ -72,39 +72,41 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
 
     With \jvversion{1.1} or later, you do not need to eject the microSD from JeVois, and you can instead add images live
     by exporting the microSD inside JeVois using the \c usbsd command. See \ref MicroSD (last section) for details. When
-    you are done addingnew images or deleting unwanted ones, properly eject the virtual USB flash drive, and JeVois will
-    restart and load the new training data.
+    you are done adding new images or deleting unwanted ones, properly eject the virtual USB flash drive, and JeVois
+    will restart and load the new training data.
 
     Live training
     -------------
 
-    With \jvversion{1.2} and later you can train this algorithm live.
+    With \jvversion{1.2} and later you can train this algorithm live bu telling JeVois to capture and save an image of
+    an object, which can be used later to identify this object again.
 
     First, enable display of a training window using:
     \verbatim
     setpar showwin true
     \endverbatim
 
-    You should now see a grey rectangle. You can adjust the window size and aspect ratio using the \p win parameter. By
-    default, the algorithm will train new objects that occupy half width and height of the camera image.
+    You should now see a gray rectangle. You can adjust the window size and aspect ratio using the \p win parameter. By
+    default, the algorithm will train new objects that occupy half the width and height of the camera image.
     
     Point your JeVois camera to a clean view of an object you want to learn (if possible, with a blank, featureless
     background, as this algorithm does not attempt to segment objects and would otherwise also learn features of the
-    backgrouns as part of the object). Make sure the objects fits inside the grey rectangle and fills as much of it as
-    possible. You should adjust the distance between th eobject and the camera, and the grey rectangle, to roughly match
+    background as part of the object). Make sure the objects fits inside the gray rectangle and fills as much of it as
+    possible. You should adjust the distance between the object and the camera, and the grey rectangle, to roughly match
     the distance at which you want to detect that object in the future. Then issue the command:
 
     \verbatim
     save somename
     \endverbatim
 
-    over a serial connection to JeVois, where <em>somename</em> is the name you want to give to this object. This will
-    grab the current camera image, crop it using the grey rectangle, and save the crop as a new training image
+    over a serial connection to JeVois, where \a somename is the name you want to give to this object. This will grab
+    the current camera image, crop it using the gray rectangle, and save the crop as a new training image
     <b>somename.png</b> for immediate use. The algorithm will immediately re-train on all objects, including the new
     one. You should see the object being detected shortly after you send your save command. Note that we save the image
     as grayscale since this algorithm does not use color anyway.
 
     You can see the list of current images by using command:
+
     \verbatim
     list
     \endverbatim
@@ -114,8 +116,14 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     \verbatim
     del somename
     \endverbatim
-    where <em>somename</em> is the object name without extension, and a .png extension will be added. The image will
+
+    where \a somename is the object name without extension, and a .png extension will be added. The image will
     immediately be deleted and that object will not be recognized anymore.
+
+    For more information, see JeVois tutorial [Live training of the Object Detection
+    module](http://jevois.org/tutorials/UserObjectDetect.html} and the associated video:
+
+    \youtube{qwJOcsbkZLE}
 
     Serial Messages
     ---------------
@@ -132,11 +140,11 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     Programmer notes
     ----------------
 
-    This algorithm is quite slow. So, here, we alternate between computing keypoints and descriptors on
-    one frame (or more, depending on how slow that gets), and doing the matching on the next frame. This module also
-    provides an example of letting some computation happen even after we exit the process() function. Here, we keep
-    detecting keypoints and computing descriptors even outside process(). The itsKPfut future is our handle to that
-    thread, and we also use it to alternate between detection and matching on alternating frames.
+    This algorithm is quite slow. So, here, we alternate between computing keypoints and descriptors on one frame (or
+    more, depending on how slow that gets), and doing the matching on the next frame. This module also provides an
+    example of letting some computation happen even after we exit the `process()` function. Here, we keep detecting
+    keypoints and computing descriptors even outside `process()`. The itsKPfut future is our handle to that thread, and
+    we also use it to alternate between detection and matching on alternating frames.
 
 
     @author Laurent Itti

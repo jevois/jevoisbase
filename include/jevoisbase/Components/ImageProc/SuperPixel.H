@@ -37,7 +37,7 @@ namespace superpixel
   JEVOIS_DECLARE_PARAMETER(regionsize, int, "SLIC Region size", 30, ParamCateg);
 
   //! Parameter \relates SuperPixel
-  JEVOIS_DECLARE_PARAMETER(numpix, int, "Nubmer of SEEDS superpixels", 200, ParamCateg);
+  JEVOIS_DECLARE_PARAMETER(numpix, int, "Number of SEEDS superpixels", 200, ParamCateg);
 
   //! Parameter \relates SuperPixel
   JEVOIS_DECLARE_PARAMETER(iterations, int, "Number of iterations", 6, jevois::Range<int>(1, 100), ParamCateg);

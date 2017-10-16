@@ -103,8 +103,8 @@ static ScriptItem const TheScript[] = {
 };
 
 //! Simple introduction to JeVois and demo that combines saliency, gist, face detection, and object recognition
-/*! This module plays an introduction movie, and then launches the equivalent of DemoSalGistFaceObj, but with some added
-    text messages that explain what is going on on the screen.
+/*! This module plays an introduction movie, and then launches the equivalent of the \jvmod{DemoSalGistFaceObj} module,
+    but with some added text messages that explain what is going on, on the screen.
 
     Try it and follow the instructions on screen!
 

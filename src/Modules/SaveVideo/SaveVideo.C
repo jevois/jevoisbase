@@ -35,7 +35,7 @@
 
 static jevois::ParameterCategory const ParamCateg("Video Saving Options");
 
-#define PATHPREFIX "/jevois/data/savevideo/"
+#define PATHPREFIX JEVOIS_ROOT_PATH "/data/savevideo/"
 
 //! Parameter \relates SaveVideo
 JEVOIS_DECLARE_PARAMETER(filename, std::string, "Name of the video file to write. If path is not absolute, "
@@ -64,14 +64,14 @@ JEVOIS_DECLARE_PARAMETER(fps, double, "Video frames/sec as stored in the file an
     example, to record footage that will be used to train some machine vision algorithm.
 
     Issue the command \c start over the command-line interface to start saving video frames, and \c stop to stop
-    saving. Successive start/stop commands will increment the file number (%d argument in the 'filename'
+    saving. Successive start/stop commands will increment the file number (%d argument in the \p filename
     parameter. Before a file is written, the module checks whether it already exists, and, if so, skips over it by
     incrementing the file number. See \ref UserCli for details on how to use the command-line interface.
 
     This module works with any video resolution and pixel format supported by the camera sensor. Thus, additional video
     mappings are possible beyond the ones listed here.
 
-    See \ref PixelFormats for information about pixel formats; with SaveVideo you can use the formats supported by the
+    See \ref PixelFormats for information about pixel formats; with this module you can use the formats supported by the
     camera sensor: YUYV, BAYER, RGB565
 
     This module accepts any resolution supported by the JeVois camera sensor:
@@ -87,8 +87,9 @@ JEVOIS_DECLARE_PARAMETER(fps, double, "Video frames/sec as stored in the file an
     This module can operate both with USB video output, or no USB video output.
 
     When using with no USB output (NONE output format), you should first issue a \c streamon command to start video
-    streaming, then 'start'. The 'streamon' is not necessary when using with a USB video output, the host computer over
-    USB triggers video streaming when it starts grabbing frames from the JeVois camera.
+    streaming by the camera sensor chip, then issue a \c start when you are ready to start recording. The \c streamon is
+    not necessary when using a video mapping with USB video output, as the host computer over USB triggers video
+    streaming when it starts grabbing frames from the JeVois camera.
 
     This module internally uses the OpenCV VideoWriter class to compress and write the video file. See the OpenCV
     documentation for which video formats are supported.
@@ -114,6 +115,48 @@ JEVOIS_DECLARE_PARAMETER(fps, double, "Video frames/sec as stored in the file an
     main memory by the CPU. If you see short stripes of what appears to be wrong pixel colors in the video, try to
     disable \c camturbo: edit JEVOIS:/config/params.cfg on your MicroSD card and in there turn \c camturbo to false.
 
+
+    Example use
+    -----------
+
+    Connect to the JeVois command-line interface (see \ref UserCli), and issue
+
+    \verbatim
+    setmapping2 YUYV 640 480 30.0 JeVois SaveVideo
+    streamon
+    start
+    \endverbatim
+
+    and you will be saving compressed video with 640x480 at 30fps to your microSD card inside JeVois. When you are done,
+    just issue:
+
+    \verbatim
+    stop
+    \endverbatim
+
+    and the video file will be finalized and closed. If you want to access it directly by exporting the microSD inside
+    JeVois as a virtual USB flash drive, issue (with \jvversion{1.3} and later):
+
+    \verbatim
+    streamoff
+    \endverbatim
+
+    to stop camera sensor streaming, and
+
+    \verbatim
+    usbsd
+    \endverbatim
+
+    to export the microSD as a virtual USB flash drive. The video file(s) will be in the <b>JEVOIS:/data/savevideo/</b>
+    folder. You can then use the recorded video to test and debug a new algorithm using your host computer, by running
+    \c jevois-daemon on the host computer with a video file input as opposed to a live camera input, as follows:
+
+    \verbatim
+    jevois-daemon --cameradev=myvideo.avi --videomapping=num
+    \endverbatim
+
+    where you replace \a num above by the video mapping you want to use. See \ref JeVoisDaemon for more info about the
+    \p cameradev parameter.
 
     @author Laurent Itti
 

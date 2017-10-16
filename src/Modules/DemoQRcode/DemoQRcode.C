@@ -24,7 +24,7 @@
 
 // icon by Vaadin in shapes at flaticon
 
-//! Simple demo of QRcode and barcode detection and decoding using the ZBar library
+//! Simple demo of QR-code and barcode detection and decoding using the ZBar library
 /*! Detect barcodes and QR-codes, and decode their contents.
 
     QR-codes (Quick Response Codes) are popular 2D patterns that contain embedded information, such as a string of text,
@@ -36,6 +36,9 @@
 
     JeVois detects and decodes QR-codes and other barcodes. The implementation of the detection and decoding algorithm
     used in JeVois is from the popular library ZBar, found at http://zbar.sourceforge.net/
+
+    You should be able to sustain 30 frames/s with camera resolution 320x240, and 15 frames/s with camera resolution
+    640x480 when running this module inside the JeVois smart camera.
 
     Serial Messages
     ---------------

@@ -39,14 +39,24 @@ JEVOIS_DECLARE_PARAMETER(binsize, unsigned int, "Descriptor bin size", 8, ParamC
 // icon by Pixel Buddha in interface at flaticon
 
 //! Simple demo of dense SIFT feature descriptors extraction
-/*! Compute SIFT keypoint descriptors on a regular grid over the input image. Beware that changing the values for the
-    step and binsize parameters changes the output image size, so you need to adjust your video mappings
-    accordingly. Hence, setting those parameters is best done once and for all in the module's optional params.cfg
-    file. This module can either have a color YUYV output, which shows the original camera image, keypoint locations,
-    and descriptor values; or a greyscale output, which is just the descriptor values.
+/*! Compute SIFT keypoint descriptors on a regular grid over the input image.
 
-    This algorithm is implemengted using the VLfeat library. It is quite slow, maybe because this library is a bit old
+    This module is useful when using JeVois as a pre-processor, delivering a dense array of keypoint descriptors to a
+    host computer, where the array is disguised as a grayscale video frame. Upon receiving the array of descriptors, the
+    host computer can further process them. For example, the host computer may compute camera motion in space by
+    matching descriptors across successive frames, or may attempt to detect and identify objects based on the
+    descriptors.
+
+    Beware that changing the values for the \p step and \p binsize parameters changes the output image size, so you need
+    to adjust your video mappings accordingly. Hence, setting those parameters is best done once and for all in the
+    module's optional \b params.cfg or \b script.cfg file.
+
+    This module can either have a color YUYV output, which shows the original camera image, keypoint locations, and
+    descriptor values; or a greyscale output, which is just the descriptor values.
+
+    This algorithm is implemented using the VLfeat library. It is quite slow, maybe because this library is a bit old
     and appears to be single-threaded.
+
 
     @author Laurent Itti
 

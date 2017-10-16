@@ -52,11 +52,14 @@ JEVOIS_DECLARE_PARAMETER(vpconf, float, "Minimum vanishing point confidence requ
     frames are shown in thick purple. Estimated vanishing point location and confidence is shown as a big green disk on
     the horizon line.
 
+    Note that the demo display runs much slower than the algorithm with no video output (which should be used on
+    autonomous cars), simply because drawing all the detected line segments takes a lot of time.
+
     Serial Messages
     ---------------
 
-    This module can send standardized serial messages as described in \ref UserSerialStyle. One 1D message is issued for
-    on every video frame at vanishing point horizontal location.
+    This module can send standardized serial messages as described in \ref UserSerialStyle. One 1D message is issued on
+    every video frame for the vanishing point's horizontal location.
 
     - Serial message type: \b 1D
     - `id`: always \b vp (shorthand for vanishing point)
@@ -68,14 +71,15 @@ JEVOIS_DECLARE_PARAMETER(vpconf, float, "Minimum vanishing point confidence requ
     -------------
 
     To casually try out this module, just search the web for pictures of roads and point the JeVois camera to one of
-    them. Make sure that you align the horizon line of the algorithm (which has a bumber of purple and green disks)
+    them. Make sure that you align the horizon line of the algorithm (which has a number of purple and green disks)
     roughly with the horizon line in your picture. As you move the camera left and right, the location of the large
     green disk that marks the detected vanishing point should move left and right, and should point to the vanishing
     point of the road in your image.
 
-    When using on a mobile robot in th ereal world, setting the proper horizon line is essential for good operation of
+    When using on a mobile robot in the real world, setting the proper horizon line is essential for good operation of
     the algorithm. This is determined by parameter \c horizon, which should be tuned according to the height and
     tilt angle of the JeVois camera on your vehicle.
+
 
     @author Laurent Itti
 

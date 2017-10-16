@@ -38,7 +38,12 @@ JEVOIS_DECLARE_PARAMETER(l2grad, bool, "Use more accurate L2 gradient norm if tr
 
 //! Simple module to detect edges using the Canny algorithm from OpenCV
 /*! Compute edges in an image using the Canny edge detection algorithm.
+
+    This module is intended as a pre-processor, delivering edge maps to a host computer, which may then be in charge of
+    further processing them, for example to detect objects of various shapes.
     
+    You should be able to run this module at 60 frames/s with resolution 320x240 on the JeVois camera.
+
     @author Laurent Itti
 
     @videomapping GREY 640 480 29.0 YUYV 640 480 29.0 JeVois EdgeDetection

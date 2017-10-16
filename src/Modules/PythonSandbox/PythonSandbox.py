@@ -10,6 +10,9 @@ import numpy as np
 # We then apply some image processing to it to create an output BGR image named 'outimg'.
 # We finally add some text drawings to outimg and send it to host over USB.
 #
+# See http://jevois.org/tutorials for tutorials on getting started with programming JeVois in Python without having
+# to install any development software on your host computer.
+#
 # @author Laurent Itti
 # 
 # @videomapping YUYV 352 288 30.0 YUYV 352 288 30.0 JeVois PythonSandbox

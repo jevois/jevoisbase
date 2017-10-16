@@ -35,8 +35,8 @@
 //! Simple saliency map and gist computation module
 /*! Computes a saliency map and gist, intended for use by machines.
 
-    See the DemoSaliency modute for more explanations about saliency and gist algorithms and for a demo output intended
-    for human viewing.
+    See the \jvmod{DemoSaliency} modute for more explanations about saliency and gist algorithms and for a demo output
+    intended for human viewing.
 
     What is returned depends on the selected output image resolution; it should always be grayscale, and can contain any
     of:
@@ -46,12 +46,16 @@
     - saliency + feature maps
     - saliency + feature maps + gist
 
+    See the example video mappings provided with this module for sample resolutions and the associated elements that are
+    returned.
+
     Serial Messages
     ---------------
 
-    This module can send standardized serial messages as described in \ref UserSerialStyle. One message is issued for on
+    This module can send standardized serial messages as described in \ref UserSerialStyle. One message is issued on
     every video frame at the temporally filtered attended location. The \p id field in the messages simply is \b salient
     for all messages.
+
 
     @author Laurent Itti
 

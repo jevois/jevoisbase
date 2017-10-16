@@ -29,7 +29,7 @@
 
     This algorithm is very fast. It runs at 400+ frames/s at 320x240 and can easily sustain the maximum 15 frames/s of
     the JeVois camera sensor chip at 1280x1024. It may be interesting to combine it with other algorithms running on the
-    quad-core JeVois processor (see for example the \ref MarkersCombo module).
+    quad-core JeVois processor (see for example the \jvmod{MarkersCombo} module).
 
     Sample patterns
     ---------------
@@ -46,7 +46,7 @@
 
     When \p msg3d is turned on, 3D messages will be sent, otherwise 2D messages.
 
-    One message is issued for every detected ArUco, on every video frame.
+    One message is issued for every detected marker, on every video frame.
 
     2D messages when \p msg3d is off:
 
@@ -66,6 +66,7 @@
 
     If you will use the quaternion data (Detail message style; see \ref UserSerialStyle), you should probably set the \p
     serprec parameter to something non-zero to get enough accuracy in the quaternion values.
+
 
     @author Shixian Wen
 

@@ -49,21 +49,44 @@ JEVOIS_DECLARE_PARAMETER(save, bool, "Save regions when true, useful to create a
 
 //! Simple salient region detection and identification using keypoint matching
 /*! This module finds objects by matching keypoint descriptors between a current set of salient regions and a set of
-    training images. Here we use SURF keypoints and descriptors as provided by OpenCV. The algorithm is quite slow and
-    consists of 3 phases: detect keypoint locations, compute keypoint descriptors, and match descriptors from current
-    image to training image descriptors. Here, we alternate between computing keypoints and descriptors on one frame (or
-    more, depending on how slow that gets), and doing the matching on the next frame. This module also provides an
-    example of letting some computation happen even after we exit the process() function. Here, we keep detecting
-    keypoints and computing descriptors even outside process(). The itsKPfut future is our handle to that thread, and we
-    also use it to alternate between detection and matching on alternating frames.
+    training images.
 
-    Also see the ObjectDetect module for a related algorithm (without attention).
+    Here we use SURF keypoints and descriptors as provided by OpenCV. The algorithm is quite slow and consists of 3
+    phases:
+    - detect keypoint locations,
+    - compute keypoint descriptors,
+    - and match descriptors from current image to training image descriptors.
 
-    Training: Simply add images of the objects you want to detect in JEVOIS:/modules/JeVois/SaliencySURF/images/ on your
-    JeVois microSD card. Those will be processed when the module starts. The names of recognized objects returned by
-    this module are simply the file names of the pictures you have added in that directory. No additional trainign
-    procedure is needed. Beware that the more images you add, the slower the algorithm will run, and the higher your
-    chances of confusions among several of your objects.
+    Here, we alternate between computing keypoints and descriptors on one frame (or more, depending on how slow that
+    gets), and doing the matching on the next frame. This module also provides an example of letting some computation
+    happen even after we exit the \c process() function. Here, we keep detecting keypoints and computing descriptors
+    even outside \c process().
+
+    Also see the \jvmod{ObjectDetect} module for a related algorithm (without attention).
+
+    Training
+    --------
+
+    Simply add images of the objects you want to detect into <b>JEVOIS:/modules/JeVois/SaliencySURF/images/</b> on your
+    JeVois microSD card.
+
+    Those will be processed when the module starts.
+
+    The names of recognized objects returned by this module are simply the file names of the pictures you have added in
+    that directory. No additional training procedure is needed.
+
+    Beware that the more images you add, the slower the algorithm will run, and the higher your chances of confusions
+    among several of your objects.
+
+    This module provides parameters that allow you to determine how strict a match should be. With stricter matching,
+    you may sometimes miss an object (i.e., it was there, but was not detected by the algorithm). With looser matching,
+    you may get more false alarms (i.e., there was something else in the camera's view, but it was matched as one of
+    your objects). If you are experiencing difficulties getting any matches, try to loosen the settings, for example:
+
+    \verbatim
+    setpar goodpts 5 ... 100
+    setpar distthresh 0.5
+    \endverbatim
 
     @author Laurent Itti
 

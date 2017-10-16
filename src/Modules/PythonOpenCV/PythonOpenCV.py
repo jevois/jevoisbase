@@ -8,6 +8,9 @@ import numpy as np
 # edge detection algorithm. Try to edit it to do something else (note that the videomapping associated with this
 # module has grayscale image outputs, so that is what you should output).
 #
+# See http://jevois.org/tutorials for tutorials on getting started with programming JeVois in Python without having
+# to install any development software on your host computer.
+#
 # @author Laurent Itti
 # 
 # @displayname Python OpenCV
@@ -56,10 +59,10 @@ class PythonOpenCV:
     
     # ###################################################################################################
     ## Parse a serial command forwarded to us by the JeVois Engine, return a string
-    def parseSerial(self, str):
-        return "ERR: Unsupported command"
+    #def parseSerial(self, str):
+    #    return "ERR: Unsupported command"
     
     # ###################################################################################################
     ## Return a string that describes the custom commands we support, for the JeVois help message
-    def supportedCommands(self):
-        return ""
+    #def supportedCommands(self):
+    #    return ""

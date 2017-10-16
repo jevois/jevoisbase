@@ -42,7 +42,14 @@ JEVOIS_DECLARE_PARAMETER(thresh2delta, double, "Second threshold delta over thre
 
 //! Simple module to detect edges, running 4 filters in parallel with 4 different settings
 /*! Compute 4 Canny edge detection filters with 4 different settings, in parallel.
-    
+
+    This module is useful as a pre-processor, feeding edge maps at 4 different levels of details to further processing
+    that may happen on a host computer. The 4 different levels of detail can be leveraged to first detect the gross
+    outlines of objects, and then focus on finer textures within these objects.
+
+    This algorithm should easily run at 45 frames/s on the JeVois smart camera.
+
+   
     @author Laurent Itti
 
     @displayname Edge Detection X4

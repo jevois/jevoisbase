@@ -7,6 +7,9 @@ import libjevois as jevois
 # Feel free to edit it and try something else. Note that this module does not import OpenCV, see the PythonOpenCV for a
 # minimal JeVois module written in Python that uses OpenCV.
 #
+# See http://jevois.org/tutorials for tutorials on getting started with programming JeVois in Python without having
+# to install any development software on your host computer.
+#
 # @author Laurent Itti
 # 
 # @videomapping YUYV 640 480 15.0 YUYV 640 480 15.0 JeVois PythonTest

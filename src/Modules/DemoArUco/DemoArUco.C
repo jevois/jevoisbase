@@ -29,8 +29,8 @@
     and white pixels. The ArUco decoding algorithm is capable of locating, decoding, and of estimating the pose
     (location and orientation in space) of any ArUco markers in the camera's field of view.
 
-    ArUcos are very useful as tags for many robotics and augmented reality applications. For example, one may place an
-    ArUco next to a robot's charging station, an elevator button, or an object that a robot should manipulate.
+    ArUco markers are very useful as tags for many robotics and augmented reality applications. For example, one may
+    place an ArUco next to a robot's charging station, an elevator button, or an object that a robot should manipulate.
 
     For more information about ArUco, see https://www.uco.es/investiga/grupos/ava/node/26
 
@@ -40,7 +40,7 @@
     ArUco markers can be created with several standard dictionaries. Different dictionaries give rise to different
     numbers of pixels in the markers, and to different numbers of possible symbols that can be created using the
     dictionary. The default dictionary used by JeVois is 4x4 with 50 symbols. Other dictionaries are also supported by
-    setting the appropriate parameter over serial port or in a config file, up to 7x7 with 1000 symbols.
+    setting the parameter \p dictionary over serial port or in a config file, up to 7x7 with 1000 symbols.
 
     Creating and printing markers
     -----------------------------
@@ -48,7 +48,7 @@
     We have created the 50 markers available in the default dictionary (4x4_50) as PNG images that you can download and
     print, at http://jevois.org/data/ArUco.zip
 
-    To make your own, for example, using another dictionary, see the documentation of the ArUco component of
+    To make your own, for example, using another dictionary, see the documentation of the \ref ArUco component of
     JeVoisBase. Some utilities are provided with the component.
 
     Serial Messages
@@ -109,6 +109,14 @@
     When doing pose estimation, you should set the \p markerlen parameter to the size (width) in millimeters of your
     actual physical markers. Knowing that size will allow the pose estimation algorithm to know where in the world your
     detected markers are.
+
+    Tutorial and video
+    ------------------
+
+    Check out this tutorial on how to [build a simple visually-guided toy robot car for under $100 with
+    JeVois](http://jevois.org/tutorials/UserRobotCar.html), which uses ArUco at its core. A demo video is here:
+
+    \youtube{7cMtD-ef83E}
 
 
     @author Laurent Itti

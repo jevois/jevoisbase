@@ -65,7 +65,46 @@ JEVOIS_DECLARE_PARAMETER(ctxframes, unsigned int, "Number of context video frame
 /*! This module detects surprising events in the live video feed from the camera, and records short video clips of each
     detected event.
 
+    Surprising is here defined according to Itti and Baldi's mathematical theory of surprise (see, e.g.,
+    http://ilab.usc.edu/surprise/) which is applied to monitoring live video streams. When a surprising event is
+    detected, a short video clip of that event is saved to the microSD card inside JeVois, for later review.
+
     It was created in this JeVois tutorial: http://jevois.org/tutorials/ProgrammerSurprise.html
+
+    Using this module
+    -----------------
+
+    This module does not send any video output to USB. Rather, it just saves surprising events to microSD for later
+    review. Hence, you may want to try the following:
+
+    - mount the JeVois camera where you want it to detect surprising events
+
+    - run it connected to a laptop computer, using any mode which does have some video output over USB (e.g., 640x500
+      YUYV). Adjust the camera orientation to best fit your needs.
+
+    - edit <b>JEVOIS:/config/initscript.cfg</b> to contain:
+      \verbatim
+setmapping2 YUYV 640 480 15.0 JeVois SurpriseRecorder
+setpar thresh 1e7
+setpar channels S
+streamon
+      \endverbatim
+      and see the above tutorial for more details. Next time you power JeVois, it will immediately start detecting and
+      recording surprising events in its view.
+
+    Example
+    -------
+
+    Here is one hour of video surveillance footage. It is very boring overall. Except that a few brief surprising things
+    occur (a few seconds each). Can you find them?
+
+    \youtube{aSKncW7Jxrs}
+
+    Here is what the SurpriseRecorder module found (4 true events plus 2 false alarms):
+
+    \youtube{zIslIsHBfYw}
+
+
 
     @author Laurent Itti
 

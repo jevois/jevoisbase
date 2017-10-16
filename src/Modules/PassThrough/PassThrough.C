@@ -31,10 +31,8 @@
     Any video mapping is possible here, as long as camera and USB pixel types match, and camera and USB image
     resolutions also match.
 
-    See \ref PixelFormats for information about pixel formats; with thismodule you can use the formats supported by the
-    camera sensor: YUYV, BAYER, RGB565
-
-    This module accepts any resolution supported by the JeVois camera sensor:
+    See \ref PixelFormats for information about pixel formats; with this module you can use the formats supported by the
+    camera sensor: YUYV, BAYER, RGB565, and resolutions:
     
     - SXGA (1280 x 1024): up to 15 fps
     - VGA (640 x 480): up to 30 fps
@@ -59,7 +57,7 @@
     host computer over the USB link. To test this mapping, select the corresponding resolution and framerate in your
     video viewing software (here, YUYV 176x144 \@ 115fps). Although the sensor can capture at up to 120fps at this
     resolution, here we used 115fps to avoid a conflict with a mapping using YUYV 176x144 \@ 120fps USB output and the
-    SaveVideo module that is already in the default <b>videomappings.cfg</b> file.
+    \jvmod{SaveVideo} module that is already in the default <b>videomappings.cfg</b> file.
 
     Note that this module may suffer from DMA coherency artifacts if the \p camturbo parameter of the jevois::Engine is
     turned on, which it is by default. The \p camturbo parameter relaxes some of the cache coherency constraints on the

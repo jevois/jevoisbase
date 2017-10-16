@@ -26,9 +26,12 @@
 //! Simple demo of QRcode + ARtoolkit + ArUco markers detection and decoding
 /*! Detect and decode 3 kinds of coded patterns which can be useful to a robot:
 
-    - QR-codes as in \ref DemoQRcode
-    - AR-toolkit markers as in \ref DemoARtoolkit
-    - ArUco markers as in DemoArUco
+    - QR-codes as in \jvmod{DemoQRcode}
+    - AR-toolkit markers as in \jvmod{DemoARtoolkit}
+    - ArUco markers as in \jvmod{DemoArUco}
+
+    The three algorithms run in parallel. You should be able to sustain 50 frames/s at 320x240 camera resolution, and 20
+    frames/s at 640x480 camera resolution.
 
     Serial Messages
     ---------------
@@ -39,24 +42,27 @@
 
     One message is issued for every detected marker, on every video frame.
 
-    2D messages when \p dopose is off:
+    2D messages when \p msg3d and \p dopose are off:
 
     - Serial message type: \b 2D
-    - `id`: decoded ArUco marker ID
+    - `id`: decoded marker ID (with prefix 'U' for ArUco, or 'A' for ARtoolkit),
+       or type of symbol (e.g., \b QR-Code, \b ISBN13, etc).
     - `x`, `y`, or vertices: standardized 2D coordinates of marker center or corners
     - `w`, `h`: standardized marker size
-    - `extra`: none (empty string)
+    - `extra`: none (empty string) for ArUco and ARtoolkit markers, otherwise decoded barcode or QRcode content.
 
-    3D messages when \p dopose is on:
+    3D messages when \p msg3d and \p dopose are on:
  
     - Serial message type: \b 3D
-    - `id`: decoded ArUco marker ID
+    - `id`: decoded marker ID (with prefix 'U' for ArUco, or 'A' for ARtoolkit),
+       or type of symbol (e.g., \b QR-Code, \b ISBN13, etc).
     - `x`, `y`, `z`, or vertices: 3D coordinates in millimeters of marker center or corners
     - `w`, `h`, `d`: marker size in millimeters, a depth of 1mm is always used
-    - `extra`: none (empty string)
+    - `extra`: none (empty string) for ArUco and ARtoolkit markers, otherwise decoded barcode or QRcode content.
 
     If you will use the quaternion data (Detail message style; see \ref UserSerialStyle), you should probably set the \p
     serprec parameter to something non-zero to get enough accuracy in the quaternion values.
+
 
     @author Laurent Itti
 

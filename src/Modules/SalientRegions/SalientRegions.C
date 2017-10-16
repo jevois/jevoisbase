@@ -37,14 +37,30 @@ static jevois::ParameterCategory const ParamCateg("Salient Regions Options");
 //! Parameter \relates SalientRegions
 JEVOIS_DECLARE_PARAMETER(inhsigma, float, "Sigma (pixels) used for inhibition of return", 32.0F, ParamCateg);
 
-//! Extract the most salient regions and send them out
+//! Extract the most salient regions and send them out over USB
 /*! This module produces an output intended for machine use, and extracts cropped images around the N most salient
     locations. N is decided by the height of the desired USB output image. See DemoSaliency for more information about
     visual attention and saliency.
 
-    Here we show how the output image size chosen in the videomappings.cfg config file can be used to decide what output
-    to compute. Namely, here we assume square regions stacked vertically. So the width of the outut image sets region
-    size, and the height divided by that size sets the number of regions. 
+    Here we show how the output image size chosen in the \b videomappings.cfg config file can be used to decide what
+    output to compute. Namely, here we assume square regions stacked vertically. So the width of the output image sets
+    region size, and the height divided by that size sets the number of regions. Note that region width and height
+    must be a multiple of 4.
+
+    Example use
+    -----------
+
+    With video mapping
+
+    \verbatim
+    YUYV 64 192 25.0 YUYV 320 240 25.0 JeVois SalientRegions
+    \endverbatim
+
+    in <b>JEVOIS:/config/videomappings.cfg</b>, this module will extract three 64x64 salient regions, and will send them
+    over USB one on top of the other (since USB video width is 64, which determines region size, and USB video height is
+    3x64 = 192, which determines the number of regions).
+
+    The most salient region is on top, the second most salient region is below the first one, etc.
 
     @author Laurent Itti
 

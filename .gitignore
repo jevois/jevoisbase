@@ -20,4 +20,5 @@ Contrib/darknet-nnpack
 /jvpkg/
 /doc/
 /JeVois_jevoisbase.jvpkg
+svnignore.sh
 *~

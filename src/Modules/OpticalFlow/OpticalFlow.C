@@ -25,12 +25,37 @@
 // icon by Gregor Cresnar in arrows at flaticon
 
 //! Fast optical flow computation using OF_DIS
-/*! Computes horizontal and vertical optical flow into two separate optical flow maps. This module is intended for uas
+/*! Computes horizontal and vertical optical flow into two separate optical flow maps. This module is intended for use
     as a pre-processor, that is, the images sent out may be further processed by the host computer.
 
-    The optical flow image output is twoce taller than the camera input image. On top is the horisontal motion map
-    (darker shades for things moving rightward from the viewpoint of the camera, lighter for leftward, mid-grey level
-    for no motion), and below it is the vertical motion map (dark for things moving down, bright for up).
+    The optical flow image output is twice taller than the camera input image:
+
+    - On top is the horizontal motion map
+      + darker shades of gray for things moving rightward from the viewpoint of the camera,
+      + lighter shades for things that move leftward,
+      + mid-grey level for no motion
+
+    - below it is the vertical motion map
+      + dark for things moving downward,
+      + bright for upward,
+      + mid-grey for no vertical motion.
+
+    You should be able to run this algorithm at 100 frames/s with 176x144 video camera resolution.
+
+    This module has parameters to tune the algorithm. Interested users are referred to the original paper and
+    implementation for how to set these:
+
+    "Fast Optical Flow using Dense Inverse Search" by Till Kroeger, Radu Timofte, Dengxin Dai and Luc Van Gool, Proc
+    ECCV, 2016.
+
+    Also see here: http://www.vision.ee.ethz.ch/~kroegert/OFlow/
+
+    Trying it out
+    -------------
+
+    Have JeVois point towards an otherwise static scene, and swipe one finger in front of it, either moving from left to
+    right of the field of view, from top to bottom, etc to confirm the different greyscale values as described above.
+
 
     @author Laurent Itti
 
