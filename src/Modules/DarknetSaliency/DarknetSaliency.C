@@ -49,7 +49,12 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
 
     This module runs a Darknet network on an image window around the most salient point and shows the top-scoring
     results. The network is currently a bit slow, hence it is only run once in a while. Point your camera towards some
-    interesting object, and wait for Darknet to tell you what it found.
+    interesting object, and wait for Darknet to tell you what it found.  The framerate figures shown at the bottom left
+    of the display reflect the speed at which each new video frame from the camera is processed, but in this module this
+    just amounts to computing the saliency map from the camera input, converting the input image to RGB, cropping it
+    around the most salient location, sending it to the neural network for processing in a separate thread, and creating
+    the demo display. Actual network inference speed (time taken to compute the predictions on one image crop) is shown
+    at the bottom right. See below for how to trade-off speed and accuracy.
 
     Note that by default this module runs the Imagenet1k tiny Darknet (it can also run the slightly slower but a bit
     more accurate Darknet Reference network; see parameters). There are 1000 different kinds of objects (object classes)
@@ -57,9 +62,9 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
 
     Sometimes it will make mistakes! The performance of darknet-tiny is about 58.7% correct (mean average precision) on
     the test set, and Darknet Reference is about 61.1% correct on the test set. This is when running these networks at
-    224x224 network input resolution (see parameter \p netin).
+    224x224 network input resolution (see parameter \p netin below).
 
-    \youtube{FIXME}
+    \youtube{77VRwFtIe8I}
 
     Neural network size and speed
     -----------------------------
@@ -78,25 +83,25 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     - with netin = (128 128), this module runs at about 180ms/prediction.
 
     Finally note that, when using video mappings with USB output, irrespective of \p foa and \p netin, the crop around
-    the most salient image region (with size given by \p foa) will always be rescaled so that, when placed to the right
-    of the input image, it fills the desired USB output dims. For example, if camera mode is 320x240 and USB output size
-    is 544x240, then the attended and recognized object will be rescaled to 224x224 (since 224 = 544-320) for display
-    purposes only. This is so that one does not need to change USB video resolution while playing with diffrent values
-    of \p foa and \p netin live.
+    the most salient image region (with size given by \p foa) will always also be rescaled so that, when placed to the
+    right of the input image, it fills the desired USB output dims. For example, if camera mode is 320x240 and USB
+    output size is 544x240, then the attended and recognized object will be rescaled to 224x224 (since 224 = 544-320)
+    for display purposes only. This is so that one does not need to change USB video resolution while playing with
+    different values of \p foa and \p netin live.
 
     Serial messages
     ---------------
 
     - On every frame where detection results were obtained, this module sends a message
       \verbatim
-      DKF framenum
+      DKS framenum
       T2 x y
       \endverbatim
       where \a framenum is the frame number (starts at 0). The T2 message is a standardized message about the location
       and size of the salient region of interest in which the object was found. The message can be customized, see \ref
       UserSerialStyle.
     - In addition, when detections are found which are above threshold, up to \p top messages will be sent, for those
-      category candidates that have scored above \a thresh:
+      category candidates that have scored above \p thresh:
       \verbatim
       DKR category score
       \endverbatim
@@ -152,7 +157,7 @@ class DarknetSaliency : public jevois::StdModule,
     void sendAllSerial(int inw, int inh, int salx, int saly, int roiw, int roih)
     {
       // Send frame marker:
-      sendSerial("DKF " + std::to_string(itsFrame));
+      sendSerial("DKS " + std::to_string(itsFrame));
 
       // Send saliency info to serial port (for arduino, etc):
       sendSerialImg2D(inw, inh, salx, saly, roiw, roih, "sm");

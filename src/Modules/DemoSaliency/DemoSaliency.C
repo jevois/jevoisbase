@@ -35,24 +35,26 @@
 //! Simple demo of the visual saliency algorithm of Itti et al., IEEE PAMI, 1998
 /*! Visual saliency algorithm as described at http://ilab.usc.edu/bu/
 
-    This algorithm finds the loaction in the camera's view that is the most attention-grabbing, conspicuous, or
-    so-called salient. This location is marked on every video frame by the pink square. Locations are smoothed over
-    frames using a Kalman filter. The smoothed locations are shown with a green circle.
+    This algorithm finds the location in the camera's view that is the most attention-grabbing, conspicuous, or
+    so-called salient. This location is marked on every video frame by the pink square. Salient locations detected on
+    each frame are smoothed over time using a Kalman filter. The smoothed attention trajectory is shown with a green
+    circle.
 
-    For an introduction to visual saliency, see http://ilab.usc.edu/bu/
+    For an introduction to visual saliency computation, see http://ilab.usc.edu/bu/
 
     Serial Messages
     ---------------
 
     This module can send standardized serial messages as described in \ref UserSerialStyle, where all coordinates and
     sizes are standardized using \ref coordhelpers. One message is issued on every video frame at the temporally
-    filtered attended (most salient) location (green circle in the video display):
+    smoothed attended (most salient) location (green circle in the video display):
 
     - Serial message type: \b 2D
     - `id`: always \b sm (shorthand for saliency map)
     - `x`, `y`: standardized 2D coordinates of temporally-filtered most salient point
     - `w`, `h`: standardized size of the pink square box around each attended point
     - `extra`: none (empty string)
+
 
     @author Laurent Itti
 

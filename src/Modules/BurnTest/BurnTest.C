@@ -46,7 +46,7 @@
     - launch two instances of dhrystone (integer benchmark test) running in the background
     - grab frames from the camera sensor
     - run the quad-core visual attention algorithm
-    - in parallel, run the NEON demo tht blurs the video frames using NEON accelerated processor instructions
+    - in parallel, run the NEON demo that blurs the video frames using NEON accelerated processor instructions
     - in parallel, run the GPU demo that processes the video through 4 image filters (shaders)
     - stream attention video results over USB
     - issue messages over the serial port
@@ -61,10 +61,11 @@
     -------------
 
     Select the burntest video mode (note that it is 640x300 \@ 10fps, while the default MicroSD card also includes a
-    mode with 640x300 \@ 60fps that runs the DemoSaliency module instead). Observe the CPU temperature at the bottom of
-    the live video window. If it ever reaches 75C (which it should not under normal conditions given the high power fan
-    on the JeVois smart camera), the CPU frequency also shown next to the temperature will drop down below 1344 MHz,
-    and will then come back up as the CPU temperature drops below 75C.
+    mode with 640x300 \@ 60fps that runs the DemoSaliency module instead). You need to activate it (remove the leading
+    \b # sign) in <b>JEVOIS:/config/videomappings.cfg</b> as it is disabled by default. Observe the CPU temperature at
+    the bottom of the live video window. If it ever reaches 75C (which it should not under normal conditions given the
+    high power fan on the JeVois smart camera), the CPU frequency shown next to the temperature will drop down below
+    1344 MHz, and will then come back up as the CPU temperature drops below 75C.
 
     Connect your JeVois camera to your host computer through a USB Tester device that measures voltage, current, and
     power. You should reach about 3.7 Watts under the burn test, which is the maximum we have ever been able to achieve

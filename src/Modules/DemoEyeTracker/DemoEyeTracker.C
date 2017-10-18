@@ -25,14 +25,33 @@
 
 // icon by Icomoon in medical at flaticon
 
-//! Simple demo of an eye-tracker using the openEyes toolkit
-/*! This demo implements an eye tracker, which is based on detecting the outline of the pupil. Note that the camera has
-    to be very close to the eye for this to work well. To be useful in practice, some sort of prism or tele-lens should
-    be used so that the camera can be out of the field of view. This demo was mainly created as an example of an
-    algorithm that can use a 120 frames/s camera capture mode.
+//! Pupil detection and eye-tracker using the openEyes toolkit
+/*! This module implements an eye tracker, which is based on detecting the outline of the pupil.
+
+    Note that the camera has to be very close to the eye for this to work well. To be useful in practice, some sort of
+    prism or tele-lens should be used so that the camera can be out of the field of view of the human participant.
+
+    This module can easily run at 120 frames/s.
 
     The original eye tracking software used here can be found at http://thirtysixthspan.com/openEyes/software.html
     
+    This module only performs the required image processing. To build a complete eye tracking system, additional
+    software is required (which can be provided by several open-source eye-tracking toolkits):
+
+    - Establish a calibration procedure, whereby the participant will be asked to look at small dots at known locations
+      on the computer screen. This will allow a comparison between coordinates of the pupil center as reported by JeVois
+      and coordinates on the computer screen.
+
+    - Compute the calibration transform (mapping from pupil coordinates reported by JeVois to screen coordinates) based
+      on the data obtained by the calibration procedure. This has to be done once for each participant and eye-tracking
+      session, or every time a participant moves her/his head by a large amount.
+
+    - On new eye-tracking sessions, convert pupil coordinates reported by JeVois to screen coordinates.
+
+    - If desired, extract events in the raw calibrated data stream, such as fixations, rapid saccadic eye movements,
+      smooth pursuit movements, and blinks.
+
+
     @author Laurent Itti
 
     @videomapping GREY 640 480 30.0 YUYV 640 480 30.0 JeVois DemoEyeTracker

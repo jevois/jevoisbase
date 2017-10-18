@@ -95,6 +95,7 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
       help message that shows parameters and commands of the running machine vision module only (and no general
       parameters related to the JeVois core).
 
+
     @author Laurent Itti
 
     @videomapping YUYV 640 240 30.0 YUYV 320 240 30.0 JeVois ColorFiltering

@@ -30,13 +30,37 @@
 
 // icon by by Freepik in arrows at flaticon
 
-//! Simple background subtraction, pretty much straight from the OpenCV tutorials
-/*! The background subtraction alorithm learns a statistical model of the appearance of a scene when the camera is not
-    moving. Any movin object entering the field of view will then be detected as significantly different from the
-    learned pixel model.
+//! Background subtraction to detect moving objects
+/*! This background subtraction algorithm learns, over time, a statistical model of the appearance of a scene when the
+    camera is not moving. Any moving object entering the field of view will then be detected as significantly different
+    from the learned pixel model.
 
-    Note that this class has internal state (it learns the statistics of the background over time). FIXME: Unclear how
-    it would react to input resolution changes, need to test.
+    You can thus use this module to detect moving objects with a static JeVois camera. This module is quite robust to
+    image noise since it learns a statistical model of the distribution of "normal" values a pixel may take over time,
+    as opposed to more simply subtracting one camera image from the previous one (which would be much noisier).
+
+    Trying it out
+    -------------
+
+    - Make sure that your JeVois camera is stable and not moving (nor vibrating because of its fan); you may want to
+      mount it securely using screws, zip ties, etc
+
+    - When nothing moves, you should see the right side of the video progressively fade to black. This is the result of
+      this module learning the normal range of RGB values that each pixel may take over time, given sensor noise, small
+      variations in lighting, and other environmental factors.
+
+    - Now move your hand or some other object in front of JeVois. It should be detected on the right side of the display
+      and should show up in white color.
+
+    - Note that the autogain and autoexposure features of the JeVois camera sensor may trip this model. For example if
+      you suddenly present a large white object in front of the JeVois camera that had been looking at an overall dark
+      scene for a while, that bright white object might trigger an automatic reduction in exposure, which will in turn
+      brighten the whole image and make it appear much different from what it used to be (so, everything might briefly
+      turn white color in the right panel of the video display). To avoid this, you may want to use this module with
+      manual settings for gain, white balance, and exposure.
+
+    Note that this class has internal state (it learns the statistics of the background over time).
+
 
     @author Laurent Itti
 

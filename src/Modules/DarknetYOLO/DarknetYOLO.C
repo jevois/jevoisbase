@@ -41,7 +41,11 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
 
     This module runs a YOLO network and shows all detections obtained. The YOLO network is currently quite slow, hence
     it is only run once in a while. Point your camera towards some interesting scene, keep it stable, and wait for YOLO
-    to tell you what it found.
+    to tell you what it found.  The framerate figures shown at the bottom left of the display reflect the speed at which
+    each new video frame from the camera is processed, but in this module this just amounts to converting the image to
+    RGB, sending it to the neural network for processing in a separate thread, and creating the demo display. Actual
+    network inference speed (time taken to compute the predictions on one image) is shown at the bottom right. See
+    below for how to trade-off speed and accuracy.
 
     Note that by default this module runs the Pascal-VOC version of tiny-YOLO, with these object categories:
 
@@ -69,22 +73,25 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     Sometimes it will make mistakes! The performance of tiny-yolo-voc is about 57.1% correct (mean average precision) on
     the test set.
 
+    \youtube{d5CfljT5kec}
+
     Speed and network size
     ----------------------
 
     The parameter \p netin allows you to rescale the neural network to the specified size. Beware that this will only
     work if the network used is fully convolutional (as is the case of the default tiny-yolo network). This not only
     allows you to adjust processing speed (and, conversely, accuracy), but also to better match the network to the input
-    images (e.g., the defaultsize for tiny-yolo is 426x416, and, thus, passing it a input image of size 640x480 will
-    result in first scaling that input to 416x312, then letterboxing it by adding grey borders on top and bottom so that
-    the finaly input to the network is 416x416).
+    images (e.g., the default size for tiny-yolo is 426x416, and, thus, passing it a input image of size 640x480 will
+    result in first scaling that input to 416x312, then letterboxing it by adding gray borders on top and bottom so that
+    the final input to the network is 416x416). This letterboxing can be completely avoided by just resizing the network
+    to 320x240.
 
     Here are expected processing speeds:
-    - when netin = [0 0], proceses letterboxed 416x416 inputs, about 2450ms/image
+    - when netin = [0 0], processes letterboxed 416x416 inputs, about 2450ms/image
     - when netin = [320 240], processes 320x240 inputs, about 1350ms/image
-    - when netin = [160 120], processes 320x240 inputs, about 695ms/image
+    - when netin = [160 120], processes 160x120 inputs, about 695ms/image
 
-    \youtube{d5CfljT5kec}
+    \youtube{77VRwFtIe8I}
 
     Serial messages
     ---------------
@@ -101,6 +108,7 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
       + `x`, `y`, or vertices: standardized 2D coordinates of object center or corners
       + `w`, `h`: standardized object size
       + `extra`: recognition score (in percent confidence)
+
 
     @author Laurent Itti
 

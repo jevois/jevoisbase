@@ -26,12 +26,15 @@
 
 //! Identify objects using Darknet deep neural network
 /*! Darknet is a popular neural network framework. This module identifies the object in a square region in the center
-    of the camera field of view using a deep convolutional neural network. The deep network analyzes the image by
-    filtering it using many different filter kernels, and several passes (network layers). This essentially amounts to
-    detecting the presence of both simple and complex parts of known objects in the image (e.g., detecting edges in
-    lower layers to detecting car wheels or even whole cars in higher layers). The last layer of the network is reduced
-    to vector with one entry per known kind of object (object class). This module returns the class names of the top
-    scoring candidates in the outut vector which (if any) have scored above a minimum confidence threshold.
+    of the camera field of view using a deep convolutional neural network.
+
+    The deep network analyzes the image by filtering it using many different filter kernels, and several stacked passes
+    (network layers). This essentially amounts to detecting the presence of both simple and complex parts of known
+    objects in the image (e.g., from detecting edges in lower layers of the network to detecting car wheels or even
+    whole cars in higher layers). The last layer of the network is reduced to a vector with one entry per known kind of
+    object (object class). This module returns the class names of the top scoring candidates in the output vector, if
+    any have scored above a minimum confidence threshold. When nothing is recognized with sufficiently high confidence,
+    there is no output.
 
     Darknet is a great alternative to popular neural network frameworks like Caffe, TensorFlow, MxNet, pyTorch, Theano,
     etc as it features: 1) small footprint which is great for small embedded systems; 2) hardware acceleration using ARM
@@ -45,13 +48,17 @@
     This module runs a Darknet network and shows the top-scoring results. The network is currently a bit slow, hence it
     is only run once in a while. Point your camera towards some interesting object, make the object fit in the picture
     shown at right (which will be fed to the neural network), keep it stable, and wait for Darknet to tell you what it
-    found.
+    found. The framerate figures shown at the bottom left of the display reflect the speed at which each new video frame
+    from the camera is processed, but in this module this just amounts to converting the image to RGB, sending it to the
+    neural network for processing in a separate thread, and creating the demo display. Actual network inference speed
+    (time taken to compute the predictions on one image) is shown at the bottom right. See below for how to trade-off
+    speed and accuracy.
 
     Note that by default this module runs the Imagenet1k tiny Darknet (it can also run the slightly slower but a bit
     more accurate Darknet Reference network; see parameters). There are 1000 different kinds of objects (object classes)
-    that this network can recognize (too long to list here). The input layer of these two networks is 224x224
-    pixels. This modules takes a crop at the center of the video image, with size determined by the network input
-    size. With the defult network parameters, this module hence requires at least 320x240 camera sensor resolution. The
+    that these networks can recognize (too long to list here). The input layer of these two networks is 224x224 pixels
+    by default. This modules takes a crop at the center of the video image, with size determined by the network input
+    size. With the default network parameters, this module hence requires at least 320x240 camera sensor resolution. The
     networks provided on the JeVois microSD image have been trained on large clusters of GPUs, typically using 1.2
     million training images from the ImageNet dataset.
 
@@ -63,8 +70,8 @@
     -----------------------------
 
     When using a video mapping with USB output, the network is automatically resized to a square size that is the
-    difference between the USB output video width and the camera input width (e.g., when USB video mode is 544x240 and
-    camera sensor mode is 320x240, the network will be resized to 224x224 where 224 is 544-320).
+    difference between the USB output video width and the camera sensor input width (e.g., when USB video mode is
+    544x240 and camera sensor mode is 320x240, the network will be resized to 224x224 since 224=544-320).
 
     The network size direcly affects both speed and accuracy. Larger networks run slower but are more accurate.
 

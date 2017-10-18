@@ -101,11 +101,22 @@ JEVOIS_DECLARE_PARAMETER(kernelw, unsigned int, "Kernel width (pixels)", 5, Para
 JEVOIS_DECLARE_PARAMETER(kernelh, unsigned int, "Kernel height (pixels)", 5, ParamCateg);
 
 //! Simple demo of ARM Neon (SIMD) extensions, comparing a box filter (blur) between CPU and Neon
-/*! NEON are specialized processor instructions that can handle several operations at once, for example, 8 additions of
-    8 bytes to 8 other bytes. They are very useful for image processing. NEON instructions are supported both by the
-    JeVois hardware platform and by the JeVois programming framework. In fact, one can directly call NEON instructions
-    using C-like function calls and specialized C data types to represent small vectors of numbers (like 8 bytes). This
-    demo uses a blur filter from the open-source NE10 library.
+/*! NEON are specialized ARM processor instructions that can handle several operations at once, for example, 8 additions
+    of 8 bytes with 8 other bytes. NEON is the counterpart for ARM architectures of SSE for Intel architectures.
+
+    They are very useful for image processing. NEON instructions are supported both by the JeVois hardware platform and
+    by the JeVois programming framework.
+
+    In fact, one can directly call NEON instructions using C-like function calls and specialized C data types to
+    represent small vectors of numbers (like 8 bytes).
+
+    This demo uses a blur filter from the open-source NE10 library. It compares processing time to apply the same filter
+    to the input video stream, either using conventional C code, or using NEON-accelerated code. The NEON-accelerated
+    code is about 6x faster.
+
+    For more examples of use of NEON on JeVois, see modules \jvmod{DarknetSingle}, \jvmod{DarknetYOLO}, and
+    \jvmod{DarknetSaliency} which use NEON to accelerate the deep neural networks implemented in these modules.
+
 
     @author Laurent Itti
 

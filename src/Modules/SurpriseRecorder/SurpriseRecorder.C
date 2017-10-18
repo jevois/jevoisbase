@@ -84,10 +84,10 @@ JEVOIS_DECLARE_PARAMETER(ctxframes, unsigned int, "Number of context video frame
 
     - edit <b>JEVOIS:/config/initscript.cfg</b> to contain:
       \verbatim
-setmapping2 YUYV 640 480 15.0 JeVois SurpriseRecorder
-setpar thresh 1e7
-setpar channels S
-streamon
+      setmapping2 YUYV 640 480 15.0 JeVois SurpriseRecorder
+      setpar thresh 1e7
+      setpar channels S
+      streamon
       \endverbatim
       and see the above tutorial for more details. Next time you power JeVois, it will immediately start detecting and
       recording surprising events in its view.
@@ -104,6 +104,8 @@ streamon
 
     \youtube{zIslIsHBfYw}
 
+    With only 6 surprising events, and assuming +/- 10 seconds of context frames around each event, we have achieved a
+    compression of the surveillance footage from 60 minutes to 2 minutes (a factor 30x).
 
 
     @author Laurent Itti

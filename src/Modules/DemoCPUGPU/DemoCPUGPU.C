@@ -30,9 +30,9 @@
 
 // icon by Freepik in computer at flaticon
 
-//! Simple image filtering demo using 4-core CPU processing and OpenGL-ES 2.0 shaders on the Mali-400MP2 GPU
-/*! In this demo, we compute saliency and gist over our 4 CPU cores while we also compute 4 different image filters over
-    the GPU, finally combining all results into a single grayscale image:
+//! Live saliency computation and image filtering using 4-core CPU and OpenGL-ES 2.0 shaders on the Mali-400MP2 GPU
+/*! This module computes saliency and gist over our 4 CPU cores while also computing 4 different image filters over the
+    GPU, finally combining all results into a single grayscale image:
 
     - saliency: multicore CPU-based detection of the most conspicuous (most attention-grabbing) object in the field of
       view.
@@ -43,17 +43,19 @@
 
     For an introduction to visual saliency, see http://ilab.usc.edu/bu/
 
+    Also see \jvmod{DemoSaliency}, \jvmod{JeVoisIntro}, \jvmod{DarknetSaliency} for more about saliency.
+
     Video output
     ------------
 
     The video output is arranged vertically, with, from top to bottom:
-    - Sobel results (same size as input image)
+    - Sobel filter results (same size as input image)
     - Median filter results (same size as input image)
     - Morphological erosion filter results (same size as input image)
     - Morphological dilation filter results (same size as input image)
-    - Saliency results: from left to right: saliency map, color map, intensity map, orientation map, flicker map, motion
-      map. Map size is input size divided by 8 horizontally and vertically. Gist vector is appended to the right but
-      note that at 160x120 it is truncated (see source code for details).
+    - Saliency results (those are very small): from left to right: saliency map, color map, intensity map, orientation
+      map, flicker map, motion map. Map size is input size divided by 8 horizontally and vertically. Gist vector is
+      appended to the right but note that at 160x120 it is truncated (see source code for details).
 
     Serial Messages
     ---------------

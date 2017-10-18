@@ -50,16 +50,18 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "GPU image processing eff
     Dewarp algorithm contributed by JeVois user [Ali AlSaibie](https://github.com/alsaibie). It is to be used with a
     modified JeVois camera sensor that has a wide-angle lens. See http://jevois.org/qa/index.php?qa=153 for details.
 
+    \youtube{rxsWR3I_LnM}
+
     Using this module
     -----------------
 
     Unfortunately, Mac OSX computers refuse to detect the JeVois smart camera as soon as it exposes one or more RGB565
-    modes. Thus, you cannot use this module with Macs, and the module is disabled by default. In addition, RGB565 does
-    not seem to work in \c guvcview either on Ubuntu prior to 17.04! Proceed as follows to enable and use this module on
-    a Linux host:
+    video modes. Thus, you cannot use this module with Macs, and the module is disabled by default. In addition, RGB565
+    does not seem to work in \c guvcview either, on Ubuntu prior to 17.04! Proceed as follows to enable and use this
+    module on a Linux host:
 
-    Then edit <b>JEVOIS:/jevois/config/videomappings.cfg</b> and look for the line that mentions DemoGPU. It is
-    commented out, so just remove the leading \b # sign. The line should then look like this:
+    Edit <b>JEVOIS:/jevois/config/videomappings.cfg</b> and look for the line that mentions DemoGPU. It is commented
+    out, so just remove the leading \b # sign. The line should then look like this:
 
     \verbatim
     RGB565 320 240 22.0 YUYV 320 240 22.0 JeVois DemoGPU
