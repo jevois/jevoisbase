@@ -72,7 +72,7 @@ if [ "X$REPLY" = "Xy" ]; then
     #/bin/rm cvEyeTracker-1.2.5.tar.gz
 
     # NNPACK-accelerated darknet CNNs:
-    get_github thomaspark-pkj darknet-nnpack fa5bddcfca788c69defdf1fcaafb31a2b6d685a7
+    get_github thomaspark-pkj darknet-nnpack 60ecf9e3dba2b30385c999c06389667957e57d6b
 
     # pthread-based thread pool for C/C++:
     get_github Maratyszcza pthreadpool 097a0c8971176257d7d565c4d37b754a12b3566b
