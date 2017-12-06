@@ -41,7 +41,7 @@ namespace morphologyfilter
 
   //! Parameter \relates MorphologyFilter
   JEVOIS_DECLARE_PARAMETER(ksize, cv::Size, "Kernel width and height",
-                           cv::Size(3, 3), ParamCateg);
+                           cv::Size(7, 7), ParamCateg);
 
   //! Parameter \relates MorphologyFilter
   JEVOIS_DECLARE_PARAMETER(anchor, cv::Point, "Anchor point x and y; default value [-1 -1] means that the anchor "

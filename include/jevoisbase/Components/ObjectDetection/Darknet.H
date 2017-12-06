@@ -33,7 +33,7 @@ namespace dknet
   static jevois::ParameterCategory const ParamCateg("Darknet Options");
 
   //! Enum \relates Darknet
-  JEVOIS_DEFINE_ENUM_CLASS(Net, (Reference) (Tiny) ) // NOT READY YET: (MobileNet) (CompMobileNet) )
+  JEVOIS_DEFINE_ENUM_CLASS(Net, (Reference) (Tiny) ) // STILL NOT READY (MobileNet) (CompMobileNet) )
 
   //! Parameter \relates Darknet
   JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(netw, Net, "Network to load. This meta-parameter sets parameters "
@@ -144,7 +144,7 @@ class Darknet : public jevois::Component,
     void getInDims(int & w, int & h, int & c) const;
     
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
-    network net;
+    network * net;
     char ** names = nullptr;
     int classes;
     

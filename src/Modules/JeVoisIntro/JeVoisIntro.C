@@ -457,7 +457,7 @@ class JeVoisIntro : public jevois::StdModule
       // FIXME do svm on gist and write resuts here
       
       // Show processing fps:
-      std::string const & fpscpu = itsProcessingTimer.stop();
+      std::string const & fpscpu = itsProcessingTimer.stop() + ", v" JEVOIS_VERSION_STRING;
       jevois::rawimage::writeText(outimg, fpscpu, 3, 240 - 13, jevois::yuyv::White);
 
       // If on a mac with height = 480, need to flip horizontally for photobooth to work (it will flip again):

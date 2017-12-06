@@ -143,7 +143,7 @@ class Yolo : public jevois::Component,
     void getInDims(int & w, int & h, int & c) const;
 
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
-    network net;
+    network * net;
     char ** names = nullptr;
     box * boxes = nullptr;
     float ** probs = nullptr;

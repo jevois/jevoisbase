@@ -29,7 +29,7 @@ static jevois::ParameterCategory const ParamCateg("Darknet YOLO Options");
 //! Parameter \relates DarknetYOLO
 JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the neural network input layer, or [0 0] "
                          "to make it match camera frame size.",
-                         cv::Size(0, 0), ParamCateg);
+                         cv::Size(320, 240), ParamCateg);
 
 
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network

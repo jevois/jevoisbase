@@ -38,14 +38,18 @@ static jevois::ParameterCategory const ParamCateg("Salient Regions Options");
 JEVOIS_DECLARE_PARAMETER(inhsigma, float, "Sigma (pixels) used for inhibition of return", 32.0F, ParamCateg);
 
 //! Extract the most salient regions and send them out over USB
-/*! This module produces an output intended for machine use, and extracts cropped images around the N most salient
-    locations. N is decided by the height of the desired USB output image. See DemoSaliency for more information about
-    visual attention and saliency.
+/*! This module extracts cropped images around the N most salient (i.e., conspicuous, or attention-grabbing) locations
+    in the JeVois camera's field of view. These regions are then streamed over USB, one of top of another.  This module
+    thus produces an output mainly intended for machine use: a host computer might grab the regions detected by JeVois,
+    and run, for example, some object recognition algorithm on each region.
 
-    Here we show how the output image size chosen in the \b videomappings.cfg config file can be used to decide what
-    output to compute. Namely, here we assume square regions stacked vertically. So the width of the output image sets
-    region size, and the height divided by that size sets the number of regions. Note that region width and height
-    must be a multiple of 4.
+    See \jvmod{DemoSaliency} for more information about visual attention and saliency.
+
+    The number of regions extracted (N) is decided by the height of the desired USB output image, while the (square)
+    region size (width and height) is determined by the output image width. Note that region width and height must be a
+    multiple of 4.
+
+    The most salient region is on top, the second most salient region is below the first one, etc.
 
     Example use
     -----------
@@ -60,7 +64,6 @@ JEVOIS_DECLARE_PARAMETER(inhsigma, float, "Sigma (pixels) used for inhibition of
     over USB one on top of the other (since USB video width is 64, which determines region size, and USB video height is
     3x64 = 192, which determines the number of regions).
 
-    The most salient region is on top, the second most salient region is below the first one, etc.
 
     @author Laurent Itti
 

@@ -19,12 +19,9 @@
 #include <jevois/Core/Module.H>
 
 // ####################################################################################################
-Yolo::Yolo(std::string const & instance) : jevois::Component(instance), itsReady(false)
+Yolo::Yolo(std::string const & instance) : jevois::Component(instance), net(nullptr), names(nullptr), boxes(nullptr),
+    probs(nullptr), classes(0), itsReady(false)
 {
-#ifdef DARKNET_NNPACK
-  net.threadpool = 0;
-#endif
-  
   // Get NNPACK ready to rock:
 #ifdef NNPACK
   nnp_initialize();
@@ -62,18 +59,17 @@ void Yolo::postInit()
 
       LINFO("Getting labels...");
       names = get_labels(const_cast<char *>(name_list.c_str()));
-      LINFO("Parsing network...");
-      net = parse_network_cfg(const_cast<char *>(cfgfil.c_str()));
-      LINFO("Loading weights...");
-      load_weights(&net, const_cast<char *>(weightfil.c_str()));
+      LINFO("Parsing network and loading weights...");
+      net = load_network(const_cast<char *>(cfgfil.c_str()), const_cast<char *>(weightfil.c_str()), 0);
+      if (net == nullptr) LFATAL("Failed to load darknet network and/or weights -- ABORT");
       classes = option_find_int(options, "classes", 2);
 
-      set_batch_network(&net, 1);
+      set_batch_network(net, 1);
       srand(2222222);
       LINFO("YOLO network ready");
   
 #ifdef DARKNET_NNPACK
-      net.threadpool = pthreadpool_create(threads::get());
+      net->threadpool = pthreadpool_create(threads::get());
 #endif
       free_list(options);
       itsReady.store(true);
@@ -85,14 +81,18 @@ void Yolo::postUninit()
 {
   try { itsReadyFut.get(); } catch (...) { }
 
-#ifdef DARKNET_NNPACK
-  pthreadpool_destroy(net.threadpool);
-#endif
-
   if (boxes) { free(boxes); boxes = nullptr; }
-  if (probs) { layer & l = net.layers[net.n-1]; free_ptrs((void **)probs, l.w * l.h * l.n); probs = nullptr; }
+  if (probs) { layer & l = net->layers[net->n-1]; free_ptrs((void **)probs, l.w * l.h * l.n); probs = nullptr; }
+
+  if (net)
+  {
+#ifdef DARKNET_NNPACK
+    if (net->threadpool) pthreadpool_destroy(net->threadpool);
+#endif
+    free_network(net);
+  }
+
   free_ptrs((void**)names, classes);
-  free_network(net);
 }
 
 // ####################################################################################################
@@ -126,7 +126,7 @@ float Yolo::predict(cv::Mat const & cvimg)
 float Yolo::predict(image & im)
 {
   image sized; bool need_free = false;
-  if (im.w == net.w && im.h == net.h) sized = im; else { sized = letterbox_image(im, net.w, net.h); need_free = true; }
+  if (im.w == net->w && im.h == net->h) sized = im; else { sized = letterbox_image(im, net->w, net->h); need_free = true; }
       
   struct timeval start, stop;
 
@@ -144,7 +144,7 @@ float Yolo::predict(image & im)
 // ####################################################################################################
 void Yolo::computeBoxes(int inw, int inh)
 {
-  layer & l = net.layers[net.n-1];
+  layer & l = net->layers[net->n-1];
 
   if (boxes == nullptr)
     boxes = (box *)calloc(l.w * l.h * l.n, sizeof(box));
@@ -155,11 +155,7 @@ void Yolo::computeBoxes(int inw, int inh)
     for (int j = 0; j < l.w * l.h * l.n; ++j) probs[j] = (float *)calloc(l.classes + 1, sizeof(float));
   }
 
-#ifdef DARKNET_NNPACK
-  get_region_boxes(l, inw, inh, net.w, net.h, thresh::get()*0.01F, probs, boxes, 0, 0, hierthresh::get()*0.01F, 1);
-#else
-  get_region_boxes(l, inw, inh, net.w, net.h, thresh::get()*0.01F, probs, boxes, 0, 0, 0, hierthresh::get()*0.01F, 1);
-#endif
+  get_region_boxes(l, inw, inh, net->w, net->h, thresh::get()*0.01F, probs, boxes, 0, 0, 0, hierthresh::get()*0.01F, 1);
   
   float const nmsval = nms::get()*0.01F;
   if (nmsval) do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nmsval);
@@ -168,7 +164,7 @@ void Yolo::computeBoxes(int inw, int inh)
 // ####################################################################################################
 void Yolo::drawDetections(jevois::RawImage & outimg, int inw, int inh, int xoff, int yoff)
 {
-  layer & l = net.layers[net.n-1];
+  layer & l = net->layers[net->n-1];
   int const num = l.w * l.h * l.n;
 
   float const thval = thresh::get();
@@ -200,7 +196,7 @@ void Yolo::sendSerial(jevois::StdModule * mod, int inw, int inh, unsigned long f
 {
   mod->sendSerial("DKY " + std::to_string(frame));
 
-  layer & l = net.layers[net.n-1];
+  layer & l = net->layers[net->n-1];
   int const num = l.w * l.h * l.n;
 
   float const thval = thresh::get();
@@ -229,12 +225,12 @@ void Yolo::sendSerial(jevois::StdModule * mod, int inw, int inh, unsigned long f
 void Yolo::resizeInDims(int w, int h)
 {
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
-  resize_network(&net, w, h);
+  resize_network(net, w, h);
 }
 
 // ####################################################################################################
 void Yolo::getInDims(int & w, int & h, int & c) const
 {
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
-  w = net.w; h = net.h; c = net.c;
+  w = net->w; h = net->h; c = net->c;
 }
