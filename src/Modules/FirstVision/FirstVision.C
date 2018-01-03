@@ -124,7 +124,7 @@ JEVOIS_DECLARE_PARAMETER(margin, size_t, "Margin from from frame borders (pixels
                          5, ParamCateg);
 
 //! Simple color-based detection of a U-shaped object for FIRST Robotics
-/*! This modules isolates pixels within a given HSV range (hue, saturation, and value of color pixels), does some
+/*! This module isolates pixels within a given HSV range (hue, saturation, and value of color pixels), does some
     cleanups, and extracts object contours. It is looking for a rectangular U shape of a specific size (set by parameter
     \p objsize). See screenshots for an example of shape. It sends information about detected objects over serial.
 
@@ -156,6 +156,11 @@ JEVOIS_DECLARE_PARAMETER(margin, size_t, "Margin from from frame borders (pixels
     Detections from all 4 pipelines are considered for overlap and quality (raggedness of their outlines), and only the
     cleanest of several overlapping detections is preserved. From those cleanest detections, pipelines 2-3 learn and
     adapt the HSV range for future video frames.
+
+    Using this module
+    -----------------
+
+    Check out [this tutorial](http://jevois.org/tutorials/UserFirstVision.html).
 
     Detection and quality control steps
     -----------------------------------
