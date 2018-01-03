@@ -273,6 +273,7 @@ JEVOIS_DECLARE_PARAMETER(margin, size_t, "Margin from from frame borders (pixels
     @videomapping YUYV 352 194 120.0 YUYV 176 144 120.0 JeVois FirstVision
     @videomapping YUYV 320 290 60.0 YUYV 320 240 60.0 JeVois FirstVision
     @videomapping YUYV 640 290 60.0 YUYV 320 240 60.0 JeVois FirstVision
+    @videomapping NONE 0 0 0.0 YUYV 320 240 60.0 JeVois FirstVision
     @videomapping NONE 0 0 0.0 YUYV 176 144 120.0 JeVois FirstVision
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
@@ -303,7 +304,6 @@ class FirstVision : public jevois::StdModule,
     /*! Note that sigma is used differently for H, S, and V, under the assumption that we want to track a bright target:
         For H, the range is [mean-sigma .. mean+sigma]. For S and V, the range is [mean-sigma .. 255]. See rmin() and
         rmax() for details. */
-    
     struct hsvcue
     {
 	//! Constructor
@@ -586,7 +586,7 @@ class FirstVision : public jevois::StdModule,
       }
 
       // Display any results requested by the users:
-      if (outimg && outimg->valid())
+      if (outimg && outimg->valid() && outimg->width == 2 * imgth.cols)
       {
 	if (tnum == showthread::get()) jevois::rawimage::pasteGreyToYUYV(imgth, *outimg, imgth.cols, 0);
 	jevois::rawimage::writeText(*outimg, str + beststr2, dispx, dispy + 12*tnum, jevois::yuyv::White);
