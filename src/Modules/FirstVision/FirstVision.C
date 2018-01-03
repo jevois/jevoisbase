@@ -229,6 +229,7 @@ JEVOIS_DECLARE_PARAMETER(margin, size_t, "Margin from from frame borders (pixels
 
     For further use of this module, you may want to check out the following tutorials:
 
+    - [Using the sample FIRST Robotics vision module](http://jevois.org/tutorials/UserFirstVision.html)
     - [Tuning the color-based object tracker using a python graphical
       interface](http://jevois.org/tutorials/UserColorTracking.html)
     - [Making a motorized pan-tilt head for JeVois and tracking
