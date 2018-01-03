@@ -586,9 +586,10 @@ class FirstVision : public jevois::StdModule,
       }
 
       // Display any results requested by the users:
-      if (outimg && outimg->valid() && outimg->width == 2 * imgth.cols)
+      if (outimg && outimg->valid())
       {
-	if (tnum == showthread::get()) jevois::rawimage::pasteGreyToYUYV(imgth, *outimg, imgth.cols, 0);
+	if (tnum == showthread::get() && outimg->width == 2 * imgth.cols)
+	  jevois::rawimage::pasteGreyToYUYV(imgth, *outimg, imgth.cols, 0);
 	jevois::rawimage::writeText(*outimg, str + beststr2, dispx, dispy + 12*tnum, jevois::yuyv::White);
       }
     }
