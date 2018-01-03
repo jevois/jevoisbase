@@ -551,7 +551,7 @@ class FirstVision : public jevois::StdModule,
 
 	  // v10+v23 should be pointing outward the U more than v03+v12 is:
 	  std::complex<float> v10p23(float(d.hull[0].x - d.hull[1].x + d.hull[3].x - d.hull[2].x),
-				     float(d.hull[0].y - d.hull[1].y + d.hull[2].y - d.hull[2].y));
+				     float(d.hull[0].y - d.hull[1].y + d.hull[3].y - d.hull[2].y));
 	  float const len10p23 = std::abs(v10p23);
 	  std::complex<float> v03p12(float(d.hull[3].x - d.hull[0].x + d.hull[2].x - d.hull[1].x),
 				     float(d.hull[3].y - d.hull[0].y + d.hull[2].y - d.hull[1].y));
@@ -796,9 +796,8 @@ class FirstVision : public jevois::StdModule,
     {
       static jevois::Timer timer("processing");
 
-      // Wait for next available camera image. Any resolution ok, but require YUYV since we assume it for drawings:
+      // Wait for next available camera image. Any resolution ok:
       jevois::RawImage inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
-      inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
 
       timer.start();
 
