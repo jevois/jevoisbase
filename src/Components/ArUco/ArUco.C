@@ -143,7 +143,6 @@ void ArUco::sendSerial(jevois::StdModule * mod, std::vector<int> ids, std::vecto
     // If we have rvecs and tvecs, we are doing 3D pose estimation, so send a 3D message:
     for (size_t i = 0; i < corners.size(); ++i)
     {
-      std::vector<cv::Point2f> const & currentMarker = corners[i];
       cv::Vec3d const & rv = rvecs[i];
       cv::Vec3d const & tv = tvecs[i];
       
@@ -160,7 +159,7 @@ void ArUco::sendSerial(jevois::StdModule * mod, std::vector<int> ids, std::vecto
   }
   else
   {
-    // Send one 2D message per parker:
+    // Send one 2D message per marker:
     for (size_t i = 0; i < corners.size(); ++i)
     {
       std::vector<cv::Point2f> const & currentMarker = corners[i];
