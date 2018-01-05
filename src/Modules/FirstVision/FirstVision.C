@@ -105,7 +105,7 @@ JEVOIS_DECLARE_PARAMETER(dopose, bool, "Compute (and show) 6D object pose, requi
 JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera resolution "
 			 "will be appended, as well as a .yaml extension. For example, specifying 'calibration' "
 			 "here and running the camera sensor at 320x240 will attempt to load "
-			 "calibration320x240.yaml from within the module's directory.",
+			 "calibration320x240.yaml from within directory " JEVOIS_SHARE_PATH "/camera/",
 			 "calibration", ParamCateg);
 
 //! Parameter \relates FirstVision
@@ -448,9 +448,9 @@ class FirstVision : public jevois::StdModule,
     {
       camparams::freeze();
       
-      std::string const cpf = absolutePath(camparams::get() + std::to_string(w) + 'x' +
-					   std::to_string(h) + ".yaml");
-      
+      std::string const cpf = std::string(JEVOIS_SHARE_PATH) + "/camera/" + camparams::get() +
+	std::to_string(w) + 'x' + std::to_string(h) + ".yaml";
+    
       cv::FileStorage fs(cpf, cv::FileStorage::READ);
       if (fs.isOpened())
       {

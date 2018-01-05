@@ -103,8 +103,8 @@
     The OpenCV ArUco module can also compute the 3D location and orientation of each marker in the world when \p dopose
     is true. The requires that the camera be calibrated, see the documentation of the \ref ArUco component in
     JeVoisBase. A generic calibration that is for a JeVois camera with standard lens is included in files \b
-    calibration640x480.yaml, \b calibration352x288.yaml, etc in the module's directory (on the MicroSD, this is in
-    <b>JEVOIS:/modules/JeVois/DemoArUco/</b>).
+    calibration640x480.yaml, \b calibration352x288.yaml, etc in the jevoisbase share directory (on the MicroSD, this is
+    in <b>JEVOIS:/share/camera/</b>).
 
     When doing pose estimation, you should set the \p markerlen parameter to the size (width) in millimeters of your
     actual physical markers. Knowing that size will allow the pose estimation algorithm to know where in the world your

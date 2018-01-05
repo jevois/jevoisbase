@@ -34,7 +34,7 @@ class PythonOpenCV:
         
     # ###################################################################################################
     ## Process function with no USB output
-    #def process(self, inframe):
+    #def processNoUSB(self, inframe):
     #    jevois.LFATAL("process with no USB output not implemented yet in this module")
 
     # ###################################################################################################

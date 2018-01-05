@@ -33,7 +33,7 @@ class PythonTest:
 
     # ###################################################################################################
     ## Process function with no USB output
-    def process(self, inframe):
+    def processNoUSB(self, inframe):
         jevois.LFATAL("process no usb not implemented")
 
     # ###################################################################################################

@@ -30,7 +30,7 @@ namespace aruco
   JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera resolution "
                            "will be appended, as well as a .yaml extension. For example, specifying 'calibration' "
                            "here and running the camera sensor at 320x240 will attempt to load "
-                           "calibration320x240.yaml from within the module's directory.",
+                           "calibration320x240.yaml from within directory " JEVOIS_SHARE_PATH "/camera/",
                            "calibration", ParamCateg);
 
   //! Parameter \relates ArUco
