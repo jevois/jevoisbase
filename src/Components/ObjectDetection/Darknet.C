@@ -21,12 +21,9 @@
 
 // ####################################################################################################
 Darknet::Darknet(std::string const & instance, bool show_detail_params) :
-    jevois::Component(instance), itsReady(false), itsShowDetailParams(show_detail_params), itsNeedReload(false)
+    jevois::Component(instance), net(nullptr), names(nullptr), classes(0), itsReady(false),
+    itsShowDetailParams(show_detail_params), itsNeedReload(false)
 {
-#ifdef DARKNET_NNPACK
-  net.threadpool = 0;
-#endif
-  
   // Get NNPACK ready to rock:
 #ifdef NNPACK
   nnp_initialize();
@@ -79,8 +76,8 @@ void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval
     cfgfile::set("cfg/tiny.cfg");
     weightfile::set("weights/tiny.weights");
     namefile::set("");
-
-    /* FIXME: need to implement depthwise convolutions first
+    break;
+    /*
   case dknet::Net::MobileNet:
     dataroot::set(JEVOIS_SHARE_PATH "/darknet/single");
     datacfg::set("cfg/imagenet1k.data");
@@ -98,7 +95,7 @@ void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval
     break;
     */
   }
-  
+
   if (itsShowDetailParams == false)
   {
     dataroot::freeze();
@@ -107,7 +104,6 @@ void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval
     weightfile::freeze();
     namefile::freeze();
   }
-
 }
 
 // ####################################################################################################
@@ -143,9 +139,10 @@ void Darknet::loadNet()
   itsReady.store(false);
 
 #ifdef DARKNET_NNPACK
-  if (net.threadpool) pthreadpool_destroy(net.threadpool);
+  if (net && net->threadpool) pthreadpool_destroy(net->threadpool);
 #endif
-
+  if (net) { free_network(net); net = nullptr; }
+  
   // Since loading big networks can take a while, do it in a thread so we can keep streaming video in the
   // meantime. itsReady will flip to true when the load is complete.
   itsReadyFut = std::async(std::launch::async, [&]() {
@@ -168,17 +165,16 @@ void Darknet::loadNet()
 
       LINFO("Getting labels...");
       names = get_labels(const_cast<char *>(name_list.c_str()));
-      LINFO("Parsing network...");
-      net = parse_network_cfg(const_cast<char *>(cfgfil.c_str()));
-      LINFO("Loading weights...");
-      load_weights(&net, const_cast<char *>(weightfil.c_str()));
+      LINFO("Parsing network and loading weights...");
+      net = load_network(const_cast<char *>(cfgfil.c_str()), const_cast<char *>(weightfil.c_str()), 0);
+      if (net == nullptr) LFATAL("Failed to load darknet network and/or weights -- ABORT");
       classes = option_find_int(options, "classes", 2);
 
-      set_batch_network(&net, 1);
+      set_batch_network(net, 1);
       srand(2222222);
 
 #ifdef DARKNET_NNPACK
-      net.threadpool = pthreadpool_create(threads::get());
+      net->threadpool = pthreadpool_create(threads::get());
 #endif
       LINFO("Darknet network ready");
 
@@ -194,12 +190,15 @@ void Darknet::postUninit()
 {
   try { itsReadyFut.get(); } catch (...) { }
 
-  free_network(net);
-  free_ptrs((void**)names, classes);
-
+  if (net)
+  {
 #ifdef DARKNET_NNPACK
-  pthreadpool_destroy(net.threadpool);
+    if (net->threadpool) pthreadpool_destroy(net->threadpool);
 #endif
+    free_network(net);
+  }
+
+  free_ptrs((void**)names, classes);
 }
 
 // ####################################################################################################
@@ -243,7 +242,7 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
   results.clear();
 
   // Resize the network if needed:
-  resize_network(&net, im.w, im.h);
+  resize_network(net, im.w, im.h);
 
   // Run the predictions:
   struct timeval start, stop;
@@ -253,11 +252,11 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
 
   float predtime = (stop.tv_sec * 1000 + stop.tv_usec / 1000) - (start.tv_sec * 1000 + start.tv_usec / 1000);
 
-  if (net.hierarchy) hierarchy_predictions(predictions, net.outputs, net.hierarchy, 1, 1);
+  if (net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
 
   // Get the top scoring predictions and push them into results:
   int indexes[topn];
-  top_k(predictions, net.outputs, topn, indexes);
+  top_k(predictions, net->outputs, topn, indexes);
 
   for (int i = 0; i < topn; ++i)
   {
@@ -274,12 +273,12 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
 void Darknet::resizeInDims(int w, int h)
 {
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
-  resize_network(&net, w, h);
+  resize_network(net, w, h);
 }
 
 // ####################################################################################################
 void Darknet::getInDims(int & w, int & h, int & c) const
 {
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
-  w = net.w; h = net.h; c = net.c;
+  w = net->w; h = net->h; c = net->c;
 }

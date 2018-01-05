@@ -29,7 +29,7 @@ static jevois::ParameterCategory const ParamCateg("Darknet YOLO Options");
 //! Parameter \relates DarknetYOLO
 JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the neural network input layer, or [0 0] "
                          "to make it match camera frame size.",
-                         cv::Size(0, 0), ParamCateg);
+                         cv::Size(320, 240), ParamCateg);
 
 
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network
@@ -293,45 +293,50 @@ class DarknetYOLO : public jevois::StdModule,
       }
       else
       {
-        // Convert input image to RGB for predictions:
-        cv::Mat cvimg = jevois::rawimage::convertToCvRGB(inimg);
-      
-        // Also make a raw YUYV copy of the input image for later displays:
-        cv::Mat inimgcv = jevois::rawimage::cvImage(inimg);
-        inimgcv.copyTo(itsRawInputCv);
+	// Note: resizeInDims() could throw if the network is not ready yet.
+	try
+	{
+	  // Convert input image to RGB for predictions:
+	  cv::Mat cvimg = jevois::rawimage::convertToCvRGB(inimg);
+	  
+	  // Also make a raw YUYV copy of the input image for later displays:
+	  cv::Mat inimgcv = jevois::rawimage::cvImage(inimg);
+	  inimgcv.copyTo(itsRawInputCv);
+	  
+	  // Resize the network if desired:
+	  cv::Size nsz = netin::get();
+	  if (nsz.width != 0 && nsz.height != 0)
+	  {
+	    itsYolo->resizeInDims(nsz.width, nsz.height);
+	    
+	    if (nsz.width == cvimg.cols && nsz.height == cvimg.rows)
+	      itsNetInput = cvimg;
+	    else if (nsz.width > cvimg.cols || nsz.height > cvimg.rows)
+	      cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_LINEAR);
+	    else
+	      cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_AREA);
+	  }
+	  else itsNetInput = cvimg;
 
-        // Resize the network if desired:
-        cv::Size nsz = netin::get();
-        if (nsz.width != 0 && nsz.height != 0)
-        {
-          itsYolo->resizeInDims(nsz.width, nsz.height);
+	  cvimg.release();
+	
+	  // Launch the predictions:
+	  itsPredictFut = std::async(std::launch::async, [&](int ww, int hh)
+				     {
+				       float pt = itsYolo->predict(itsNetInput);
+				       itsYolo->computeBoxes(ww, hh);
+				       return pt;
+				     }, w, h);
+	}
+	catch (std::logic_error const & e) { }
 
-          if (nsz.width == cvimg.cols && nsz.height == cvimg.rows)
-            itsNetInput = cvimg;
-          else if (nsz.width > cvimg.cols || nsz.height > cvimg.rows)
-            cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_LINEAR);
-          else
-            cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_AREA);
-        }
-        else itsNetInput = cvimg;
-
-        cvimg.release();
-         
-        // Wait for paste to finish up:
-        paste_fut.get();
-
-        // Let camera know we are done processing the input image:
-        inframe.done();
-
-        // Launch the predictions:
-        itsPredictFut = std::async(std::launch::async, [&](int ww, int hh)
-                                   {
-                                     float pt = itsYolo->predict(itsNetInput);
-                                     itsYolo->computeBoxes(ww, hh);
-                                     return pt;
-                                   }, w, h);
+	// Wait for paste to finish up:
+	paste_fut.get();
+	
+	// Let camera know we are done processing the input image:
+	inframe.done();
       }
-
+      
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
