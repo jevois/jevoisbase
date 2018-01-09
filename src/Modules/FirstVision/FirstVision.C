@@ -132,7 +132,8 @@ JEVOIS_DECLARE_PARAMETER(margin, size_t, "Margin from from frame borders (pixels
     so that HSV color values are reliable. See the file \b script.cfg file in this module's directory for an example of
     how to set the camera settings each time this module is loaded.
 
-    This code was loosely inspired by the JeVois \jvmod{ObjectTracker} module.
+    This code was loosely inspired by the JeVois \jvmod{ObjectTracker} module. Also see \jvmod{FirstPython} for a
+    simplified version of this module, written in Python.
 
     This module is provided for inspiration. It has no pretension of actually solving the FIRST Robotics vision problem
     in a complete and reliable way. It is released in the hope that FRC teams will try it out and get inspired to
@@ -458,7 +459,7 @@ class FirstVision : public jevois::StdModule,
 	fs["distortion_coefficients"] >> itsDistCoeffs;
 	LINFO("Loaded camera calibration from " << cpf);
       }
-      else LFATAL("Failed to read camera parameters from file [" << cpf << "] -- IGNORED");
+      else LFATAL("Failed to read camera parameters from file [" << cpf << "]");
     }
     
     // ####################################################################################################
@@ -778,14 +779,14 @@ class FirstVision : public jevois::StdModule,
       int e = erodesize::get();
       if (e != itsErodeElement.cols)
       {
-	if (e) itsErodeElement = getStructuringElement(cv::MORPH_RECT, cv::Size(e, e));
+	if (e) itsErodeElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(e, e));
 	else itsErodeElement.release();
       }
 
       int d = dilatesize::get();
       if (d != itsDilateElement.cols)
       {
-	if (d) itsDilateElement = getStructuringElement(cv::MORPH_RECT, cv::Size(d, d));
+	if (d) itsDilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(d, d));
 	else itsDilateElement.release();
       }
     }
