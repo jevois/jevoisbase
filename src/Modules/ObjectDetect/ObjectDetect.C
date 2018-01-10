@@ -78,7 +78,7 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     Live training
     -------------
 
-    With \jvversion{1.2} and later you can train this algorithm live bu telling JeVois to capture and save an image of
+    With \jvversion{1.2} and later you can train this algorithm live by telling JeVois to capture and save an image of
     an object, which can be used later to identify this object again.
 
     First, enable display of a training window using:
@@ -121,7 +121,7 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     immediately be deleted and that object will not be recognized anymore.
 
     For more information, see JeVois tutorial [Live training of the Object Detection
-    module](http://jevois.org/tutorials/UserObjectDetect.html} and the associated video:
+    module](http://jevois.org/tutorials/UserObjectDetect.html) and the associated video:
 
     \youtube{qwJOcsbkZLE}
 
