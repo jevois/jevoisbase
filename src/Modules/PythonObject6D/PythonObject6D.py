@@ -34,10 +34,14 @@ import math # for cos, sin, etc
 #   quality, compute the homography (geometric transformation) between keypoint locations in that training image and
 #   locations of the matching keypoints in the current image. If it is well conditioned (i.e., a 3D viewpoint change
 #   could well explain how the keypoints moved between the training and current images), declare that a match was
-#   found, and draw a green rectangle around the detected object.
-# - 6D pose estimation (3D translation + 3D rotation) given a known physical size for the object.
+#   found, and draw a pink rectangle around the detected whole object.
+# - finally perform 6D pose estimation (3D translation + 3D rotation), here for a window located at a specific position
+#   within the whole object, given the known physical sizes of both the whole object and the window within. A green
+#   parallelepiped is drawn at that window's location, sinking into the whole object (as it is representing a tunnel
+#   or port into the object).
 #
-# For more information about ORB in OpenCV, see, e.g., https://docs.opencv.org/3.4.0/d1/d89/tutorial_py_orb.html
+# For more information about ORB keypoint detection and matching in OpenCV, see, e.g.,
+# https://docs.opencv.org/3.4.0/d1/d89/tutorial_py_orb.html
 #
 # This module is provided for inspiration. It has no pretension of actually solving the FIRST Robotics Power Up (sm)
 # vision problem in a complete and reliable way. It is released in the hope that FRC teams will try it out and get
@@ -76,12 +80,15 @@ import math # for cos, sin, etc
 # - It does not use color, the input image is converted to grayscale before processing. One could use a different
 #   approach to object detection that would make use of color.
 # - Results are often quite noisy. Maybe using another detector, like SIFT which provides subpixel accuracy, and better
-#   pruning of false matches (e.g., David Lowe's ratio of the best to second-best match scores) whould help.
+#   pruning of false matches (e.g., David Lowe's ratio of the best to second-best match scores) would help.
 # - This algorithm is slow in this single-threaded Python example, and frame rate depends on image complexity (it gets
 #   slower when more keypoints are detected). One should explore parallelization, as was done in C++ for the
 #   \jvmod{ObjectDetect} module. One could also alternate between full detection using this algorithm once in a while,
 #   and much faster tracking of previous detections at a higher framerate (e.g., using the very robust TLD tracker
 #   (track-learn-detect), also supported in OpenCV).
+# - If you want to detect smaller objects or pieces of objects, and you do not need 6D pose, you may want to use modules
+#   \jvmod{ObjectDetect} or \jvmod{SaliencySURF} as done, for example, by JeVois user Bill Kendall at
+#   https://www.youtube.com/watch?v=8wYhOnsNZcc
 #
 #
 # @author Laurent Itti
