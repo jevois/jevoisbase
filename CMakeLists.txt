@@ -42,8 +42,8 @@ include_directories("include")
 # Allow #include <jevoibase/Contrib/x/y> in our components and modules:
 include_directories("..")
 
-# Setup our library using the source files in src/Components and call it jevoisbase with version 1.6.3:
-jevois_setup_library(src/Components jevoisbase 1.6.3)
+# Setup our library using the source files in src/Components and call it jevoisbase with version 1.7.0:
+jevois_setup_library(src/Components jevoisbase 1.7.0)
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)
