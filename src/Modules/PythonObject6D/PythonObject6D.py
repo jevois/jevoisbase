@@ -362,7 +362,7 @@ class PythonObject6D:
     ## Process function with no USB output
     def processNoUSB(self, inframe):
         # Get the next camera image (may block until it is captured) as OpenCV GRAY:
-        imggray = inframe.getCvGray()
+        imggray = inframe.getCvGRAY()
         h, w = imggray.shape
         
         # Start measuring image processing time:
