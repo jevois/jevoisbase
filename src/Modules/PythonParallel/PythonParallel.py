@@ -37,14 +37,14 @@ def computefunc(inimggray, th1, th2):
 # uncomment the line with \jvmod{PythonParallel} in it, to enable it.
 #
 # \fixme Conflated with this problem is the fact that guvcview sometimes, when it starts, turns streaming on, then grabs
-# only 5 frames, then stream off, then set same video format again, and then sream on again. We are not sure why
+# only 5 frames, then stream off, then set same video format again, and then stream on again. We are not sure why
 # guvcview is doing this, however, this breaks this module since the second streamon fails as it is unable to allocate
 # video buffers.
 #
 # Using this module
 # -----------------
 #
-# One way we have been able to use this module sith USB video outputs is: start `guvcview -f yuyv -x 352x288` (launches
+# One way we have been able to use this module with USB video outputs is: start `guvcview -f yuyv -x 352x288` (launches
 # \jvmod{PythonSandbox}), then use the pull-down menu to select 1280x240 (switches to \jvmod{PythonParallel})
 #
 # This module is best used with no USB video outputs. Connect to JeVois over serial and issue:
