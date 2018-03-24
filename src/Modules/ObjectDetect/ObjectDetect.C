@@ -187,7 +187,30 @@ class ObjectDetect : public jevois::StdModule,
       if (newval.first < 10.0F || newval.first > 100.0F || newval.second < 10.0F || newval.second > 100.0F)
         throw std::range_error("Invalid window percentage values, must be between 10.0 and 100.0");
     }
-    
+
+    // ####################################################################################################
+    //! Processing function with no USB output
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe) override
+    {
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+
+      // Wait for next available camera image. Any resolution and format ok, we just convert to grayscale:
+      itsGrayImg = inframe.getCvGRAY();
+
+      timer.start();
+
+      // Compute keypoints and descriptors, then match descriptors to our training images:
+      itsDist = itsMatcher->process(itsGrayImg, itsTrainIdx, itsCorners);
+
+      // Send message about object if a good one was found:
+      if (itsDist < 100.0 && itsCorners.size() == 4)
+	sendSerialContour2D(itsGrayImg.cols, itsGrayImg.rows, itsCorners, itsMatcher->traindata(itsTrainIdx).name);
+
+      // Show processing fps to log:
+      timer.stop();
+    }
+
     // ####################################################################################################
     //! Processing function with USB output
     // ####################################################################################################
