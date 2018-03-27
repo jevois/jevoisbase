@@ -32,7 +32,7 @@ if [ "X$REPLY" = "Xy" ]; then
     ###################################################################################################
     # Cleanup:
     /bin/rm -rf generalized-hough-tranform Ne10 NNPACK OF_DIS pixy pthreadpool tiny-dnn vlfeat ZBar NNPACK-darknet \
-	    FXdiv FP16 psimd darknet-nnpack darknet
+	    FXdiv FP16 psimd darknet-nnpack darknet tensorflow
 
     ###################################################################################################
     # Get the packages:
@@ -88,6 +88,12 @@ if [ "X$REPLY" = "Xy" ]; then
 
     # Darknet original (used for training only):
     git clone https://github.com/pjreddie/darknet.git
+
+    # Tensorflow 1.7.0-rc1 (March 20, 2018):
+    get_github tensorflow tensorflow e79eb0b8de130bf905a101608681e9c18561356c
+    cd tensorflow
+    ./tensorflow/contrib/lite/download_dependencies.sh
+    cd ..
     
     ###################################################################################################
     # Patching:

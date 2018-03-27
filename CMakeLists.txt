@@ -43,7 +43,7 @@ include_directories("include")
 include_directories("..")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with the current version number:
-jevois_setup_library(src/Components jevoisbase 1.7.3)
+jevois_setup_library(src/Components jevoisbase 1.8.0)
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)
@@ -72,7 +72,7 @@ include_directories(Contrib/pthreadpool/include)
 target_sources(jevoisbase PRIVATE Contrib/pthreadpool/src/threadpool-pthreads.c)
 
 ########################################################################################################################
-# darknet with NNPACK support: (on top of things already pulled in by tiny-dnn and NNPACK)
+# darknet with NNPACK support: (on top of things already pulled in by tiny-dnn)
 
 include_directories(Contrib/NNPACK/include)
 include_directories(Contrib/NNPACK/src)
@@ -268,6 +268,120 @@ add_definitions(-DWITH_OPENMP -DUSE_PARALLEL_ON_FLOWAGGR)
 target_sources(jevoisbase PRIVATE Contrib/ARToolKit5arm/lib/SRC/VideoImage/videoImage.c Contrib/ARToolKit5arm/lib/SRC/KPM/FreakMatcher/unsupported/test/mpreal/dlmalloc.c Contrib/ARToolKit5arm/lib/SRC/KPM/kpmFopen.c Contrib/ARToolKit5arm/lib/SRC/ARICP/icpCalibStereo.c Contrib/ARToolKit5arm/lib/SRC/ARICP/icpCore.c Contrib/ARToolKit5arm/lib/SRC/ARICP/icpUtil.c Contrib/ARToolKit5arm/lib/SRC/ARICP/icpStereoHandle.c Contrib/ARToolKit5arm/lib/SRC/ARICP/icpPointRobust.c Contrib/ARToolKit5arm/lib/SRC/ARICP/icpHandle.c Contrib/ARToolKit5arm/lib/SRC/ARICP/icpStereoPoint.c Contrib/ARToolKit5arm/lib/SRC/ARICP/icpPoint.c Contrib/ARToolKit5arm/lib/SRC/ARICP/icpStereoPointRobust.c Contrib/ARToolKit5arm/lib/SRC/AR2/tracking.c Contrib/ARToolKit5arm/lib/SRC/AR2/featureSet.c Contrib/ARToolKit5arm/lib/SRC/AR2/imageSet.c Contrib/ARToolKit5arm/lib/SRC/AR2/searchPoint.c Contrib/ARToolKit5arm/lib/SRC/AR2/marker.c Contrib/ARToolKit5arm/lib/SRC/AR2/handle.c Contrib/ARToolKit5arm/lib/SRC/AR2/matching2.c Contrib/ARToolKit5arm/lib/SRC/AR2/jpeg.c Contrib/ARToolKit5arm/lib/SRC/AR2/selectTemplate.c Contrib/ARToolKit5arm/lib/SRC/AR2/coord.c Contrib/ARToolKit5arm/lib/SRC/AR2/matching.c Contrib/ARToolKit5arm/lib/SRC/AR2/featureMap.c Contrib/ARToolKit5arm/lib/SRC/AR2/tracking2d.c Contrib/ARToolKit5arm/lib/SRC/AR2/surface.c Contrib/ARToolKit5arm/lib/SRC/AR2/template.c Contrib/ARToolKit5arm/lib/SRC/VideoDummy/videoDummy.c Contrib/ARToolKit5arm/lib/SRC/AR/paramDistortion.c Contrib/ARToolKit5arm/lib/SRC/AR/arCreateHandle.c Contrib/ARToolKit5arm/lib/SRC/AR/vHouse.c Contrib/ARToolKit5arm/lib/SRC/AR/arFilterTransMat.c Contrib/ARToolKit5arm/lib/SRC/AR/vTridiag.c Contrib/ARToolKit5arm/lib/SRC/AR/paramClear.c Contrib/ARToolKit5arm/lib/SRC/AR/arDetectMarker.c Contrib/ARToolKit5arm/lib/SRC/AR/arGetTransMat.c Contrib/ARToolKit5arm/lib/SRC/AR/arPattGetID.c Contrib/ARToolKit5arm/lib/SRC/AR/mDet.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabeling.c Contrib/ARToolKit5arm/lib/SRC/AR/ar3DCreateHandle.c Contrib/ARToolKit5arm/lib/SRC/AR/mFree.c Contrib/ARToolKit5arm/lib/SRC/AR/mTrans.c Contrib/ARToolKit5arm/lib/SRC/AR/arPattCreateHandle.c Contrib/ARToolKit5arm/lib/SRC/AR/mDup.c Contrib/ARToolKit5arm/lib/SRC/AR/arPattSave.c Contrib/ARToolKit5arm/lib/SRC/AR/ar3DUtil.c Contrib/ARToolKit5arm/lib/SRC/AR/arGetTransMatStereo.c Contrib/ARToolKit5arm/lib/SRC/AR/vDisp.c Contrib/ARToolKit5arm/lib/SRC/AR/paramFile.c Contrib/ARToolKit5arm/lib/SRC/AR/mInv.c Contrib/ARToolKit5arm/lib/SRC/AR/vFree.c Contrib/ARToolKit5arm/lib/SRC/AR/mAllocMul.c Contrib/ARToolKit5arm/lib/SRC/AR/arPattAttach.c Contrib/ARToolKit5arm/lib/SRC/AR/paramGetPerspective.c Contrib/ARToolKit5arm/lib/SRC/AR/arImageProc.c Contrib/ARToolKit5arm/lib/SRC/AR/arPattLoad.c Contrib/ARToolKit5arm/lib/SRC/AR/arDetectMarker2.c Contrib/ARToolKit5arm/lib/SRC/AR/mPCA.c Contrib/ARToolKit5arm/lib/SRC/AR/mAlloc.c Contrib/ARToolKit5arm/lib/SRC/AR/mAllocTrans.c Contrib/ARToolKit5arm/lib/SRC/AR/paramDisp.c Contrib/ARToolKit5arm/lib/SRC/AR/vAlloc.c Contrib/ARToolKit5arm/lib/SRC/AR/paramChangeSize.c Contrib/ARToolKit5arm/lib/SRC/AR/mAllocDup.c Contrib/ARToolKit5arm/lib/SRC/AR/arGetLine.c Contrib/ARToolKit5arm/lib/SRC/AR/mAllocInv.c Contrib/ARToolKit5arm/lib/SRC/AR/mAllocUnit.c Contrib/ARToolKit5arm/lib/SRC/AR/mUnit.c Contrib/ARToolKit5arm/lib/SRC/AR/mDisp.c Contrib/ARToolKit5arm/lib/SRC/AR/paramLT.c Contrib/ARToolKit5arm/lib/SRC/AR/mMul.c Contrib/ARToolKit5arm/lib/SRC/AR/mSelfInv.c Contrib/ARToolKit5arm/lib/SRC/AR/vInnerP.c Contrib/ARToolKit5arm/lib/SRC/AR/arGetMarkerInfo.c Contrib/ARToolKit5arm/lib/SRC/AR/paramDecomp.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBI3C565.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWIYC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBI3CA4444.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBR3C565.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWI3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBICY.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWRCY.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWI3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWI3CA5551.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBR3CA4444.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBR3CA5551.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBRA3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBRC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBR3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBICY.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWRC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBR3C565.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWRYC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWI3CA5551.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWRC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBRA3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBI3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWIYC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWI3C565.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWR3C565.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWR3CA5551.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBI3CA5551.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWR3CA5551.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBR3CA5551.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWR3CA.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWR3CA4444.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBZ.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBI3C565.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBI3CA.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBZ.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBIC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWI3C565.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWR3CA.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBIC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWI3CA4444.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBRCY.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBR3CA4444.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWIC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBR3CA.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWIA3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBI3CA.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBRYC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWI3CA.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBIA3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBIYC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBRC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBI3CA4444.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWZ.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWR3CA4444.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBR3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWRCY.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBI3CA5551.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWRA3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWRA3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWRYC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWR3C565.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWICY.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBI3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWIC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWR3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWICY.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWR3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBIYC.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDWZ.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBIA3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubDBRCY.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWI3CA.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWI3CA4444.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBR3CA.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEWIA3C.c Contrib/ARToolKit5arm/lib/SRC/AR/arLabelingSub/arLabelingSubEBRYC.c Contrib/ARToolKit5arm/lib/SRC/AR/arUtil.c Contrib/ARToolKit5arm/lib/SRC/ARMulti/arMultiReadConfigFile.c Contrib/ARToolKit5arm/lib/SRC/ARMulti/arMultiGetTransMat.c Contrib/ARToolKit5arm/lib/SRC/ARMulti/arMultiGetTransMatStereo.c Contrib/ARToolKit5arm/lib/SRC/ARMulti/arMultiFreeConfig.c Contrib/ARToolKit5arm/lib/SRC/Video/video2.c Contrib/ARToolKit5arm/lib/SRC/Video/videoAspectRatio.c Contrib/ARToolKit5arm/lib/SRC/Video/video.c Contrib/ARToolKit5arm/lib/SRC/Video/videoSaveImage.c Contrib/ARToolKit5arm/lib/SRC/Util/profile.c Contrib/ARToolKit5arm/lib/SRC/Util/thread_sub.c Contrib/ARToolKit5arm/lib/SRC/ARWrapper/trackingSub.c)
 
 include_directories(Contrib/ARToolKit5arm/include)
+
+########################################################################################################################
+# tensorflow-lite support:
+
+set(TFS "${JVB}/Contrib/tensorflow/tensorflow/contrib/lite")
+
+# Note: see Makefile in Contrib/tensorflow/tensorflow/contrib/lite for any updates to this list of includes and list of
+# source files for tensorflow lite.
+include_directories("${JVB}/Contrib/tensorflow")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/flatbuffers/include")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/gemmlowp")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/neon_2_sse")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/eigen")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/farmhash/src")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/absl")
+
+
+# in jevoisbase/Contrib/tensorflow/tensorflow/contrib/lite run:
+# find . -name "*.cc" |grep -v test|grep -v bench|grep -v farmhash/dev|grep -v example|grep -v smartreply|grep -v absl|grep -v toco|grep -v grpc|grep -v java|sed -e 's/\.\//\$\{TFS\}\//g'
+
+#${TFS}/kernels/internal/spectrogram.cc
+#${TFS}/tools/gen_op_registration_main.cc
+#${TFS}/tools/gen_op_registration.cc
+
+#add: ${TFS}/context.c
+
+target_sources(jevoisbase PRIVATE
+  ${TFS}/error_reporter.cc
+${TFS}/arena_planner.cc
+${TFS}/optional_debug_tools.cc
+${TFS}/string_util.cc
+${TFS}/simple_memory_arena.cc
+${TFS}/kernels/fully_connected.cc
+${TFS}/kernels/skip_gram.cc
+${TFS}/kernels/concatenation.cc
+${TFS}/kernels/l2norm.cc
+${TFS}/kernels/split.cc
+${TFS}/kernels/mean.cc
+${TFS}/kernels/svdf.cc
+${TFS}/kernels/dequantize.cc
+${TFS}/kernels/unidirectional_sequence_lstm.cc
+${TFS}/kernels/local_response_norm.cc
+${TFS}/kernels/batch_to_space_nd.cc
+${TFS}/kernels/embedding_lookup_sparse.cc
+${TFS}/kernels/cast.cc
+${TFS}/kernels/resize_bilinear.cc
+${TFS}/kernels/transpose.cc
+${TFS}/kernels/hashtable_lookup.cc
+${TFS}/kernels/gemm_support.cc
+${TFS}/kernels/space_to_batch_nd.cc
+${TFS}/kernels/depthwise_conv.cc
+${TFS}/kernels/internal/mfcc_dct.cc
+${TFS}/kernels/internal/quantization_util.cc
+${TFS}/kernels/internal/tensor_utils.cc
+${TFS}/kernels/internal/mfcc.cc
+${TFS}/kernels/internal/optimized/neon_tensor_utils.cc
+${TFS}/kernels/internal/mfcc_mel_filterbank.cc
+${TFS}/kernels/internal/reference/portable_tensor_utils.cc
+${TFS}/kernels/internal/kernel_utils.cc
+${TFS}/kernels/topk_v2.cc
+${TFS}/kernels/basic_rnn.cc
+${TFS}/kernels/div.cc
+${TFS}/kernels/conv.cc
+${TFS}/kernels/mul.cc
+${TFS}/kernels/unidirectional_sequence_rnn.cc
+${TFS}/kernels/strided_slice.cc
+${TFS}/kernels/bidirectional_sequence_rnn.cc
+${TFS}/kernels/squeeze.cc
+${TFS}/kernels/bidirectional_sequence_lstm.cc
+${TFS}/kernels/register.cc
+${TFS}/kernels/embedding_lookup.cc
+${TFS}/kernels/sub.cc
+${TFS}/kernels/activations.cc
+${TFS}/kernels/exp.cc
+${TFS}/kernels/space_to_depth.cc
+${TFS}/kernels/kernel_util.cc
+${TFS}/kernels/add.cc
+${TFS}/kernels/gather.cc
+${TFS}/kernels/reshape.cc
+${TFS}/kernels/pooling.cc
+${TFS}/kernels/lstm.cc
+${TFS}/kernels/pad.cc
+${TFS}/kernels/lsh_projection.cc
+${TFS}/nnapi_delegate.cc
+${TFS}/interpreter.cc
+${TFS}/allocation.cc
+${TFS}/model.cc
+${TFS}/tools/verifier.cc
+${TFS}/tools/mutable_op_resolver.cc
+${TFS}/downloads/farmhash/src/farmhash.cc
+${TFS}/downloads/gemmlowp/eight_bit_int_gemm/eight_bit_int_gemm.cc
+${TFS}/schema/builtin_ops_header/generator.cc
+${TFS}/schema/builtin_ops_header/generate.cc
+${TFS}/graph_info.cc
+${TFS}/context.c)
+
+#target_sources(jevoisbase PRIVATE ${TFS}/allocation.cc ${TFS}/arena_planner.cc ${TFS}/context.c
+#  ${TFS}/downloads/farmhash/src/farmhash.cc ${TFS}/error_reporter.cc ${TFS}/graph_info.cc ${TFS}/interpreter.cc
+#  ${TFS}/kernels/activations.cc ${TFS}/kernels/add.cc ${TFS}/kernels/basic_rnn.cc ${TFS}/kernels/batch_to_space_nd.cc
+#  ${TFS}/kernels/bidirectional_sequence_lstm.cc ${TFS}/kernels/bidirectional_sequence_rnn.cc
+#  ${TFS}/kernels/concatenation.cc ${TFS}/kernels/conv.cc ${TFS}/kernels/depthwise_conv.cc ${TFS}/kernels/div.cc
+#  ${TFS}/kernels/embedding_lookup.cc ${TFS}/kernels/embedding_lookup_sparse.cc ${TFS}/kernels/exp.cc
+#  ${TFS}/kernels/fully_connected.cc ${TFS}/kernels/gather.cc ${TFS}/kernels/gemm_support.cc
+#  ${TFS}/kernels/hashtable_lookup.cc ${TFS}/kernels/internal/kernel_utils.cc
+#  ${TFS}/kernels/internal/optimized/neon_tensor_utils.cc ${TFS}/kernels/internal/quantization_util.cc
+#  ${TFS}/kernels/internal/reference/portable_tensor_utils.cc ${TFS}/kernels/internal/tensor_utils.cc
+#  ${TFS}/kernels/kernel_util.cc ${TFS}/kernels/l2norm.cc ${TFS}/kernels/local_response_norm.cc
+#  ${TFS}/kernels/lsh_projection.cc ${TFS}/kernels/lstm.cc ${TFS}/kernels/mean.cc ${TFS}/kernels/mul.cc
+#  ${TFS}/kernels/pad.cc ${TFS}/kernels/pooling.cc ${TFS}/kernels/register.cc ${TFS}/kernels/reshape.cc
+#  ${TFS}/kernels/resize_bilinear.cc ${TFS}/kernels/skip_gram.cc ${TFS}/kernels/space_to_batch_nd.cc
+#  ${TFS}/kernels/space_to_depth.cc ${TFS}/kernels/split.cc ${TFS}/kernels/squeeze.cc ${TFS}/kernels/strided_slice.cc
+#  ${TFS}/kernels/sub.cc ${TFS}/kernels/svdf.cc ${TFS}/kernels/topk_v2.cc ${TFS}/kernels/transpose.cc
+#  ${TFS}/kernels/unidirectional_sequence_lstm.cc ${TFS}/kernels/unidirectional_sequence_rnn.cc ${TFS}/model.cc
+#  ${TFS}/nnapi_delegate.cc ${TFS}/optional_debug_tools.cc ${TFS}/simple_memory_arena.cc ${TFS}/string_util.cc )
 
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others (from pkg-config --libs opencv and deleting a few):

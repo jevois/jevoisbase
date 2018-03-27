@@ -15,6 +15,7 @@ Contrib/FP16
 Contrib/psimd
 Contrib/darknet
 Contrib/darknet-nnpack
+Contrib/tensorflow
 /hbuild/
 /pbuild/
 /jvpkg/
