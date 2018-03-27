@@ -284,104 +284,33 @@ include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads
 include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/farmhash/src")
 include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/absl")
 
-
 # in jevoisbase/Contrib/tensorflow/tensorflow/contrib/lite run:
-# find . -name "*.cc" |grep -v test|grep -v bench|grep -v farmhash/dev|grep -v example|grep -v smartreply|grep -v absl|grep -v toco|grep -v grpc|grep -v java|sed -e 's/\.\//\$\{TFS\}\//g'
+# find . -name "*.cc" |grep -v test|grep -v bench|grep -v farmhash/dev|grep -v example|grep -v smartreply|grep -v absl|grep -v toco|grep -v grpc|grep -v java|grep -v registration|grep -v spectrogram|sed -e 's/\.\//\$\{TFS\}\//g'
+#
+# then add: ${TFS}/context.c
 
-#${TFS}/kernels/internal/spectrogram.cc
-#${TFS}/tools/gen_op_registration_main.cc
-#${TFS}/tools/gen_op_registration.cc
-
-#add: ${TFS}/context.c
-
-target_sources(jevoisbase PRIVATE
-  ${TFS}/error_reporter.cc
-${TFS}/arena_planner.cc
-${TFS}/optional_debug_tools.cc
-${TFS}/string_util.cc
-${TFS}/simple_memory_arena.cc
-${TFS}/kernels/fully_connected.cc
-${TFS}/kernels/skip_gram.cc
-${TFS}/kernels/concatenation.cc
-${TFS}/kernels/l2norm.cc
-${TFS}/kernels/split.cc
-${TFS}/kernels/mean.cc
-${TFS}/kernels/svdf.cc
-${TFS}/kernels/dequantize.cc
-${TFS}/kernels/unidirectional_sequence_lstm.cc
-${TFS}/kernels/local_response_norm.cc
-${TFS}/kernels/batch_to_space_nd.cc
-${TFS}/kernels/embedding_lookup_sparse.cc
-${TFS}/kernels/cast.cc
-${TFS}/kernels/resize_bilinear.cc
-${TFS}/kernels/transpose.cc
-${TFS}/kernels/hashtable_lookup.cc
-${TFS}/kernels/gemm_support.cc
-${TFS}/kernels/space_to_batch_nd.cc
-${TFS}/kernels/depthwise_conv.cc
-${TFS}/kernels/internal/mfcc_dct.cc
-${TFS}/kernels/internal/quantization_util.cc
-${TFS}/kernels/internal/tensor_utils.cc
-${TFS}/kernels/internal/mfcc.cc
-${TFS}/kernels/internal/optimized/neon_tensor_utils.cc
-${TFS}/kernels/internal/mfcc_mel_filterbank.cc
-${TFS}/kernels/internal/reference/portable_tensor_utils.cc
-${TFS}/kernels/internal/kernel_utils.cc
-${TFS}/kernels/topk_v2.cc
-${TFS}/kernels/basic_rnn.cc
-${TFS}/kernels/div.cc
-${TFS}/kernels/conv.cc
-${TFS}/kernels/mul.cc
-${TFS}/kernels/unidirectional_sequence_rnn.cc
-${TFS}/kernels/strided_slice.cc
-${TFS}/kernels/bidirectional_sequence_rnn.cc
-${TFS}/kernels/squeeze.cc
-${TFS}/kernels/bidirectional_sequence_lstm.cc
-${TFS}/kernels/register.cc
-${TFS}/kernels/embedding_lookup.cc
-${TFS}/kernels/sub.cc
-${TFS}/kernels/activations.cc
-${TFS}/kernels/exp.cc
-${TFS}/kernels/space_to_depth.cc
-${TFS}/kernels/kernel_util.cc
-${TFS}/kernels/add.cc
-${TFS}/kernels/gather.cc
-${TFS}/kernels/reshape.cc
-${TFS}/kernels/pooling.cc
-${TFS}/kernels/lstm.cc
-${TFS}/kernels/pad.cc
-${TFS}/kernels/lsh_projection.cc
-${TFS}/nnapi_delegate.cc
-${TFS}/interpreter.cc
-${TFS}/allocation.cc
-${TFS}/model.cc
-${TFS}/tools/verifier.cc
-${TFS}/tools/mutable_op_resolver.cc
-${TFS}/downloads/farmhash/src/farmhash.cc
-${TFS}/downloads/gemmlowp/eight_bit_int_gemm/eight_bit_int_gemm.cc
-${TFS}/schema/builtin_ops_header/generator.cc
-${TFS}/schema/builtin_ops_header/generate.cc
-${TFS}/graph_info.cc
-${TFS}/context.c)
-
-#target_sources(jevoisbase PRIVATE ${TFS}/allocation.cc ${TFS}/arena_planner.cc ${TFS}/context.c
-#  ${TFS}/downloads/farmhash/src/farmhash.cc ${TFS}/error_reporter.cc ${TFS}/graph_info.cc ${TFS}/interpreter.cc
-#  ${TFS}/kernels/activations.cc ${TFS}/kernels/add.cc ${TFS}/kernels/basic_rnn.cc ${TFS}/kernels/batch_to_space_nd.cc
-#  ${TFS}/kernels/bidirectional_sequence_lstm.cc ${TFS}/kernels/bidirectional_sequence_rnn.cc
-#  ${TFS}/kernels/concatenation.cc ${TFS}/kernels/conv.cc ${TFS}/kernels/depthwise_conv.cc ${TFS}/kernels/div.cc
-#  ${TFS}/kernels/embedding_lookup.cc ${TFS}/kernels/embedding_lookup_sparse.cc ${TFS}/kernels/exp.cc
-#  ${TFS}/kernels/fully_connected.cc ${TFS}/kernels/gather.cc ${TFS}/kernels/gemm_support.cc
-#  ${TFS}/kernels/hashtable_lookup.cc ${TFS}/kernels/internal/kernel_utils.cc
-#  ${TFS}/kernels/internal/optimized/neon_tensor_utils.cc ${TFS}/kernels/internal/quantization_util.cc
-#  ${TFS}/kernels/internal/reference/portable_tensor_utils.cc ${TFS}/kernels/internal/tensor_utils.cc
-#  ${TFS}/kernels/kernel_util.cc ${TFS}/kernels/l2norm.cc ${TFS}/kernels/local_response_norm.cc
-#  ${TFS}/kernels/lsh_projection.cc ${TFS}/kernels/lstm.cc ${TFS}/kernels/mean.cc ${TFS}/kernels/mul.cc
-#  ${TFS}/kernels/pad.cc ${TFS}/kernels/pooling.cc ${TFS}/kernels/register.cc ${TFS}/kernels/reshape.cc
-#  ${TFS}/kernels/resize_bilinear.cc ${TFS}/kernels/skip_gram.cc ${TFS}/kernels/space_to_batch_nd.cc
-#  ${TFS}/kernels/space_to_depth.cc ${TFS}/kernels/split.cc ${TFS}/kernels/squeeze.cc ${TFS}/kernels/strided_slice.cc
-#  ${TFS}/kernels/sub.cc ${TFS}/kernels/svdf.cc ${TFS}/kernels/topk_v2.cc ${TFS}/kernels/transpose.cc
-#  ${TFS}/kernels/unidirectional_sequence_lstm.cc ${TFS}/kernels/unidirectional_sequence_rnn.cc ${TFS}/model.cc
-#  ${TFS}/nnapi_delegate.cc ${TFS}/optional_debug_tools.cc ${TFS}/simple_memory_arena.cc ${TFS}/string_util.cc )
+target_sources(jevoisbase PRIVATE ${TFS}/error_reporter.cc ${TFS}/arena_planner.cc ${TFS}/optional_debug_tools.cc
+  ${TFS}/string_util.cc ${TFS}/simple_memory_arena.cc ${TFS}/kernels/fully_connected.cc ${TFS}/kernels/skip_gram.cc
+  ${TFS}/kernels/concatenation.cc ${TFS}/kernels/l2norm.cc ${TFS}/kernels/split.cc ${TFS}/kernels/mean.cc
+  ${TFS}/kernels/svdf.cc ${TFS}/kernels/dequantize.cc ${TFS}/kernels/unidirectional_sequence_lstm.cc
+  ${TFS}/kernels/local_response_norm.cc ${TFS}/kernels/batch_to_space_nd.cc ${TFS}/kernels/embedding_lookup_sparse.cc
+  ${TFS}/kernels/cast.cc ${TFS}/kernels/resize_bilinear.cc ${TFS}/kernels/transpose.cc
+  ${TFS}/kernels/hashtable_lookup.cc ${TFS}/kernels/gemm_support.cc ${TFS}/kernels/space_to_batch_nd.cc
+  ${TFS}/kernels/depthwise_conv.cc ${TFS}/kernels/internal/mfcc_dct.cc ${TFS}/kernels/internal/quantization_util.cc
+  ${TFS}/kernels/internal/tensor_utils.cc ${TFS}/kernels/internal/mfcc.cc
+  ${TFS}/kernels/internal/optimized/neon_tensor_utils.cc ${TFS}/kernels/internal/mfcc_mel_filterbank.cc
+  ${TFS}/kernels/internal/reference/portable_tensor_utils.cc ${TFS}/kernels/internal/kernel_utils.cc
+  ${TFS}/kernels/topk_v2.cc ${TFS}/kernels/basic_rnn.cc ${TFS}/kernels/div.cc ${TFS}/kernels/conv.cc
+  ${TFS}/kernels/mul.cc ${TFS}/kernels/unidirectional_sequence_rnn.cc ${TFS}/kernels/strided_slice.cc
+  ${TFS}/kernels/bidirectional_sequence_rnn.cc ${TFS}/kernels/squeeze.cc ${TFS}/kernels/bidirectional_sequence_lstm.cc
+  ${TFS}/kernels/register.cc ${TFS}/kernels/embedding_lookup.cc ${TFS}/kernels/sub.cc ${TFS}/kernels/activations.cc
+  ${TFS}/kernels/exp.cc ${TFS}/kernels/space_to_depth.cc ${TFS}/kernels/kernel_util.cc ${TFS}/kernels/add.cc
+  ${TFS}/kernels/gather.cc ${TFS}/kernels/reshape.cc ${TFS}/kernels/pooling.cc ${TFS}/kernels/lstm.cc
+  ${TFS}/kernels/pad.cc ${TFS}/kernels/lsh_projection.cc ${TFS}/nnapi_delegate.cc ${TFS}/interpreter.cc
+  ${TFS}/allocation.cc ${TFS}/model.cc ${TFS}/tools/verifier.cc ${TFS}/tools/mutable_op_resolver.cc
+  ${TFS}/downloads/farmhash/src/farmhash.cc ${TFS}/downloads/gemmlowp/eight_bit_int_gemm/eight_bit_int_gemm.cc
+  ${TFS}/schema/builtin_ops_header/generator.cc ${TFS}/schema/builtin_ops_header/generate.cc ${TFS}/graph_info.cc
+  ${TFS}/context.c)
 
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others (from pkg-config --libs opencv and deleting a few):

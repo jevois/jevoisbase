@@ -165,20 +165,18 @@ class DarknetYOLO : public jevois::StdModule,
       // Convert input image to RGB for predictions:
       cv::Mat cvimg = jevois::rawimage::convertToCvRGB(inimg);
 
-      // Resize the network if desired:
+      // Resize the network and/or the input if desired:
       cv::Size nsz = netin::get();
       if (nsz.width != 0 && nsz.height != 0)
       {
         itsYolo->resizeInDims(nsz.width, nsz.height);
-
-        if (nsz.width == cvimg.cols && nsz.height == cvimg.rows)
-          itsNetInput = cvimg;
-        else if (nsz.width > cvimg.cols || nsz.height > cvimg.rows)
-          cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_LINEAR);
-        else
-          cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_AREA);
+	itsNetInput = jevois::rescaleCv(cvimg, nsz);
       }
-      else itsNetInput = cvimg;
+      else
+      {
+        itsYolo->resizeInDims(cvimg.cols, cvimg.rows);
+	itsNetInput = cvimg;
+      }
 
       cvimg.release();
       
@@ -308,16 +306,14 @@ class DarknetYOLO : public jevois::StdModule,
 	  if (nsz.width != 0 && nsz.height != 0)
 	  {
 	    itsYolo->resizeInDims(nsz.width, nsz.height);
-	    
-	    if (nsz.width == cvimg.cols && nsz.height == cvimg.rows)
-	      itsNetInput = cvimg;
-	    else if (nsz.width > cvimg.cols || nsz.height > cvimg.rows)
-	      cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_LINEAR);
-	    else
-	      cv::resize(cvimg, itsNetInput, nsz, 0, 0, cv::INTER_AREA);
+	    itsNetInput = jevois::rescaleCv(cvimg, nsz);
 	  }
-	  else itsNetInput = cvimg;
-
+	  else
+	  {
+	    itsYolo->resizeInDims(cvimg.cols, cvimg.rows);
+	    itsNetInput = cvimg;
+	  }
+	  
 	  cvimg.release();
 	
 	  // Launch the predictions:

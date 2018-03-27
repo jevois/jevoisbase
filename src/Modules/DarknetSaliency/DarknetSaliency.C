@@ -232,14 +232,7 @@ class DarknetSaliency : public jevois::StdModule,
         inframe.done();
 
         // Scale the ROI if needed:
-        cv::Size scaledsize = netin::get();
-        cv::Mat scaledroi;
-        if (scaledsize.width == rw && scaledsize.height == rh)
-          scaledroi = rgbroi;
-        else if (scaledsize.width > rw || scaledsize.height > rh)
-          cv::resize(rgbroi, scaledroi, scaledsize, 0, 0, cv::INTER_LINEAR);
-        else
-          cv::resize(rgbroi, scaledroi, scaledsize, 0, 0, cv::INTER_AREA);
+        cv::Mat scaledroi = jevois::rescaleCv(rgbroi, netin::get());
 
         // Launch the predictions (do not catch exceptions, we already tested for network ready in this block):
         float const ptime = itsDarknet->predict(scaledroi, itsResults);
@@ -374,24 +367,12 @@ class DarknetSaliency : public jevois::StdModule,
         inframe.done();
 
         // Scale the ROI if needed to the desired network input dims:
-        cv::Size scaledsize = netin::get();
-        if (scaledsize.width == rw && scaledsize.height == rh)
-          itsCvImg = rgbroi;
-        else if (scaledsize.width > rw || scaledsize.height > rh)
-          cv::resize(rgbroi, itsCvImg, scaledsize, 0, 0, cv::INTER_LINEAR);
-        else
-          cv::resize(rgbroi, itsCvImg, scaledsize, 0, 0, cv::INTER_AREA);
+	itsCvImg = jevois::rescaleCv(rgbroi, netin::get());
 
         // Also scale the ROI to the desired output size, i.e., USB width - camera width:
         float fac = float(outimg.width - w) / float(rgbroi.cols);
         cv::Size displaysize(outimg.width - w, int(rgbroi.rows * fac + 0.4999F));
-        cv::Mat displayroi;
-        if (displaysize.width == rw && displaysize.height == rh)
-          displayroi = rgbroi;
-        else if (displaysize.width > rw || displaysize.height > rh)
-          cv::resize(rgbroi, displayroi, displaysize, 0, 0, cv::INTER_LINEAR);
-        else
-          cv::resize(rgbroi, displayroi, displaysize, 0, 0, cv::INTER_AREA);
+        cv::Mat displayroi = jevois::rescaleCv(rgbroi, displaysize);
 
         // Convert back the display ROI to YUYV and store for later display, while we are still computing the network
         // predictions on that ROI:

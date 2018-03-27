@@ -36,27 +36,29 @@
     any have scored above a minimum confidence threshold. When nothing is recognized with sufficiently high confidence,
     there is no output.
 
+    This module runs a TensorFlow network and shows the top-scoring results. The network is currently a bit slow, hence
+    it is only run once in a while. Point your camera towards some interesting object, make the object fit in the
+    picture shown at right (which will be fed to the neural network), keep it stable, and wait for TensorFlow to tell
+    you what it found. The framerate figures shown at the bottom left of the display reflect the speed at which each new
+    video frame from the camera is processed, but in this module this just amounts to converting the image to RGB,
+    sending it to the neural network for processing in a separate thread, and creating the demo display. Actual network
+    inference speed (time taken to compute the predictions on one image) is shown at the bottom right. See below for how
+    to trade-off speed and accuracy.
 
-    This module runs a TensorFlow network and shows the top-scoring results. The network is currently a bit slow, hence it
-    is only run once in a while. Point your camera towards some interesting object, make the object fit in the picture
-    shown at right (which will be fed to the neural network), keep it stable, and wait for TensorFlow to tell you what it
-    found. The framerate figures shown at the bottom left of the display reflect the speed at which each new video frame
-    from the camera is processed, but in this module this just amounts to converting the image to RGB, sending it to the
-    neural network for processing in a separate thread, and creating the demo display. Actual network inference speed
-    (time taken to compute the predictions on one image) is shown at the bottom right. See below for how to trade-off
-    speed and accuracy.
-
-    Note that by default this module runs the Imagenet1k tiny TensorFlow (it can also run the slightly slower but a bit
-    more accurate TensorFlow Reference network; see parameters). There are 1000 different kinds of objects (object classes)
-    that these networks can recognize (too long to list here). The input layer of these two networks is 224x224 pixels
-    by default. This modules takes a crop at the center of the video image, with size determined by the network input
+    Note that by default this module runs different flavors of MobileNets trained on the ImageNet dataset.  There are
+    1000 different kinds of objects (object classes) that these networks can recognize (too long to list here). The
+    input layer of these networks is 224x224, 192x192, 160x160, or 128x128 pixels by default, depending on the network
+    used. This modules takes a crop at the center of the video image, with size determined by the network input
     size. With the default network parameters, this module hence requires at least 320x240 camera sensor resolution. The
-    networks provided on the JeVois microSD image have been trained on large clusters of GPUs, typically using 1.2
-    million training images from the ImageNet dataset.
+    networks provided on the JeVois microSD image have been trained on large clusters of GPUs, using 1.2 million
+    training images from the ImageNet dataset.
+
+    For more information about MobileNets, see
+    https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md
 
     Sometimes this module will make mistakes! The performance of darknet-tiny is about 58.7% correct (mean average
-    precision) on the test set, and TensorFlow Reference is about 61.1% correct on the test set, using the default 224x224
-    network input layer size.
+    precision) on the test set, and TensorFlow Reference is about 61.1% correct on the test set, using the default
+    224x224 network input layer size.
 
     Neural network size and speed
     -----------------------------
@@ -69,8 +71,7 @@
 
     For example:
 
-    - with USB output 544x240 (network size 224x224), this module runs at about 450ms/prediction.
-    - with USB output 448x240 (network size 128x128), this module runs at about 180ms/prediction.
+    - with USB output 546x240 (network size 224x224), this module runs at about 450ms/prediction.
 
     When using a videomapping with no USB output, the network is not resized (since we would not know what to resize it
     to). You can still change its native size by changing the network's config file, for example, change the width and
@@ -98,8 +99,7 @@
 
     @displayname TensorFlow Single
     @videomapping NONE 0 0 0.0 YUYV 320 240 2.1 JeVois TensorFlowSingle
-    @videomapping YUYV 544 240 15.0 YUYV 320 240 15.0 JeVois TensorFlowSingle
-    @videomapping YUYV 448 240 15.0 YUYV 320 240 15.0 JeVois TensorFlowSingle
+    @videomapping YUYV 546 240 15.0 YUYV 320 240 15.0 JeVois TensorFlowSingle
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2017 by Laurent Itti, iLab and the University of Southern California
@@ -213,17 +213,20 @@ class TensorFlowSingle : public jevois::Module
 
           // Paste the current input image:
           jevois::rawimage::paste(inimg, outimg, 0, 0);
-          jevois::rawimage::writeText(outimg, "JeVois TensorFlow Single - input", 3, 3, jevois::yuyv::White);
+          jevois::rawimage::writeText(outimg, "JeVois TensorFlow - input", 3, 3, jevois::yuyv::White);
 
+	  // Draw a 2-pixel wide rectangle:
+	  jevois::rawimage::drawFilledRect(outimg, w, 0, 2, h, jevois::yuyv::MedGrey);
+	  
           // Paste the latest prediction results, if any, otherwise a wait message:
           cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
           if (itsRawPrevOutputCv.empty() == false)
-            itsRawPrevOutputCv.copyTo(outimgcv(cv::Rect(w, 0, itsRawPrevOutputCv.cols, itsRawPrevOutputCv.rows)));
+            itsRawPrevOutputCv.copyTo(outimgcv(cv::Rect(w + 2, 0, itsRawPrevOutputCv.cols, itsRawPrevOutputCv.rows)));
           else
           {
-            jevois::rawimage::drawFilledRect(outimg, w, 0, outimg.width - w, h, jevois::yuyv::Black);
-            jevois::rawimage::writeText(outimg, "Loading network -", w + 3, 3, jevois::yuyv::White);
-            jevois::rawimage::writeText(outimg, "please wait...", w + 3, 15, jevois::yuyv::White);
+            jevois::rawimage::drawFilledRect(outimg, w + 2, 0, outimg.width - w, h, jevois::yuyv::Black);
+            jevois::rawimage::writeText(outimg, "Loading network -", w + 5, 3, jevois::yuyv::White);
+            jevois::rawimage::writeText(outimg, "please wait...", w + 5, 15, jevois::yuyv::White);
           }
         });
 
@@ -249,8 +252,9 @@ class TensorFlowSingle : public jevois::Module
             
             // Update our output image: First paste the image we have been making predictions on:
             if (itsRawPrevOutputCv.empty()) itsRawPrevOutputCv = cv::Mat(h, netw, CV_8UC2);
-            itsRawInputCv.copyTo(outimgcv(cv::Rect(w, 0, netw, neth)));
-            jevois::rawimage::drawFilledRect(outimg, w, neth, netw, h - neth, jevois::yuyv::Black);
+            itsRawInputCv.copyTo(outimgcv(cv::Rect(w + 2, 0, netw, neth)));
+            jevois::rawimage::drawFilledRect(outimg, w + 2, neth, netw, h - neth, jevois::yuyv::Black);
+	    jevois::rawimage::drawFilledRect(outimg, w, 0, 2, h, jevois::yuyv::MedGrey);
 
             // Then draw the detections: either below the detection crop if there is room, or on top of it if not enough
             // room below:
@@ -259,7 +263,7 @@ class TensorFlowSingle : public jevois::Module
             for (auto const & p : itsResults)
             {
               jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.second.c_str(), p.first),
-                                          w + 3, y, jevois::yuyv::White);
+                                          w + 5, y, jevois::yuyv::White);
               y += 12;
             }
 
@@ -268,10 +272,10 @@ class TensorFlowSingle : public jevois::Module
 
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
-                                        w + 3, h - 13, jevois::yuyv::White);
+                                        w + 5, h - 13, jevois::yuyv::White);
 
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
-            outimgcv(cv::Rect(w, 0, netw, h)).copyTo(itsRawPrevOutputCv);
+            outimgcv(cv::Rect(w + 2, 0, netw, h)).copyTo(itsRawPrevOutputCv);
 
             // Switch to next frame:
             ++itsFrame;
@@ -290,12 +294,12 @@ class TensorFlowSingle : public jevois::Module
         paste_fut.get();
 
         // In this module, we use square crops for the network, with size given by USB width - camera width:
-        if (outimg.width < inimg.width) LFATAL("USB output image must be larger than camera input");
-        int const netw = outimg.width - inimg.width;
+        if (outimg.width < inimg.width + 2) LFATAL("USB output image must be larger than camera input");
+        int const netw = outimg.width - inimg.width - 2; // 2 pix separator to distinguish darknet vs tensorflow
         int const neth = netw; // square crop
         
         // Check input vs network dims:
-        if (netw > w || neth > h) LFATAL("Network input window must fit within camera frame");
+        if (netw <= 0 || neth <= 0 || netw > w || neth > h) LFATAL("Network input window must fit within camera frame");
 
         // Take a central crop of the input:
         int const offx = (w - netw) / 2;
@@ -311,6 +315,10 @@ class TensorFlowSingle : public jevois::Module
 
         // Let camera know we are done processing the input image:
         inframe.done();
+
+	// Rescale the cropped image to network dims if needed:
+	int netinw, netinh, netinc; itsTensorFlow->getInDims(netinw, netinh, netinc);
+	itsCvImg = jevois::rescaleCv(itsCvImg, cv::Size(netinw, netinh));
 
         // Launch the predictions:
         itsPredictFut = std::async(std::launch::async, [&]() { return itsTensorFlow->predict(itsCvImg, itsResults); });

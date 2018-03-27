@@ -57,13 +57,12 @@ namespace tflow
 /*! TensorFlow is a popular neural network framework. This component identifies the object in the given image crop. It
     returns the top scoring candidates.
 
-    See https://pjreddie.com/darknet
+    See https://www.tensorflow.org
 
-    TensorFlow is a great, bare-metal deep learning and deep neural network framework. It is great for embedded systems
-    like the small JeVois camera because it has a very small footprint and fewer dependencies than other deep neural
-    network frameworks like Tensorflow, MXNet, Theano, Keras, PyTorch, etc. In addition, the port of TensorFlow to JeVois
-    includes acceleration using the ARM NEON multimedia instructions through the popular NNPACK neural network
-    acceleration package.
+    TensorFlow is a great deep learning and deep neural network framework. TensorFlow Lite (used here) is optimized for
+    embedded systems like the small JeVois camera because it has a very small footprint and fewer dependencies than
+    other deep neural network frameworks like MXNet, Theano, Keras, PyTorch, etc. In addition, the port of TensorFlow to
+    JeVois includes acceleration using the ARM NEON multimedia instructions.
 
     \ingroup Components */
 class TensorFlow : public jevois::Component,

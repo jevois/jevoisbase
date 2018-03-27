@@ -93,7 +93,9 @@ void TensorFlow::get_top_n(T * prediction, int prediction_size, std::vector<Tens
   for (int i = 0; i < prediction_size; ++i)
   {
     float value;
-    if (input_floating) value = prediction[i]; else value = prediction[i] / 255.0;
+    // FIXME: the original label_image code did not have this factor 0.1 but the scores on inceptionV3 are just too high
+    // without it...
+    if (input_floating) value = prediction[i] * 0.1F; else value = prediction[i] / 255.0F;
 
     // Only add it if it beats the threshold and has a chance at being in the top N.
     if (value < th) continue;
@@ -209,27 +211,46 @@ float TensorFlow::predict(cv::Mat const & cvimg, std::vector<predresult> & resul
 {
   if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
-  if (cvimg.type() != CV_8UC3) LFATAL("cvimg must have type CV_8UC3 and RGB pixels");
-
-  int image_width = cvimg.cols;
-  int image_height = cvimg.rows;
-  int image_channels = cvimg.channels();
-  uint8_t const * in = cvimg.data;
-
-  int input = interpreter->inputs()[0];
+  
+  int const image_width = cvimg.cols;
+  int const image_height = cvimg.rows;
+  int const image_type = cvimg.type();
 
   // get input dimension from the input tensor metadata assuming one input only
+  int input = interpreter->inputs()[0];
   TfLiteIntArray * dims = interpreter->tensor(input)->dims;
-  int wanted_height = dims->data[1];
-  int wanted_width = dims->data[2];
-  int wanted_channels = dims->data[3];
+  int const wanted_height = dims->data[1];
+  int const wanted_width = dims->data[2];
+  int const wanted_channels = dims->data[3];
 
-  if (interpreter->tensor(input)->type != kTfLiteUInt8) LFATAL("only uint8 input supported");
+  if (wanted_channels != 1 && wanted_channels != 3)
+    LFATAL("Network wants " << wanted_channels << " input channels, but only 1 or 3 are supported");
+  if (wanted_channels == 3 && image_type != CV_8UC3) LFATAL("Network wants RGB but input image is not CV_8UC3");
+  if (wanted_channels == 1 && image_type != CV_8UC1) LFATAL("Network wants Gray but input image is not CV_8UC1");
   
-  if (image_width != wanted_width || image_height != wanted_height || wanted_channels != 3)
-    LFATAL("ooops wrong input size");
+  if (image_width != wanted_width || image_height != wanted_height)
+    LFATAL("Wrong input size " << image_width << 'x' << image_height << " but network wants "
+	   << wanted_width << 'x' << wanted_height);
 
-  memcpy(interpreter->typed_tensor<uint8_t>(input), in, cvimg.total());
+  // Copy input image to input tensor, converting pixel type if needed:
+  switch (interpreter->tensor(input)->type)
+  {
+  case kTfLiteUInt8:
+  {
+    memcpy(interpreter->typed_tensor<uint8_t>(input), cvimg.data, cvimg.total() * cvimg.elemSize());
+    break;
+  }
+  case kTfLiteFloat32:
+  {
+    cv::Mat convimg;
+    if (wanted_channels == 1) cvimg.convertTo(convimg, CV_32FC1, 1.0F / 127.5F, -1.0F);
+    else cvimg.convertTo(convimg, CV_32FC3, 1.0F / 127.5F, -1.0F);
+    memcpy(interpreter->typed_tensor<float>(input), convimg.data, convimg.total() * convimg.elemSize());
+    break;
+  }
+  default:
+    LFATAL("only uint8 or float32 network input pixel types are supported");
+  }
 
   // Run the inference:
   struct timeval start, stop;
@@ -247,10 +268,12 @@ float TensorFlow::predict(cv::Mat const & cvimg, std::vector<predresult> & resul
   int output = interpreter->outputs()[0];
   switch (interpreter->tensor(output)->type)
   {
-  case kTfLiteFloat32: get_top_n<float>(interpreter->typed_output_tensor<float>(0), output_size, results, true);
+  case kTfLiteFloat32:
+    get_top_n<float>(interpreter->typed_output_tensor<float>(0), output_size, results, true);
     break;
     
-  case kTfLiteUInt8: get_top_n<uint8_t>(interpreter->typed_output_tensor<uint8_t>(0), output_size, results, false);
+  case kTfLiteUInt8:
+    get_top_n<uint8_t>(interpreter->typed_output_tensor<uint8_t>(0), output_size, results, false);
     break;
 
   default:
