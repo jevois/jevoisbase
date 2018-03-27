@@ -90,12 +90,13 @@ void TensorFlow::get_top_n(T * prediction, int prediction_size, std::vector<Tens
   std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int> >,
                       std::greater<std::pair<float, int> > > top_result_pq;
 
+  // FIXME: the original label_image tensorflow code did not have the factor 10/127.5 for float networks, but the scores
+  // on inceptionV3 are just too high without it...
+  float const scale = input_floating ? 10.0F/127.5F : 1.0F / 255.0F;
+  
   for (int i = 0; i < prediction_size; ++i)
   {
-    float value;
-    // FIXME: the original label_image code did not have this factor 0.1 but the scores on inceptionV3 are just too high
-    // without it...
-    if (input_floating) value = prediction[i] * 0.1F; else value = prediction[i] / 255.0F;
+    float value = prediction[i] * scale;
 
     // Only add it if it beats the threshold and has a chance at being in the top N.
     if (value < th) continue;
