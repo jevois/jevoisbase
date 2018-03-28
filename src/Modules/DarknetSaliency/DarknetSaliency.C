@@ -208,12 +208,6 @@ class DarknetSaliency : public jevois::StdModule,
       jevois::RawImage const inimg = inframe.get();
       unsigned int const w = inimg.width, h = inimg.height;
 
-      // Check input vs network dims:
-      int netw, neth, netc;
-      itsDarknet->getInDims(netw, neth, netc);
-      if (netw > w) netw = w;
-      if (neth > h) neth = h;
-
       // Find the most salient location, no gist for now:
       int rx, ry, rw, rh;
       getSalROI(inimg, rx, ry, rw, rh);
@@ -229,12 +223,15 @@ class DarknetSaliency : public jevois::StdModule,
       // Let camera know we are done processing the input image:
       inframe.done();
 
-      // Scale the ROI if needed:
-      cv::Mat scaledroi = jevois::rescaleCv(rgbroi, netin::get());
-
-      // Launch the predictions (do not catch exceptions, we already tested for network ready in this block):
+      // Launch the predictions, will throw if network is not ready:
       try
       {
+	int netinw, netinh, netinc; itsDarknet->getInDims(netinw, netinh, netinc);
+
+	// Scale the ROI if needed:
+	cv::Mat scaledroi = jevois::rescaleCv(rgbroi, cv::Size(netinw, netinh));
+
+	// Predict:
 	float const ptime = itsDarknet->predict(scaledroi, itsResults);
 	LINFO("Predicted in " << ptime << "ms");
 

@@ -77,6 +77,9 @@
 
     For example:
 
+    - with USB output 450x240 (crop size 128x128), mobilenet_v1_0.25_128_quant (network size 128x128), runs at about
+      12ms/prediction (83.3 frames/s).
+
     - with USB output 450x240 (crop size 128x128), mobilenet_v1_0.5_128_quant (network size 128x128), runs at about
       26ms/prediction (38.5 frames/s).
 
@@ -86,8 +89,8 @@
     - with USB output 546x240 (crop size 224x224), mobilenet_v1_1.0_224_quant (network size 224x224), runs at about
       185ms/prediction (5.4 frames/s).
 
-    When using a videomapping with no USB output, the image crop directly taken to match the network input size, so that
-    no resizing occurs.
+    When using a videomapping with no USB output, the image crop is directly taken to match the network input size, so
+    that no resizing occurs.
 
     Note that network dims must always be such that they fit inside the camera input image.
 
