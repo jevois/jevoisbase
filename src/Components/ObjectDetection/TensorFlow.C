@@ -32,10 +32,20 @@ specific language governing permissions and limitations under the License. */
 #include <opencv2/imgproc/imgproc.hpp>
 #include <queue>
 #include <fstream>
+#include <cstdio>
 
 #include <tensorflow/contrib/lite/kernels/register.h>
 #include <tensorflow/contrib/lite/optional_debug_tools.h>
 #include <tensorflow/contrib/lite/string_util.h>
+
+// ####################################################################################################
+int TensorFlow::JeVoisReporter::Report(char const * format, va_list args)
+{
+  char buf[1024];
+  int ret = vsnprintf(buf, 1024, format, args);
+  LERROR(buf);
+  return ret;
+}
 
 // ####################################################################################################
 TensorFlow::TensorFlow(std::string const & instance) :
@@ -90,9 +100,7 @@ void TensorFlow::get_top_n(T * prediction, int prediction_size, std::vector<Tens
   std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int> >,
                       std::greater<std::pair<float, int> > > top_result_pq;
 
-  // FIXME: the original label_image tensorflow code did not have the factor 10/127.5 for float networks, but the scores
-  // on inceptionV3 are just too high without it...
-  float const scale = input_floating ? 10.0F/127.5F : 1.0F / 255.0F;
+  float const scale = scorescale::get() * (input_floating ? 1.0 : 1.0F / 255.0F);
   
   for (int i = 0; i < prediction_size; ++i)
   {
@@ -138,6 +146,15 @@ void TensorFlow::loadNet()
   // Since loading big networks can take a while, do it in a thread so we can keep streaming video in the
   // meantime. itsReady will flip to true when the load is complete.
   itsReadyFut = std::async(std::launch::async, [&]() {
+      if (model)
+      {
+	LINFO("Closing model..");
+	model.reset();
+	interpreter.reset();
+	labels.clear();
+	numlabels = 0;
+      }
+
       std::string root = dataroot::get(); if (root.empty() == false) root += '/';
       std::string const modelfile = absolutePath(root + netdir::get() + "/model.tflite");
       std::string const labelfile = absolutePath(root + netdir::get() + "/labels.txt");
@@ -149,13 +166,11 @@ void TensorFlow::loadNet()
       readLabelsFile(labelfile);
 
       // Create the model from flatbuffer file using mmap:
-      model = tflite::FlatBufferModel::BuildFromFile(modelfile.c_str());
+      model = tflite::FlatBufferModel::BuildFromFile(modelfile.c_str(), &itsErrorReporter);
       if (!model) LFATAL("Failed to mmap model " << modelfile);
       LINFO("Loaded model " << modelfile);
       
-      model->error_reporter();
       tflite::ops::builtin::BuiltinOpResolver resolver;
-
       tflite::InterpreterBuilder(*model, resolver)(&interpreter);
       if (!interpreter) LFATAL("Failed to construct interpreter");
       //////interpreter->UseNNAPI(s->accel);
@@ -176,19 +191,11 @@ void TensorFlow::loadNet()
 
       if (threads::get()) interpreter->SetNumThreads(threads::get());
 
-
-      int input = interpreter->inputs()[0];
-      LINFO("input: " << input);
-
-      const std::vector<int> inputs = interpreter->inputs();
-      const std::vector<int> outputs = interpreter->outputs();
-
-      LINFO("number of inputs: " << inputs.size());
-      LINFO("number of outputs: " << outputs.size());
+      LINFO("input: " << interpreter->inputs()[0]);
+      LINFO("number of inputs: " << interpreter->inputs().size());
+      LINFO("number of outputs: " << interpreter->outputs().size());
 
       if (interpreter->AllocateTensors() != kTfLiteOk) LFATAL("Failed to allocate tensors");
-
-      //if (s->verbose) PrintInterpreterState(interpreter.get());
 
       LINFO("TensorFlow network ready");
 
@@ -202,10 +209,6 @@ void TensorFlow::postUninit()
 {
   try { itsReadyFut.get(); } catch (...) { }
 }
-
-// ####################################################################################################
-bool TensorFlow::ready() const
-{ return (itsReady.load() == true && itsNeedReload.load() == false); }
 
 // ####################################################################################################
 float TensorFlow::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
@@ -285,8 +288,9 @@ float TensorFlow::predict(cv::Mat const & cvimg, std::vector<predresult> & resul
 }
 
 // ####################################################################################################
-void TensorFlow::getInDims(int & w, int & h, int & c) const
+void TensorFlow::getInDims(int & w, int & h, int & c)
 {
+  if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
 
   // get input dimension from the input tensor metadata assuming one input only

@@ -33,7 +33,7 @@ namespace dknet
   static jevois::ParameterCategory const ParamCateg("Darknet Options");
 
   //! Enum \relates Darknet
-  JEVOIS_DEFINE_ENUM_CLASS(Net, (Reference) (Tiny) ) // STILL NOT READY (MobileNet) (CompMobileNet) )
+  JEVOIS_DEFINE_ENUM_CLASS(Net, (Reference) (Tiny) )
 
   //! Parameter \relates Darknet
   JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(netw, Net, "Network to load. This meta-parameter sets parameters "
@@ -115,9 +115,6 @@ class Darknet : public jevois::Component,
     //! Typedef for one result: score, category name
     typedef std::pair<float, std::string> predresult;
 
-    //! Return true if th enetwork is ready (i.e., not loading)
-    bool ready() const;
-    
     //! Processing function, results are stored internally in the underlying Darknet network object
     /*! This version expects an OpenCV RGB byte image which will be converted to float RGB planar. If the image dims do
         not match the network's input layer dims, we here resize the network (beware that this only works if the network
@@ -141,7 +138,7 @@ class Darknet : public jevois::Component,
     
     //! Get input width, height, channels
     /*! Throws std::logic_error if the network is still loading and not ready. */
-    void getInDims(int & w, int & h, int & c) const;
+    void getInDims(int & w, int & h, int & c);
     
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     network * net;

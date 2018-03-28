@@ -108,3 +108,17 @@ if [ "X$REPLY" = "Xy" ]; then
 fi
 
 
+###################################################################################################
+if [ "x$1" = "x-y" ]; then
+    REPLY="y";
+else			   
+    read -p "Do you want to fetch and unpack contributed data [y/N]? "
+fi
+
+
+if [ "X$REPLY" = "Xy" ]; then
+    cd ../share
+    wget http://jevois.org/data/contrib-data.tbz
+    tar jxvf contrib-data.tbz
+    /bin/rm contrib-data.tbz
+fi

@@ -50,7 +50,11 @@ namespace tflow
 
   //! Parameter \relates TensorFlow
   JEVOIS_DECLARE_PARAMETER(threads, int, "Number of parallel computation threads, or 0 for auto",
-                           6, jevois::Range<int>(0, 1024), ParamCateg);
+                           4, jevois::Range<int>(0, 1024), ParamCateg);
+
+  //! Parameter \relates TensorFlow
+  JEVOIS_DECLARE_PARAMETER(scorescale, float, "Scaling factors applied to recognition scores, useful for InceptionV3",
+                           1.0F, ParamCateg);
 }
 
 //! Identify an object using TensorFlow deep neural network
@@ -66,14 +70,15 @@ namespace tflow
 
     \ingroup Components */
 class TensorFlow : public jevois::Component,
-                jevois::Parameter<tflow::netdir, tflow::dataroot, tflow::top, tflow::thresh, tflow::threads>
+		   jevois::Parameter<tflow::netdir, tflow::dataroot, tflow::top, tflow::thresh, tflow::threads,
+				     tflow::scorescale>
 {
   public: 
     //! Constructor
     TensorFlow(std::string const & instance);
 
     //! Initialize, configure and load the network in a thread
-    /*! Any call to process() will simply throw until the network is loaded and ready */
+    /*! Any call to predict() will simply throw until the network is loaded and ready */
     void postInit() override;
 
     //! Virtual destructor for safe inheritance
@@ -85,19 +90,16 @@ class TensorFlow : public jevois::Component,
     //! Typedef for one result: score, category name
     typedef std::pair<float, std::string> predresult;
 
-    //! Return true if th enetwork is ready (i.e., not loading)
-    bool ready() const;
-    
     //! Processing function, results are stored internally in the underlying TensorFlow network object
-    /*! This version expects an OpenCV RGB byte image which will be converted to float RGB planar. If the image dims do
-        not match the network's input layer dims, we here resize the network (beware that this only works if the network
-        is fully convolutional).  Returns the prediction time (neural net forward pass) in milliseconds. Throws
-        std::logic_error if the network is still loading and not ready. */
+    /*! Expects an OpenCV byte RGB (CV_8UC3) or Gray (CV_8UC1) image, which may be further converted to float if that is
+        what the network wants as input. The image dims and number of channels must match the network's input dims and
+        channels.  Returns the prediction time (neural net forward pass) in milliseconds. Throws std::logic_error if the
+        network is still loading and not ready. */
     float predict(cv::Mat const & cvimg, std::vector<predresult> & results);
     
     //! Get input width, height, channels
     /*! Throws std::logic_error if the network is still loading and not ready. */
-    void getInDims(int & w, int & h, int & c) const;
+    void getInDims(int & w, int & h, int & c);
     
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     std::vector<std::string> labels;
@@ -117,4 +119,11 @@ class TensorFlow : public jevois::Component,
     std::future<void> itsReadyFut;
     std::atomic<bool> itsReady;
     std::atomic<bool> itsNeedReload;
+
+    struct JeVoisReporter : public tflite::ErrorReporter
+    {
+	int Report(char const * format, va_list args) override;
+    };
+
+    JeVoisReporter itsErrorReporter;
 };

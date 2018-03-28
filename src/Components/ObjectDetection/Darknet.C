@@ -77,23 +77,6 @@ void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval
     weightfile::set("weights/tiny.weights");
     namefile::set("");
     break;
-    /*
-  case dknet::Net::MobileNet:
-    dataroot::set(JEVOIS_SHARE_PATH "/darknet/single");
-    datacfg::set("cfg/imagenet1k.data");
-    cfgfile::set("cfg/mobilenet.cfg");
-    weightfile::set("weights/mobilenet.weights");
-    namefile::set("");
-    break;
-
-  case dknet::Net::CompMobileNet:
-    dataroot::set(JEVOIS_SHARE_PATH "/darknet/single");
-    datacfg::set("cfg/imagenet1k.data");
-    cfgfile::set("cfg/compressmobilenet_0.1.cfg");
-    weightfile::set("weights/compressmobilenet_0.1.weights");
-    namefile::set("");
-    break;
-    */
   }
 
   if (itsShowDetailParams == false)
@@ -202,10 +185,6 @@ void Darknet::postUninit()
 }
 
 // ####################################################################################################
-bool Darknet::ready() const
-{ return (itsReady.load() == true && itsNeedReload.load() == false); }
-
-// ####################################################################################################
 float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
 {
   if (itsNeedReload.load()) loadNet();
@@ -272,13 +251,15 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
 // ####################################################################################################
 void Darknet::resizeInDims(int w, int h)
 {
+  if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   resize_network(net, w, h);
 }
 
 // ####################################################################################################
-void Darknet::getInDims(int & w, int & h, int & c) const
+void Darknet::getInDims(int & w, int & h, int & c)
 {
+  if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
   w = net->w; h = net->h; c = net->c;
 }

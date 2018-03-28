@@ -208,42 +208,42 @@ class DarknetSaliency : public jevois::StdModule,
       jevois::RawImage const inimg = inframe.get();
       unsigned int const w = inimg.width, h = inimg.height;
 
-      if (itsDarknet->ready())
+      // Check input vs network dims:
+      int netw, neth, netc;
+      itsDarknet->getInDims(netw, neth, netc);
+      if (netw > w) netw = w;
+      if (neth > h) neth = h;
+
+      // Find the most salient location, no gist for now:
+      int rx, ry, rw, rh;
+      getSalROI(inimg, rx, ry, rw, rh);
+
+      // Extract a raw YUYV ROI around attended point:
+      cv::Mat rawimgcv = jevois::rawimage::cvImage(inimg);
+      cv::Mat rawroi = rawimgcv(cv::Rect(rx, ry, rw, rh));
+
+      // Convert the ROI to RGB:
+      cv::Mat rgbroi;
+      cv::cvtColor(rawroi, rgbroi, CV_YUV2RGB_YUYV);
+
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      // Scale the ROI if needed:
+      cv::Mat scaledroi = jevois::rescaleCv(rgbroi, netin::get());
+
+      // Launch the predictions (do not catch exceptions, we already tested for network ready in this block):
+      try
       {
-        // Check input vs network dims:
-        int netw, neth, netc;
-        itsDarknet->getInDims(netw, neth, netc);
-        if (netw > w) netw = w;
-        if (neth > h) neth = h;
+	float const ptime = itsDarknet->predict(scaledroi, itsResults);
+	LINFO("Predicted in " << ptime << "ms");
 
-        // Find the most salient location, no gist for now:
-        int rx, ry, rw, rh;
-        getSalROI(inimg, rx, ry, rw, rh);
-
-        // Extract a raw YUYV ROI around attended point:
-        cv::Mat rawimgcv = jevois::rawimage::cvImage(inimg);
-        cv::Mat rawroi = rawimgcv(cv::Rect(rx, ry, rw, rh));
-
-        // Convert the ROI to RGB:
-        cv::Mat rgbroi;
-        cv::cvtColor(rawroi, rgbroi, CV_YUV2RGB_YUYV);
-
-        // Let camera know we are done processing the input image:
-        inframe.done();
-
-        // Scale the ROI if needed:
-        cv::Mat scaledroi = jevois::rescaleCv(rgbroi, netin::get());
-
-        // Launch the predictions (do not catch exceptions, we already tested for network ready in this block):
-        float const ptime = itsDarknet->predict(scaledroi, itsResults);
-        LINFO("Predicted in " << ptime << "ms");
-
-        // Send serial results and switch to next frame:
-        sendAllSerial(w, h, rx + rw/2, ry + rh/2, rw, rh);
-
-        ++itsFrame;
+	// Send serial results and switch to next frame:
+	sendAllSerial(w, h, rx + rw/2, ry + rh/2, rw, rh);
       }
-      else inframe.done();
+      catch (std::logic_error const & e) { } // network still loading
+      
+      ++itsFrame;
     }
 
     // ####################################################################################################
@@ -252,10 +252,6 @@ class DarknetSaliency : public jevois::StdModule,
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
       static jevois::Timer timer("processing", 30, LOG_DEBUG);
-
-      // Make sure the network is ready:
-      bool const netready = itsDarknet->ready();
-      if (netready == false) itsRawPrevOutputCv.release();
 
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
@@ -313,7 +309,6 @@ class DarknetSaliency : public jevois::StdModule,
             cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
             
             // Update our output image: First paste the image we have been making predictions on:
-            if (itsRawPrevOutputCv.empty()) itsRawPrevOutputCv = cv::Mat(h, dispw, CV_8UC2);
             itsRawInputCv.copyTo(outimgcv(cv::Rect(w, 0, dispw, disph)));
             jevois::rawimage::drawFilledRect(outimg, w, disph, dispw, h - disph, jevois::yuyv::Black);
 
@@ -337,7 +332,8 @@ class DarknetSaliency : public jevois::StdModule,
                                         w + 3, h - 13, jevois::yuyv::White);
 
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
-            outimgcv(cv::Rect(w, 0, dispw, h)).copyTo(itsRawPrevOutputCv);
+	    itsRawPrevOutputCv = cv::Mat(h, dispw, CV_8UC2);
+	    outimgcv(cv::Rect(w, 0, dispw, h)).copyTo(itsRawPrevOutputCv);
 
             // Switch to next frame:
             ++itsFrame;
@@ -350,7 +346,7 @@ class DarknetSaliency : public jevois::StdModule,
           paste_fut.get(); sal_fut.get(); inframe.done();
         }
       }
-      else if (netready) // We are not predicting but network is ready: start new predictions
+      else // We are not predicting: start new predictions
       {
         // Wait for paste to finish up. Also wait for saliency to finish up so that rx, ry, rw, rh are available:
         paste_fut.get(); sal_fut.get();
@@ -378,12 +374,13 @@ class DarknetSaliency : public jevois::StdModule,
         // predictions on that ROI:
         jevois::rawimage::convertCvRGBtoCvYUYV(displayroi, itsRawInputCv);
 
-        // Launch the predictions:
-        itsPredictFut = std::async(std::launch::async, [&]() { return itsDarknet->predict(itsCvImg, itsResults); });
-      }
-      else // We are not predicting and network is not ready - do nothing except drawings of paste_fut:
-      {
-        paste_fut.get(); sal_fut.get(); inframe.done();
+        // Launch the predictions; will throw if network is not ready:
+	try
+	{
+	  int netinw, netinh, netinc; itsDarknet->getInDims(netinw, netinh, netinc); // will throw if not ready
+	  itsPredictFut = std::async(std::launch::async, [&]() { return itsDarknet->predict(itsCvImg, itsResults); });
+	}
+	catch (std::logic_error const & e) { itsRawPrevOutputCv.release(); } // network is not ready yet
       }
 
       // Show processing fps:
