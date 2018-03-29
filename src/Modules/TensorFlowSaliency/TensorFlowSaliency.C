@@ -70,7 +70,7 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the foc
     The network actual input size varies depending on which network is used; for example, mobilenet_v1_0.25_128_quant
     expects 128x128 input images, while mobilenet_v1_1.0_224 expects 224x224. We automatically rescale the cropped
     window to the network's desired input size. Note that there is a cost to rescaling, so, for best performance, you
-    should match \p foa size to the network input width.
+    should match \p foa size to the network input size.
 
     For example:
 
@@ -108,11 +108,12 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the foc
 
     @displayname TensorFlow Saliency
     @videomapping NONE 0 0 0.0 YUYV 320 240 15.0 JeVois TensorFlowSaliency
-    @videomapping YUYV 448 240 30.0 YUYV 320 240 30.0 JeVois TensorFlowSaliency
-    @videomapping YUYV 544 240 30.0 YUYV 320 240 30.0 JeVois TensorFlowSaliency
+    @videomapping YUYV 448 240 30.0 YUYV 320 240 30.0 JeVois TensorFlowSaliency # recommended network size 128x128
+    @videomapping YUYV 512 240 30.0 YUYV 320 240 30.0 JeVois TensorFlowSaliency # recommended network size 192x192
+    @videomapping YUYV 544 240 30.0 YUYV 320 240 30.0 JeVois TensorFlowSaliency # recommended network size 224x224
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
-    @copyright Copyright (C) 2017 by Laurent Itti, iLab and the University of Southern California
+    @copyright Copyright (C) 2018 by Laurent Itti, iLab and the University of Southern California
     @mainurl http://jevois.org
     @supporturl http://jevois.org/doc
     @otherurl http://iLab.usc.edu
@@ -331,7 +332,7 @@ class TensorFlowSaliency : public jevois::StdModule,
 
 	  // Then draw the detections: either below the detection crop if there is room, or on top of it if not enough
 	  // room below:
-	  int y = disph + 13; if (disph + itsResults.size() * 12 > h - 10) y = 3;
+	  int y = disph + 3; if (y + itsTensorFlow->top::get() * 12 > h - 21) y = 3;
 
 	  for (auto const & p : itsResults)
 	  {
@@ -345,7 +346,7 @@ class TensorFlowSaliency : public jevois::StdModule,
 
 	  // Draw some text messages:
 	  jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
-				      w + 3, h - 13, jevois::yuyv::White);
+				      w + 3, h - 11, jevois::yuyv::White);
 
 	  // Finally make a copy of these new results so we can display them again on the next frame while we compute
 	  // saliency:

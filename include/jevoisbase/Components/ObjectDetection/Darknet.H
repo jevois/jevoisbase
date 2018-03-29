@@ -93,8 +93,8 @@ namespace dknet
 
     \ingroup Components */
 class Darknet : public jevois::Component,
-                jevois::Parameter<dknet::netw, dknet::dataroot, dknet::datacfg, dknet::cfgfile,
-                                  dknet::weightfile, dknet::namefile, dknet::top, dknet::thresh, dknet::threads>
+                public jevois::Parameter<dknet::netw, dknet::dataroot, dknet::datacfg, dknet::cfgfile,
+					 dknet::weightfile, dknet::namefile, dknet::top, dknet::thresh, dknet::threads>
 {
   public: 
     //! Constructor

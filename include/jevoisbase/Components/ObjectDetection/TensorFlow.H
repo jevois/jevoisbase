@@ -70,8 +70,8 @@ namespace tflow
 
     \ingroup Components */
 class TensorFlow : public jevois::Component,
-		   jevois::Parameter<tflow::netdir, tflow::dataroot, tflow::top, tflow::thresh, tflow::threads,
-				     tflow::scorescale>
+		   public jevois::Parameter<tflow::netdir, tflow::dataroot, tflow::top, tflow::thresh, tflow::threads,
+					    tflow::scorescale>
 {
   public: 
     //! Constructor

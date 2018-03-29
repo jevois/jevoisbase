@@ -285,7 +285,7 @@ class TensorFlowSingle : public jevois::Module
 
             // Then draw the detections: either below the detection crop if there is room, or on top of it if not enough
             // room below:
-            int y = croph + 13; if (croph + itsResults.size() * 12 > h - 10) y = 3;
+	    int y = croph + 3; if (y + itsTensorFlow->top::get() * 12 > h - 21) y = 3;
 
             for (auto const & p : itsResults)
             {
@@ -299,7 +299,7 @@ class TensorFlowSingle : public jevois::Module
 
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
-                                        w + 5, h - 13, jevois::yuyv::White);
+                                        w + 5, h - 11, jevois::yuyv::White);
 
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
             itsRawPrevOutputCv = cv::Mat(h, cropw, CV_8UC2);
