@@ -224,6 +224,7 @@ class DarknetSaliency : public jevois::StdModule,
       inframe.done();
 
       // Launch the predictions, will throw if network is not ready:
+      itsResults.clear();
       try
       {
 	int netinw, netinh, netinc; itsDarknet->getInDims(netinw, netinh, netinc);

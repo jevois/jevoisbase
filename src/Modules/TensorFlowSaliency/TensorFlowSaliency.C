@@ -31,7 +31,7 @@ static jevois::ParameterCategory const ParamCateg("TensorFlow Saliency Options")
 JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the focus of attention. "
                          "This is the size of the image crop that is taken around the most salient "
                          "location in each frame. The foa size must fit within the camera input frame size. To avoid "
-			 "rescaling, it is best using here the size that the deep network expects as input.",
+			 "rescaling, it is best to use here the size that the deep network expects as input.",
                          cv::Size(128, 128), ParamCateg);
 
 //! Detect salient objects and identify them using TensorFlow deep neural network
@@ -222,6 +222,7 @@ class TensorFlowSaliency : public jevois::StdModule,
       inframe.done();
 
       // Launch the predictions, will throw if network is not ready:
+      itsResults.clear();
       try
       {
 	int netinw, netinh, netinc; itsTensorFlow->getInDims(netinw, netinh, netinc);
@@ -299,6 +300,7 @@ class TensorFlowSaliency : public jevois::StdModule,
         inframe.done();
 
 	// Launch the predictions, will throw if network is not ready:
+	itsResults.clear();
 	try
 	{
 	  // Get the network input dims:
