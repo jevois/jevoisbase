@@ -78,6 +78,8 @@ void TensorFlow::readLabelsFile(std::string const & fname)
   numlabels = labels.size();
   int const padding = 16;
   while (labels.size() % padding) labels.emplace_back();
+
+  LINFO("Loaded " << numlabels << " category names from " << fname);
 }
 
 // ####################################################################################################
@@ -263,7 +265,6 @@ float TensorFlow::predict(cv::Mat const & cvimg, std::vector<predresult> & resul
   gettimeofday(&stop, 0);
   float predtime = (stop.tv_sec * 1000 + stop.tv_usec / 1000) - (start.tv_sec * 1000 + start.tv_usec / 1000);
   
-  const int output_size = 1000;
   const size_t num_results = 5;
   const float threshold = 0.001f;
 
@@ -273,11 +274,11 @@ float TensorFlow::predict(cv::Mat const & cvimg, std::vector<predresult> & resul
   switch (interpreter->tensor(output)->type)
   {
   case kTfLiteFloat32:
-    get_top_n<float>(interpreter->typed_output_tensor<float>(0), output_size, results, true);
+    get_top_n<float>(interpreter->typed_output_tensor<float>(0), numlabels, results, true);
     break;
     
   case kTfLiteUInt8:
-    get_top_n<uint8_t>(interpreter->typed_output_tensor<uint8_t>(0), output_size, results, false);
+    get_top_n<uint8_t>(interpreter->typed_output_tensor<uint8_t>(0), numlabels, results, false);
     break;
 
   default:

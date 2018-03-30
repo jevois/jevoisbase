@@ -36,14 +36,14 @@
     any have scored above a minimum confidence threshold. When nothing is recognized with sufficiently high confidence,
     there is no output.
 
-    This module runs a TensorFlow network and shows the top-scoring results. The network is currently a bit slow, hence
-    it is only run once in a while. Point your camera towards some interesting object, make the object fit in the
-    picture shown at right (which will be fed to the neural network), keep it stable, and wait for TensorFlow to tell
-    you what it found. The framerate figures shown at the bottom left of the display reflect the speed at which each new
-    video frame from the camera is processed, but in this module this just amounts to converting the image to RGB,
-    sending it to the neural network for processing in a separate thread, and creating the demo display. Actual network
-    inference speed (time taken to compute the predictions on one image) is shown at the bottom right. See below for how
-    to trade-off speed and accuracy.
+    This module runs a TensorFlow network and shows the top-scoring results. Larger deep networks can be a bit slow,
+    hence the network prediction is only run once in a while. Point your camera towards some interesting object, make
+    the object fit in the picture shown at right (which will be fed to the neural network), keep it stable, and wait for
+    TensorFlow to tell you what it found. The framerate figures shown at the bottom left of the display reflect the
+    speed at which each new video frame from the camera is processed, but in this module this just amounts to converting
+    the image to RGB, sending it to the neural network for processing in a separate thread, and creating the demo
+    display. Actual network inference speed (time taken to compute the predictions on one image) is shown at the bottom
+    right. See below for how to trade-off speed and accuracy.
 
     Note that by default this module runs different flavors of MobileNets trained on the ImageNet dataset.  There are
     1000 different kinds of objects (object classes) that these networks can recognize (too long to list here). The

@@ -23,7 +23,7 @@
 #include <jevoisbase/Components/ObjectDetection/TensorFlow.H>
 #include <jevoisbase/Components/Saliency/Saliency.H>
 
-// icon from https://pjreddie.com/darknet/
+// icon from tensorflow youtube
 
 static jevois::ParameterCategory const ParamCateg("TensorFlow Saliency Options");
 
