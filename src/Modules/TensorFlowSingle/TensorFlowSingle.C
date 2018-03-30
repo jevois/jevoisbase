@@ -36,6 +36,8 @@
     any have scored above a minimum confidence threshold. When nothing is recognized with sufficiently high confidence,
     there is no output.
 
+    \youtube{TRk8rCuUVEE}
+
     This module runs a TensorFlow network and shows the top-scoring results. Larger deep networks can be a bit slow,
     hence the network prediction is only run once in a while. Point your camera towards some interesting object, make
     the object fit in the picture shown at right (which will be fed to the neural network), keep it stable, and wait for
@@ -116,14 +118,17 @@
     Using your own network
     ----------------------
 
+    For a step-by-step tutorial, see [Training custom TensorFlow networks for
+    JeVois](http://jevois.org/tutorials/UserTensorFlowTraining.html).
+
     This module supports RGB or grayscale inputs, byte or float32. You should create and train your network using fast
     GPUs, and then follow the instruction here to convert your trained network to TFLite format:
 
-    https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/lite
+    https://www.tensorflow.org/mobile/tflite/
 
     Then you just need to create a directory under <b>JEVOIS:/share/tensorflow/</B> with the name of your network, and,
     in there, two files, \b labels.txt with the category labels, and \b model.tflite with your model converted to
-    TensorFlow Lite (flatbuffer format). Finally, edit <B>JEVOIS:/modules/JeVois/TensorFlowSingle/params.cfg</B> to
+    TensorFlow Lite (flatbuffer format). Finally, edit <B>JEVOIS:/modules/JeVois/TensorFlowEasy/params.cfg</B> to
     select your new network when the module is launched.
 
 

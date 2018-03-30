@@ -41,6 +41,8 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the foc
     See http://ilab.usc.edu/bu/ for more information about saliency detection, and https://www.tensorflow.org for more
     information about the TensorFlow deep neural network framework.
 
+    \youtube{TRk8rCuUVEE}
+
     This module runs a TensorFlow network on an image window around the most salient point and shows the top-scoring
     results. We alternate, on every other frame, between updating the salient window crop location, and predicting what
     is in it. Actual network inference speed (time taken to compute the predictions on one image crop) is shown at the
@@ -103,6 +105,22 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the foc
       TFR category score
       \endverbatim
       where \a category is the category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0
+
+    Using your own network
+    ----------------------
+
+    For a step-by-step tutorial, see [Training custom TensorFlow networks for
+    JeVois](http://jevois.org/tutorials/UserTensorFlowTraining.html).
+
+    This module supports RGB or grayscale inputs, byte or float32. You should create and train your network using fast
+    GPUs, and then follow the instruction here to convert your trained network to TFLite format:
+
+    https://www.tensorflow.org/mobile/tflite/
+
+    Then you just need to create a directory under <b>JEVOIS:/share/tensorflow/</B> with the name of your network, and,
+    in there, two files, \b labels.txt with the category labels, and \b model.tflite with your model converted to
+    TensorFlow Lite (flatbuffer format). Finally, edit <B>JEVOIS:/modules/JeVois/TensorFlowEasy/params.cfg</B> to
+    select your new network when the module is launched.
 
     @author Laurent Itti
 

@@ -46,6 +46,8 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the fix
     any have scored above a minimum confidence threshold. When nothing is recognized with sufficiently high confidence,
     there is no output.
 
+    \youtube{TRk8rCuUVEE}
+
     This module runs a TensorFlow network and shows the top-scoring results. In this module, we run the deep network on
     every video frame, so framerate will vary depending on network complexity (see below). Point your camera towards
     some interesting object, make the object fit within the grey box shown in the video (which will be fed to the neural
@@ -104,10 +106,13 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the fix
     Using your own network
     ----------------------
 
+    For a step-by-step tutorial, see [Training custom TensorFlow networks for
+    JeVois](http://jevois.org/tutorials/UserTensorFlowTraining.html).
+
     This module supports RGB or grayscale inputs, byte or float32. You should create and train your network using fast
     GPUs, and then follow the instruction here to convert your trained network to TFLite format:
 
-    https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/lite
+    https://www.tensorflow.org/mobile/tflite/
 
     Then you just need to create a directory under <b>JEVOIS:/share/tensorflow/</B> with the name of your network, and,
     in there, two files, \b labels.txt with the category labels, and \b model.tflite with your model converted to
@@ -117,7 +122,7 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the fix
 
     @author Laurent Itti
 
-    @displayname TensorFlow Single
+    @displayname TensorFlow Easy
     @videomapping NONE 0 0 0.0 YUYV 320 240 60.0 JeVois TensorFlowEasy
     @videomapping YUYV 320 308 30.0 YUYV 320 240 30.0 JeVois TensorFlowEasy
     @videomapping YUYV 640 548 30.0 YUYV 640 480 30.0 JeVois TensorFlowEasy
