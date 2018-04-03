@@ -374,7 +374,7 @@ else (JEVOIS_PLATFORM)
   set(JEVOIS_DEPEND "jevois-host (>=${JEVOIS_VERSION_MAJOR}.${JEVOIS_VERSION_MINOR}.${JEVOIS_VERSION_PATCH})")
 endif (JEVOIS_PLATFORM)
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${JEVOIS_DEPEND}, libgles2-mesa, libgles2-mesa-dev")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${JEVOIS_DEPEND}, libgles2-mesa, libgles2-mesa-dev, curl")
 
 # Use helper from JeVois.cmake for all other settings:
 jevois_setup_cpack("jevoisbase")
