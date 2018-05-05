@@ -64,7 +64,9 @@ JEVOIS_DECLARE_PARAMETER(vpconf, float, "Minimum vanishing point confidence requ
     - Serial message type: \b 1D
     - `id`: always \b vp (shorthand for vanishing point)
     - `x`: standardized 2D horizontal coordinate of the vanishing point
-    - `w`: always 0
+    - `w`: the vanishing point has no width since it is a single point. However, we here use the `w` field to represent
+      confidence in the vanishing point detection, between 0.0 (very low confidence) and 1.0 (high conidence that the
+      location was well detected).
     - `extra`: none (empty string)
 
     Trying it out
@@ -126,8 +128,10 @@ class RoadNavigation : public jevois::StdModule, jevois::Parameter<vpconf>
       jevois::RawImage visual; // unallocated pixels, will not draw anything
       itsRoadFinder->process(imggray, visual);
       
-      // Get the filtered target point x and send to serial:
-      sendSerialImg1Dx(imggray.cols, itsRoadFinder->getFilteredTargetX(), 0.0F, "vp");
+      // Get the vanishing point and send to serial:
+      int const w = imggray.cols;
+      std::pair<Point2D<int>, float> vp = itsRoadFinder->getCurrVanishingPoint();
+      if (vp.second >= vpconf::get()) sendSerialImg1Dx(w, vp.first.i, vp.second * w * 0.0005F, "vp");
     }
 
     // ####################################################################################################
@@ -168,7 +172,7 @@ class RoadNavigation : public jevois::StdModule, jevois::Parameter<vpconf>
 
       // Get the vanishing point and send to serial:
       std::pair<Point2D<int>, float> vp = itsRoadFinder->getCurrVanishingPoint();
-      if (vp.second >= vpconf::get()) sendSerialImg1Dx(w, vp.first.i, 0.0F, "vp");
+      if (vp.second >= vpconf::get()) sendSerialImg1Dx(w, vp.first.i, vp.second * w * 0.0005F, "vp");
       
       // Write some extra info about the vp:
       std::ostringstream otxt; otxt << std::fixed << std::setprecision(3);

@@ -152,15 +152,15 @@ void FilterGPU::process(cv::Mat const & src, cv::Mat & dst)
     
     GL_CHECK(glGenFramebuffers(1, &itsFramebufferId));
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, itsFramebufferId));
-
-	GL_CHECK(glGenRenderbuffers(1, &itsRenderbufferId));
-	GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, itsRenderbufferId));
-	GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, dstformat, dst.cols, dst.rows));
+    
+    GL_CHECK(glGenRenderbuffers(1, &itsRenderbufferId));
+    GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, itsRenderbufferId));
+    GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, dstformat, dst.cols, dst.rows));
     GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, itsRenderbufferId));
-
+    
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
       LFATAL("Framebuffer creation failed");
-
+    
     itsRenderWidth = dst.cols; itsRenderHeight = dst.rows; itsRenderType = dst.type();
     LINFO("Render buffer " << itsRenderWidth << 'x' << itsRenderHeight << ' ' <<
           (dst.channels() == 2 ? "RGB565" : "RGBA") << " ready.");
