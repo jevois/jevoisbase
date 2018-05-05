@@ -294,7 +294,9 @@ void RoadFinder::process(cv::Mat const & img, jevois::RawImage & visual)
   // Track lines in a thread if we have any. Do not access itsCurrentLines or destroy cvEdgeMap until done:
   std::future<void> track_fut;
   if (itsCurrentLines.empty() == false)
-    track_fut = std::async(std::launch::async, [&]() {
+  {
+    ///// FIXME parallelizing this is problematic with no USB out
+    ////    track_fut = std::async(std::launch::async, [&]() {
         // Track the vanishing lines:
         trackVanishingLines(cvEdgeMap, itsCurrentLines, visual);
         
@@ -309,7 +311,8 @@ void RoadFinder::process(cv::Mat const & img, jevois::RawImage & visual)
         itsCenterPoint              = cp;
         itsTargetPoint              = tp;
         itsVanishingPointConfidence = confidence;
-      });
+	////   });
+  }
   else
   {
     itsVanishingPoint           = Point2D<int>  (-1,-1);
@@ -1335,10 +1338,11 @@ void RoadFinder::trackVanishingLines(cv::Mat const & edgeMap, std::vector<Line> 
         
         float score = getLineFitness(pn1, pn2, edgeMap, points, visual);
 
-        // Debug drawing:
+	Line l; updateLine(l, points, score, edgeMap.cols, edgeMap.rows);
+
+	// Debug drawing:
         if (visual.valid())
         {
-          Line l; updateLine(l, points, score, edgeMap.cols, edgeMap.rows);
           jevois::rawimage::drawLine(visual, pn1.i, pn1.j, pn2.i, pn2.j, 0, jevois::yuyv::MedPurple);
           for (Point2D<int> const & p : points)
             jevois::rawimage::drawDisk(visual, p.i, p.j, 1, jevois::yuyv::MedPurple);
