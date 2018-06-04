@@ -81,7 +81,7 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     The parameter \p netin allows you to rescale the neural network to the specified size. Beware that this will only
     work if the network used is fully convolutional (as is the case of the default tiny-yolo network). This not only
     allows you to adjust processing speed (and, conversely, accuracy), but also to better match the network to the input
-    images (e.g., the default size for tiny-yolo is 426x416, and, thus, passing it a input image of size 640x480 will
+    images (e.g., the default size for tiny-yolo is 416x416, and, thus, passing it a input image of size 640x480 will
     result in first scaling that input to 416x312, then letterboxing it by adding gray borders on top and bottom so that
     the final input to the network is 416x416). This letterboxing can be completely avoided by just resizing the network
     to 320x240.
