@@ -111,7 +111,7 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
 
     @displayname Darknet Saliency
     @videomapping NONE 0 0 0.0 YUYV 320 240 5.0 JeVois DarknetSaliency
-    @videomapping YUYV 460 240 15.0 YUYV 320 240 15.0 JeVois DarknetSaliency
+    @videomapping YUYV 460 240 15.0 YUYV 320 240 15.0 JeVois DarknetSaliency # not for mac (width not multiple of 16)
     @videomapping YUYV 560 240 15.0 YUYV 320 240 15.0 JeVois DarknetSaliency
     @videomapping YUYV 880 480 15.0 YUYV 640 480 15.0 JeVois DarknetSaliency # set foa param to 256 256
     @email itti\@usc.edu

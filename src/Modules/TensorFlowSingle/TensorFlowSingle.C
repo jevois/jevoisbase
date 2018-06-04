@@ -68,9 +68,9 @@
     -----------------------------
 
     When using a video mapping with USB output, the cropped window sent to the network is automatically sized to a
-    square size that is the difference between the USB output video width and the camera sensor input width minus 2
-    pixels (e.g., when USB video mode is 546x240 and camera sensor mode is 320x240, the network will be resized to
-    224x224 since 224=546-2-320).
+    square size that is the difference between the USB output video width and the camera sensor input width minus 16
+    pixels (e.g., when USB video mode is 560x240 and camera sensor mode is 320x240, the network will be resized to
+    224x224 since 224=560-16-320).
 
     The network actual input size varies depending on which network is used; for example, mobilenet_v1_0.25_128_quant
     expects 128x128 input images, while mobilenet_v1_1.0_224 expects 224x224. We automatically rescale the cropped
@@ -79,16 +79,16 @@
 
     For example:
 
-    - with USB output 450x240 (crop size 128x128), mobilenet_v1_0.25_128_quant (network size 128x128), runs at about
+    - with USB output 464x240 (crop size 128x128), mobilenet_v1_0.25_128_quant (network size 128x128), runs at about
       12ms/prediction (83.3 frames/s).
 
-    - with USB output 450x240 (crop size 128x128), mobilenet_v1_0.5_128_quant (network size 128x128), runs at about
+    - with USB output 464x240 (crop size 128x128), mobilenet_v1_0.5_128_quant (network size 128x128), runs at about
       26ms/prediction (38.5 frames/s).
 
-    - with USB output 546x240 (crop size 224x224), mobilenet_v1_0.25_224_quant (network size 224x224), runs at about
+    - with USB output 560x240 (crop size 224x224), mobilenet_v1_0.25_224_quant (network size 224x224), runs at about
       35ms/prediction (28.5 frames/s).
 
-    - with USB output 546x240 (crop size 224x224), mobilenet_v1_1.0_224_quant (network size 224x224), runs at about
+    - with USB output 560x240 (crop size 224x224), mobilenet_v1_1.0_224_quant (network size 224x224), runs at about
       185ms/prediction (5.4 frames/s).
 
     When using a videomapping with no USB output, the image crop is directly taken to match the network input size, so
@@ -136,9 +136,9 @@
 
     @displayname TensorFlow Single
     @videomapping NONE 0 0 0.0 YUYV 320 240 30.0 JeVois TensorFlowSingle
-    @videomapping YUYV 546 240 15.0 YUYV 320 240 15.0 JeVois TensorFlowSingle
-    @videomapping YUYV 450 240 15.0 YUYV 320 240 15.0 JeVois TensorFlowSingle
-    @videomapping YUYV 866 480 15.0 YUYV 640 480 15.0 JeVois TensorFlowSingle
+    @videomapping YUYV 560 240 15.0 YUYV 320 240 15.0 JeVois TensorFlowSingle
+    @videomapping YUYV 464 240 15.0 YUYV 320 240 15.0 JeVois TensorFlowSingle
+    @videomapping YUYV 880 480 15.0 YUYV 640 480 15.0 JeVois TensorFlowSingle
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2017 by Laurent Itti, iLab and the University of Southern California
@@ -248,18 +248,18 @@ class TensorFlowSingle : public jevois::Module
           jevois::rawimage::paste(inimg, outimg, 0, 0);
           jevois::rawimage::writeText(outimg, "JeVois TensorFlow - input", 3, 3, jevois::yuyv::White);
 
-	  // Draw a 2-pixel wide rectangle:
-	  jevois::rawimage::drawFilledRect(outimg, w, 0, 2, h, jevois::yuyv::MedGrey);
+	  // Draw a 16-pixel wide rectangle:
+	  jevois::rawimage::drawFilledRect(outimg, w, 0, 16, h, jevois::yuyv::MedGrey);
 	  
           // Paste the latest prediction results, if any, otherwise a wait message:
           cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
           if (itsRawPrevOutputCv.empty() == false)
-            itsRawPrevOutputCv.copyTo(outimgcv(cv::Rect(w + 2, 0, itsRawPrevOutputCv.cols, itsRawPrevOutputCv.rows)));
+            itsRawPrevOutputCv.copyTo(outimgcv(cv::Rect(w + 16, 0, itsRawPrevOutputCv.cols, itsRawPrevOutputCv.rows)));
           else
           {
-            jevois::rawimage::drawFilledRect(outimg, w + 2, 0, outimg.width - w, h, jevois::yuyv::Black);
-            jevois::rawimage::writeText(outimg, "Loading network -", w + 5, 3, jevois::yuyv::White);
-            jevois::rawimage::writeText(outimg, "please wait...", w + 5, 15, jevois::yuyv::White);
+            jevois::rawimage::drawFilledRect(outimg, w + 16, 0, outimg.width - w, h, jevois::yuyv::Black);
+            jevois::rawimage::writeText(outimg, "Loading network -", w + 19, 3, jevois::yuyv::White);
+            jevois::rawimage::writeText(outimg, "please wait...", w + 19, 15, jevois::yuyv::White);
           }
         });
 
@@ -284,9 +284,9 @@ class TensorFlowSingle : public jevois::Module
             cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
             
             // Update our output image: First paste the image we have been making predictions on:
-            itsRawInputCv.copyTo(outimgcv(cv::Rect(w + 2, 0, cropw, croph)));
-            jevois::rawimage::drawFilledRect(outimg, w + 2, croph, cropw, h - croph, jevois::yuyv::Black);
-	    jevois::rawimage::drawFilledRect(outimg, w, 0, 2, h, jevois::yuyv::MedGrey);
+            itsRawInputCv.copyTo(outimgcv(cv::Rect(w + 16, 0, cropw, croph)));
+            jevois::rawimage::drawFilledRect(outimg, w + 16, croph, cropw, h - croph, jevois::yuyv::Black);
+	    jevois::rawimage::drawFilledRect(outimg, w, 0, 16, h, jevois::yuyv::MedGrey);
 
             // Then draw the detections: either below the detection crop if there is room, or on top of it if not enough
             // room below:
@@ -295,7 +295,7 @@ class TensorFlowSingle : public jevois::Module
             for (auto const & p : itsResults)
             {
               jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.second.c_str(), p.first),
-                                          w + 5, y, jevois::yuyv::White);
+                                          w + 19, y, jevois::yuyv::White);
               y += 12;
             }
 
@@ -304,11 +304,11 @@ class TensorFlowSingle : public jevois::Module
 
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
-                                        w + 5, h - 11, jevois::yuyv::White);
+                                        w + 19, h - 11, jevois::yuyv::White);
 
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
             itsRawPrevOutputCv = cv::Mat(h, cropw, CV_8UC2);
-            outimgcv(cv::Rect(w + 2, 0, cropw, h)).copyTo(itsRawPrevOutputCv);
+            outimgcv(cv::Rect(w + 16, 0, cropw, h)).copyTo(itsRawPrevOutputCv);
 
             // Switch to next frame:
             ++itsFrame;
@@ -327,8 +327,8 @@ class TensorFlowSingle : public jevois::Module
         paste_fut.get();
 
         // In this module, we use square crops for the network, with size given by USB width - camera width:
-        if (outimg.width < inimg.width + 2) LFATAL("USB output image must be larger than camera input");
-        int const cropw = outimg.width - inimg.width - 2; // 2 pix separator to distinguish darknet vs tensorflow
+        if (outimg.width < inimg.width + 16) LFATAL("USB output image must be larger than camera input");
+        int const cropw = outimg.width - inimg.width - 16; // 16 pix separator to distinguish darknet vs tensorflow
         int const croph = cropw; // square crop
         
         // Check input vs network dims:
