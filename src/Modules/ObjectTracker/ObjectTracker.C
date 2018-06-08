@@ -16,6 +16,7 @@
 /*! \file */
 
 #include <jevois/Core/Module.H>
+#include <jevoisbase/Components/ObjectDetection/BlobDetector.H>
 #include <jevois/Debug/Log.H>
 #include <jevois/Util/Utils.H>
 #include <jevois/Image/RawImageOps.H>
@@ -23,7 +24,6 @@
 #include <jevois/Util/Coordinates.H>
 
 #include <linux/videodev2.h>
-#include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <string.h>
 
@@ -47,41 +47,6 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // icon by Roundicons in miscellaneous at flaticon
-
-static jevois::ParameterCategory const ParamCateg("ObjectTracker Options");
-
-//! Parameter \relates ObjectTracker
-JEVOIS_DECLARE_PARAMETER(hrange, jevois::Range<unsigned char>, "Range of H values for HSV window",
-                         jevois::Range<unsigned char>(10, 245), ParamCateg);
-
-//! Parameter \relates ObjectTracker
-JEVOIS_DECLARE_PARAMETER(srange, jevois::Range<unsigned char>, "Range of S values for HSV window",
-                         jevois::Range<unsigned char>(10, 245), ParamCateg);
-
-//! Parameter \relates ObjectTracker
-JEVOIS_DECLARE_PARAMETER(vrange, jevois::Range<unsigned char>, "Range of V values for HSV window",
-                         jevois::Range<unsigned char>(10, 245), ParamCateg);
-
-//! Parameter \relates ObjectTracker
-JEVOIS_DECLARE_PARAMETER(maxnumobj, size_t, "Max number of objects to declare a clean image",
-                         10, ParamCateg);
-
-//! Parameter \relates ObjectTracker
-JEVOIS_DECLARE_PARAMETER(objectarea, jevois::Range<unsigned int>, "Range of object area (in pixels) to track",
-                         jevois::Range<unsigned int>(20*20, 100*100), ParamCateg);
-
-//! Parameter \relates ObjectTracker
-JEVOIS_DECLARE_PARAMETER(erodesize, size_t, "Erosion structuring element size (pixels)",
-                         3, ParamCateg);
-
-//! Parameter \relates ObjectTracker
-JEVOIS_DECLARE_PARAMETER(dilatesize, size_t, "Dilation structuring element size (pixels)",
-                         8, ParamCateg);
-
-//! Parameter \relates ObjectTracker
-JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if true",
-                         true, ParamCateg);
-
 
 //! Simple color-based object detection/tracking
 /*! This modules isolates pixels within a given HSV range (hue, saturation, and value of color pixels), does some
@@ -188,13 +153,15 @@ JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class ObjectTracker : public jevois::StdModule,
-                      public jevois::Parameter<hrange, srange, vrange, maxnumobj, objectarea, erodesize,
-                                               dilatesize, debug>
+class ObjectTracker : public jevois::StdModule
 {
   public:
-    //! Default base class constructor ok
-    using jevois::StdModule::StdModule;
+    //! Constructor
+    ObjectTracker(std::string const & instance) :
+	jevois::StdModule(instance)
+    {
+      itsDetector = addSubComponent<BlobDetector>("detector");
+    }
 
     //! Virtual destructor for safe inheritance
     virtual ~ObjectTracker() { }
@@ -212,34 +179,11 @@ class ObjectTracker : public jevois::StdModule,
       // Let camera know we are done processing the input image:
       inframe.done();
 
-      // Threshold the HSV image to only keep pixels within the desired HSV range:
-      cv::Mat imgth;
-      cv::inRange(imghsv, cv::Scalar(hrange::get().min(), srange::get().min(), vrange::get().min()),
-                  cv::Scalar(hrange::get().max(), srange::get().max(), vrange::get().max()), imgth);
+      // Detect blobs and get their contours:
+      auto contours = itsDetector->detect(imghsv);
 
-      // Apply morphological operations to cleanup the image noise:
-      cv::Mat erodeElement = getStructuringElement(cv::MORPH_RECT, cv::Size(erodesize::get(), erodesize::get()));
-      cv::erode(imgth, imgth, erodeElement);
-
-      cv::Mat dilateElement = getStructuringElement(cv::MORPH_RECT, cv::Size(dilatesize::get(), dilatesize::get()));
-      cv::dilate(imgth, imgth, dilateElement);
-
-      // Detect objects by finding contours:
-      std::vector<std::vector<cv::Point> > contours; std::vector<cv::Vec4i> hierarchy;
-      cv::findContours(imgth, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
-      
-      // Identify the "good" objects:
-      if (hierarchy.size() > 0 && hierarchy.size() <= maxnumobj::get())
-        for (int index = 0; index >= 0; index = hierarchy[index][0])
-        {
-	  // Let's examine this contour:
-	  std::vector<cv::Point> const & c = contours[index];
-	  
-	  cv::Moments moment = cv::moments(c);
-          double const area = moment.m00;
-          if (objectarea::get().contains(int(area + 0.4999)))
-	    sendSerialContour2D(w, h, c, "blob"); // Send coords to serial port (for arduino, etc)
-	}
+      // Send a serial message for each detected blob:
+      for (auto const & c : contours) sendSerialContour2D(w, h, c, "blob");
     }
     
     //! Processing function, with USB video output
@@ -267,75 +211,51 @@ class ObjectTracker : public jevois::StdModule,
       cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
       cv::Mat imghsv; cv::cvtColor(imgbgr, imghsv, cv::COLOR_BGR2HSV);
 
-      // Threshold the HSV image to only keep pixels within the desired HSV range:
-      cv::Mat imgth;
-      cv::inRange(imghsv, cv::Scalar(hrange::get().min(), srange::get().min(), vrange::get().min()),
-                  cv::Scalar(hrange::get().max(), srange::get().max(), vrange::get().max()), imgth);
+      // Detect blobs and get their contours:
+      auto contours = itsDetector->detect(imghsv);
 
       // Wait for paste to finish up:
       paste_fut.get();
 
       // Let camera know we are done processing the input image:
       inframe.done();
-      
-      // Apply morphological operations to cleanup the image noise:
-      cv::Mat erodeElement = getStructuringElement(cv::MORPH_RECT, cv::Size(erodesize::get(), erodesize::get()));
-      cv::erode(imgth, imgth, erodeElement);
 
-      cv::Mat dilateElement = getStructuringElement(cv::MORPH_RECT, cv::Size(dilatesize::get(), dilatesize::get()));
-      cv::dilate(imgth, imgth, dilateElement);
+      // Draw all detected contours in a thread:
+      std::future<void> draw_fut = std::async(std::launch::async, [&]() {
+	  // We reinterpret the top portion of our YUYV output image as an opencv 8UC2 image:
+	  cv::Mat outuc2 = jevois::rawimage::cvImage(outimg); // pixel data shared
+	  cv::drawContours(outuc2, contours, -1, jevois::yuyv::LightPink, 2, 8);
+	});
+  
+      // Send a serial message and draw a circle for each detected blob:
+      for (auto const & c : contours)
+      {
+	sendSerialContour2D(w, h, c, "blob");
 
-      // Detect objects by finding contours:
-      std::vector<std::vector<cv::Point> > contours; std::vector<cv::Vec4i> hierarchy;
-      cv::findContours(imgth, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
-
-      // If desired, draw all contours in a thread:
-      std::future<void> draw_fut;
-      if (debug::get())
-        draw_fut = std::async(std::launch::async, [&]() {
-            // We reinterpret the top portion of our YUYV output image as an opencv 8UC2 image:
-            cv::Mat outuc2(imgth.rows, imgth.cols, CV_8UC2, outimg.pixelsw<unsigned char>()); // pixel data shared
-            for (size_t i = 0; i < contours.size(); ++i)
-              cv::drawContours(outuc2, contours, i, jevois::yuyv::LightPink, 2, 8, hierarchy);
-          });
-      
-      // Identify the "good" objects:
-      int numobj = 0;
-      // Identify the "good" objects:
-      if (hierarchy.size() > 0 && hierarchy.size() <= maxnumobj::get())
-        for (int index = 0; index >= 0; index = hierarchy[index][0])
-        {
-	  // Let's examine this contour:
-	  std::vector<cv::Point> const & c = contours[index];
-	  
-	  cv::Moments moment = cv::moments(c);
-          double const area = moment.m00;
-          if (objectarea::get().contains(int(area + 0.4999)))
-	  {
-	    ++numobj;
-	    
-	    int const x = int(moment.m10 / area + 0.4999);
-	    int const y = int(moment.m01 / area + 0.4999);
-	    jevois::rawimage::drawCircle(outimg, x, y, 20, 1, jevois::yuyv::LightGreen);
-	    
-	    sendSerialContour2D(w, h, c, "blob"); // Send coords to serial port (for arduino, etc)
-	  }
-	}
+	cv::Moments moment = cv::moments(c);
+	double const area = moment.m00;
+	int const x = int(moment.m10 / area + 0.4999);
+	int const y = int(moment.m01 / area + 0.4999);
+	jevois::rawimage::drawCircle(outimg, x, y, 20, 1, jevois::yuyv::LightGreen);
+      }
       
       // Show number of detected objects:
-      jevois::rawimage::writeText(outimg, "Detected " + std::to_string(numobj) + " objects.",
+      jevois::rawimage::writeText(outimg, "Detected " + std::to_string(contours.size()) + " objects.",
                                   3, h + 2, jevois::yuyv::White);
       
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
 
-      // Possibly wait until all contours are drawn, if they had been requested:
-      if (draw_fut.valid()) draw_fut.get();
+      // Wait until all contours are drawn, if they had been requested:
+      draw_fut.get();
       
       // Send the output image with our processing results to the host over USB:
       outframe.send();
     }
+    
+  private:
+    std::shared_ptr<BlobDetector> itsDetector;
 };
 
 // Allow the module to be loaded as a shared object (.so) file:
