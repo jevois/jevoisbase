@@ -110,6 +110,27 @@ JEVOIS_DECLARE_PARAMETER(debug, bool, "Show contours of all object candidates if
     - `w`, `h`: standardized object size
     - `extra`: none (empty string)
 
+    \jvversion{1.8.1}: Note that this module sends one message per detected object (blob) and per frame. You may want to
+    specify `setpar serstamp Frame` if you need to get all the objects on one given frame (they will have the same frame
+    number prefix). Here is an example output with `setpar serstyle Detail` and `setpar serstamp Frame` (see \ref
+    UserSerialStyle for more info about \p serstamp and \p serstyle):
+
+    \verbatim
+    2940 D2 blob 4 -238 237 -238 19 13 19 13 237
+    2940 D2 blob 4 266 209 194 206 213 -277 285 -274
+    2940 D2 blob 4 575 -243 499 -511 613 -544 689 -275
+    2940 D2 blob 4 -150 -413 -150 -613 50 -613 50 -413
+    2940 D2 blob 4 -913 -306 -1000 -306 -1000 -750 -913 -750
+    2941 D2 blob 4 -313 119 -313 -106 -63 -106 -63 119
+    2941 D2 blob 4 189 105 115 99 157 -385 231 -379
+    2941 D2 blob 4 469 -275 469 -500 575 -500 575 -275
+    2941 D2 blob 4 -200 -531 -200 -744 -13 -744 -13 -531
+    2942 D2 blob 4 -381 -13 -381 -244 -113 -244 -113 -13
+    2942 D2 blob 4 478 -213 310 -402 414 -494 582 -305
+    2942 D2 blob 4 144 -6 53 -15 114 -668 206 -660
+    \endverbatim
+    In this example, we detected 5 blobs on frame 2940, then 4 blobs on frame 2941, then 3 blobs on frame 2942.
+
     Trying it out
     -------------
 
@@ -206,24 +227,21 @@ class ObjectTracker : public jevois::StdModule,
       // Detect objects by finding contours:
       std::vector<std::vector<cv::Point> > contours; std::vector<cv::Vec4i> hierarchy;
       cv::findContours(imgth, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
-
+      
       // Identify the "good" objects:
       if (hierarchy.size() > 0 && hierarchy.size() <= maxnumobj::get())
-      {
-        double refArea = 0.0; int x = 0, y = 0; int refIdx = 0;
-
         for (int index = 0; index >= 0; index = hierarchy[index][0])
         {
-          cv::Moments moment = cv::moments((cv::Mat)contours[index]);
-          double area = moment.m00;
-          if (objectarea::get().contains(int(area + 0.4999)) && area > refArea) { refArea = area; refIdx = index; }
-        }
-        
-        // Send coords to serial port (for arduino, etc):
-        if (refArea > 0.0) sendSerialContour2D(w, h, contours[refIdx], "blob");
-      }
+	  // Let's examine this contour:
+	  std::vector<cv::Point> const & c = contours[index];
+	  
+	  cv::Moments moment = cv::moments(c);
+          double const area = moment.m00;
+          if (objectarea::get().contains(int(area + 0.4999)))
+	    sendSerialContour2D(w, h, c, "blob"); // Send coords to serial port (for arduino, etc)
+	}
     }
-
+    
     //! Processing function, with USB video output
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
@@ -283,28 +301,27 @@ class ObjectTracker : public jevois::StdModule,
       
       // Identify the "good" objects:
       int numobj = 0;
+      // Identify the "good" objects:
       if (hierarchy.size() > 0 && hierarchy.size() <= maxnumobj::get())
-      {
-        double refArea = 0.0; int x = 0, y = 0; int refIdx = 0;
-
         for (int index = 0; index >= 0; index = hierarchy[index][0])
         {
-          cv::Moments moment = cv::moments((cv::Mat)contours[index]);
-          double area = moment.m00;
-          if (objectarea::get().contains(int(area + 0.4999)) && area > refArea)
-          { x = moment.m10 / area + 0.4999; y = moment.m01 / area + 0.4999; refArea = area; refIdx = index; }
-        }
-        
-        if (refArea > 0.0)
-        {
-          ++numobj;
-          jevois::rawimage::drawCircle(outimg, x, y, 20, 1, jevois::yuyv::LightGreen);
-
-          // Send coords to serial port (for arduino, etc):
-          sendSerialContour2D(w, h, contours[refIdx], "blob");
-        }
-      }
-
+	  // Let's examine this contour:
+	  std::vector<cv::Point> const & c = contours[index];
+	  
+	  cv::Moments moment = cv::moments(c);
+          double const area = moment.m00;
+          if (objectarea::get().contains(int(area + 0.4999)))
+	  {
+	    ++numobj;
+	    
+	    int const x = int(moment.m10 / area + 0.4999);
+	    int const y = int(moment.m01 / area + 0.4999);
+	    jevois::rawimage::drawCircle(outimg, x, y, 20, 1, jevois::yuyv::LightGreen);
+	    
+	    sendSerialContour2D(w, h, c, "blob"); // Send coords to serial port (for arduino, etc)
+	  }
+	}
+      
       // Show number of detected objects:
       jevois::rawimage::writeText(outimg, "Detected " + std::to_string(numobj) + " objects.",
                                   3, h + 2, jevois::yuyv::White);
