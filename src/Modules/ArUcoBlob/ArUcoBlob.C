@@ -48,13 +48,66 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
     - \jvmod{DemoArUco} for the ArUco algorithm and messages
     - \jvmod{ObjectTracker} for the blob detection algorithm and messages
 
+    The number of parallel blob trackers is determined by parameter \p numtrack, which should be set before the module
+    is initialized, i.e., in the module's \b params.cfg file. It cannot be changed while the module is running.
+
+    The module runs at about 50 frames/s with 3 parallel blob detectors plus ArUco, at 320x240 camera sensor
+    resolution. Increasing to 10 parallel blob detectors will still get you about 25 frames/s (but finding robust
+    non-overlapping HSV ranges for all those detectors will become challenging!) Just make sure that both modules
+    have the same camera settings in their respective \b script.cfg files.
+
+    To configure parameters \p hrange, \p srange, and \p vrange for each detector in the module's \b scrip.cfg, we
+    recommend that you do it one by one using the \jvmod{ObjectTracker} module (which shares the same color blog
+    detection code, just for one HSV range) and the tutorial on <A
+    HREF="http://jevois.org/tutorials/UserColorTracking.html">Tuning the color-based object tracker using a python
+    graphical interface</A>, or the sliders in JeVois Inventor.
+
+    Using the serial outputs
+    ------------------------
+
+    We recommend the following settings (to apply after you load the module, for example in the module's \b script.cfg
+    file:
+    \code{.py}
+    setpar serout USB      # to send to serial-over-USB, or use Hard to send to 4-pin serial port
+    setpar serstyle Normal # to get ID, center location, size
+    setpar serstamp Frame  # to add video frame number to all messages
+    \endcode
+
+    With a scene as shown in this module's screenshots, you would then get outputs like:
+
+    \verbatim
+    1557 N2 U42 -328 -9 706 569
+    1557 N2 U18 338 -241 613 444
+    1557 N2 blob0 616 91 406 244
+    1557 N2 blob1 28 584 881 331
+    1557 N2 blob2 47 -553 469 206
+    1558 N2 U42 -328 -9 706 569
+    1558 N2 U18 338 -241 613 444
+    1558 N2 blob0 547 113 519 275
+    1558 N2 blob1 28 581 881 338
+    1558 N2 blob2 47 -553 469 206
+    1559 N2 U42 -331 -13 700 563
+    1559 N2 U18 338 -244 613 450
+    1559 N2 blob0 369 153 200 194
+    1559 N2 blob0 616 94 381 250
+    1559 N2 blob1 28 581 881 338
+    1559 N2 blob2 47 -553 469 206
+    \endverbatim
+
+    which basically means that, on frame 1557, ArUco markers U42 and U18 were detected, then blob detector named "blob0"
+    (configured for light blue objects in \b script.cfg) detected one blob, then "blob1" (configured for yellow) also
+    detected one, and finally "blob2" (configured for green) found one too. That was all for frame 1157, and we then
+    switch to frame 1158 (with essentially the same detections), then frame 1159 (note how blob0 detected 2 different
+    blobs on that frame), and so on. See \ref UserSerialStyle for more info about these messages.
+
     @author Laurent Itti
 
+    @displayname ArUco Blob
     @videomapping YUYV 320 266 30.0 YUYV 320 240 30.0 JeVois ArUcoBlob
     @videomapping NONE 0 0 0.0 YUYV 320 240 30.0 JeVois ArUcoBlob
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
-    @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California
+    @copyright Copyright (C) 2018 by Laurent Itti, iLab and the University of Southern California
     @mainurl http://jevois.org
     @supporturl http://jevois.org/doc
     @otherurl http://iLab.usc.edu
@@ -115,11 +168,8 @@ class ArUcoBlob : public jevois::StdModule,
 		      [this](std::shared_ptr<BlobDetector> b)
 		      {
 			auto c = b->detect(itsImgHsv);
-			if (c.empty() == false)
-			{
-			  std::lock_guard<std::mutex> _(itsBlobMtx);
-			  itsContours[b->instanceName()] = std::move(c);
-			}
+			std::lock_guard<std::mutex> _(itsBlobMtx);
+			itsContours[b->instanceName()] = std::move(c);
 		      }, b));
     }
 
@@ -257,7 +307,6 @@ class ArUcoBlob : public jevois::StdModule,
       // Show number of detected objects:
       std::string str = "Detected ";
       for (auto const & cc : itsContours) str += std::to_string(cc.second.size()) + ' ';
-
       jevois::rawimage::writeText(outimg, str + "blobs.", 3, h + 14, jevois::yuyv::White);
       
       // Show processing fps:
