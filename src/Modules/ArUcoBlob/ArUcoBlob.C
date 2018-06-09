@@ -66,7 +66,7 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
     ------------------------
 
     We recommend the following settings (to apply after you load the module, for example in the module's \b script.cfg
-    file:
+    file):
     \code{.py}
     setpar serout USB      # to send to serial-over-USB, or use Hard to send to 4-pin serial port
     setpar serstyle Normal # to get ID, center location, size
