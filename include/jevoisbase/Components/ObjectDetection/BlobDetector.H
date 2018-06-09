@@ -44,15 +44,17 @@ namespace blobdetector
   static jevois::ParameterCategory const ParamCateg("BlobDetector Options");
 
   //! Parameter \relates ObjectTracker
-  JEVOIS_DECLARE_PARAMETER(hrange, jevois::Range<unsigned char>, "Range of H values for HSV window",
+  JEVOIS_DECLARE_PARAMETER(hrange, jevois::Range<unsigned char>, "Range of H values for HSV window (0=red/do not "
+			   "use because of wraparound, 30=yellow, 45=light green, 60=green, 75=green cyan, 90=cyan, "
+			   "105=light blue, 120=blue, 135=purple, 150=pink)",
 			   jevois::Range<unsigned char>(10, 245), ParamCateg);
   
   //! Parameter \relates ObjectTracker
-  JEVOIS_DECLARE_PARAMETER(srange, jevois::Range<unsigned char>, "Range of S values for HSV window",
+  JEVOIS_DECLARE_PARAMETER(srange, jevois::Range<unsigned char>, "Range of S (saturation) values for HSV window",
 			   jevois::Range<unsigned char>(10, 245), ParamCateg);
   
   //! Parameter \relates ObjectTracker
-  JEVOIS_DECLARE_PARAMETER(vrange, jevois::Range<unsigned char>, "Range of V values for HSV window",
+  JEVOIS_DECLARE_PARAMETER(vrange, jevois::Range<unsigned char>, "Range of V (brightness) values for HSV window",
 			   jevois::Range<unsigned char>(10, 245), ParamCateg);
   
   //! Parameter \relates ObjectTracker

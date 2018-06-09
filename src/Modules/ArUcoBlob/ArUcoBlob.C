@@ -1,0 +1,285 @@
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// JeVois Smart Embedded Machine Vision Toolkit - Copyright (C) 2018 by Laurent Itti, the University of Southern
+// California (USC), and iLab at USC. See http://iLab.usc.edu and http://jevois.org for information about this project.
+//
+// This file is part of the JeVois Smart Embedded Machine Vision Toolkit.  This program is free software; you can
+// redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
+// Foundation, version 2.  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+// License for more details.  You should have received a copy of the GNU General Public License along with this program;
+// if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+//
+// Contact information: Laurent Itti - 3641 Watt Way, HNB-07A - Los Angeles, CA 90089-2520 - USA.
+// Tel: +1 213 740 3527 - itti@pollux.usc.edu - http://iLab.usc.edu - http://jevois.org
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*! \file */
+#include <jevois/Core/Module.H>
+#include <jevoisbase/Components/ObjectDetection/BlobDetector.H>
+#include <jevoisbase/Components/ArUco/ArUco.H>
+#include <jevois/Debug/Log.H>
+#include <jevois/Util/Utils.H>
+#include <jevois/Image/RawImageOps.H>
+#include <jevois/Debug/Timer.H>
+#include <jevois/Util/Coordinates.H>
+
+#include <opencv2/imgproc/imgproc.hpp>
+
+#include <map>
+
+static jevois::ParameterCategory const ParamCateg("ArUcoBlob Options");
+
+//! Parameter \relates ArUcoBlob
+JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to run. They will be named blob0, "
+			 "blob1, etc for parameters and serial messages",
+			   3, ParamCateg);
+ 
+//! Combined ArUco marker + multiple color-based object detection
+/*! This modules 1) detects ArUco markers, and, in parallel, 2) isolates pixels within multiple given HSV ranges
+    (hue, saturation, and value of color pixels), does some cleanups, and extracts object contours.
+    It sends information about detected ArUco tags and color objects over serial.
+
+    This module usually works best with the camera sensor set to manual exposure, manual gain, manual color balance, etc
+    so that HSV color values are reliable. See the file \b script.cfg file in this module's directory for an example of
+    how to set the camera settings each time this module is loaded.
+
+    Since this is a combination module, refer to:
+
+    - \jvmod{DemoArUco} for the ArUco algorithm and messages
+    - \jvmod{ObjectTracker} for the blob detection algorithm and messages
+
+    @author Laurent Itti
+
+    @videomapping YUYV 320 266 30.0 YUYV 320 240 30.0 JeVois ArUcoBlob
+    @videomapping NONE 0 0 0.0 YUYV 320 240 30.0 JeVois ArUcoBlob
+    @email itti\@usc.edu
+    @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
+    @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California
+    @mainurl http://jevois.org
+    @supporturl http://jevois.org/doc
+    @otherurl http://iLab.usc.edu
+    @license GPL v3
+    @distribution Unrestricted
+    @restrictions None
+    \ingroup modules */
+class ArUcoBlob : public jevois::StdModule,
+		  public jevois::Parameter<numtrack>
+{
+  public:
+    // ####################################################################################################
+    //! Constructor
+    // ####################################################################################################
+    ArUcoBlob(std::string const & instance) :
+	jevois::StdModule(instance)
+    {
+      itsArUco = addSubComponent<ArUco>("aruco");
+      // We instantiate the blob detectors in postInit() once their number is finalized
+    }
+
+    // ####################################################################################################
+    //! Post-init: instantiate the blob detectors
+    // ####################################################################################################
+    void postInit() override
+    {
+      numtrack::freeze();
+      
+      for (int i = 0; i < numtrack::get(); ++i)
+	itsBlobs.push_back(addSubComponent<BlobDetector>("blob" + std::to_string(i)));
+    }
+
+    // ####################################################################################################
+    // Pre-unInit: release the blob detectors
+    // ####################################################################################################
+    void preUninit() override
+    {
+      for (auto & b : itsBlobs) removeSubComponent(b);
+      itsBlobs.clear();
+    }
+    
+    // ####################################################################################################
+    //! Virtual destructor for safe inheritance
+    // ####################################################################################################
+    virtual ~ArUcoBlob() { }
+
+    // ####################################################################################################
+    //! Detect blobs in parallel threads
+    // ####################################################################################################
+    void detectBlobs(jevois::RawImage * outimg = nullptr)
+    {
+      itsContours.clear();
+      
+      // In a bunch of threads, detect blobs and get the contours:
+      for (auto & b : itsBlobs)
+	itsBlobFuts.push_back
+	  (std::async(std::launch::async,
+		      [this](std::shared_ptr<BlobDetector> b)
+		      {
+			auto c = b->detect(itsImgHsv);
+			if (c.empty() == false)
+			{
+			  std::lock_guard<std::mutex> _(itsBlobMtx);
+			  itsContours[b->instanceName()] = std::move(c);
+			}
+		      }, b));
+    }
+
+    // ####################################################################################################
+    //! Gather our blob threads and send/draw the results
+    // ####################################################################################################
+    void sendBlobs(unsigned int w, unsigned int h, jevois::RawImage * outimg = nullptr)
+    {
+      for (auto & f : itsBlobFuts)
+	try { f.get(); } catch (...) { LERROR("Ooops, some blob detector threw -- IGNORED"); }
+      itsBlobFuts.clear();
+      
+      // Send a serial message for each detected blob:
+      for (auto const & cc : itsContours)
+	for (auto const & c : cc.second)
+	  sendSerialContour2D(w, h, c, cc.first);
+    }
+
+    // ####################################################################################################
+    //! Detect ArUcos
+    // ####################################################################################################
+    void detectArUco(cv::Mat cvimg, std::vector<int> & ids, std::vector<std::vector<cv::Point2f>> & corners,
+		     std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs,
+		     unsigned int h, jevois::RawImage * outimg = nullptr)
+    {
+      itsArUco->detectMarkers(cvimg, ids, corners);
+
+      if (itsArUco->dopose::get() && ids.empty() == false)
+        itsArUco->estimatePoseSingleMarkers(corners, rvecs, tvecs);
+
+      // Show all the results:
+      if (outimg) itsArUco->drawDetections(*outimg, 3, h+2, ids, corners, rvecs, tvecs);
+    }
+
+    // ####################################################################################################
+    //! Processing function, no USB video output
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe) override
+    {
+      // Wait for next available camera image. Any resolution and format ok:
+      jevois::RawImage inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
+
+      // Convert input image to BGR24, then to HSV:
+      cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
+      cv::cvtColor(imgbgr, itsImgHsv, cv::COLOR_BGR2HSV);
+
+      // Detect blobs in parallel threads:
+      detectBlobs();
+			    
+      // In our thread, detect ArUcos; first convert to gray:
+      cv::Mat cvimg = jevois::rawimage::convertToCvGray(inimg);
+
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      // Detect ArUcos:
+      std::vector<int> ids; std::vector<std::vector<cv::Point2f> > corners; std::vector<cv::Vec3d> rvecs, tvecs;
+      detectArUco(cvimg, ids, corners, rvecs, tvecs, h);
+
+      // Send ArUco serial output:
+      itsArUco->sendSerial(this, ids, corners, w, h, rvecs, tvecs);
+
+      // Done with ArUco, gather the blobs and send the serial messages:
+      sendBlobs(w, h);
+    }
+    
+    // ####################################################################################################
+    //! Processing function, with USB video output
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
+    {
+      static jevois::Timer timer("processing");
+
+      // Wait for next available camera image. Any resolution ok, but require YUYV since we assume it for drawings:
+      jevois::RawImage inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
+      inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
+
+      timer.start();
+
+      // While we process it, start a thread to wait for output frame and paste the input image into it:
+      jevois::RawImage outimg; // main thread should not use outimg until paste thread is complete
+      auto paste_fut = std::async(std::launch::async, [&]() {
+          outimg = outframe.get();
+          outimg.require("output", w, h + 26, inimg.fmt);
+          jevois::rawimage::paste(inimg, outimg, 0, 0);
+          jevois::rawimage::writeText(outimg, "JeVois Color Object Tracker", 3, 3, jevois::yuyv::White);
+          jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height-h, 0x8000);
+        });
+
+      // Convert input image to BGR24, then to HSV:
+      cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
+      cv::cvtColor(imgbgr, itsImgHsv, cv::COLOR_BGR2HSV);
+
+      // Detect blobs in parallel threads:
+      detectBlobs(&outimg);
+			    
+      // In our thread, detect ArUcos; first convert to gray:
+      cv::Mat cvimg = jevois::rawimage::convertToCvGray(inimg);
+
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      // Wait for paste to finish up:
+      paste_fut.get();
+
+      // Detect ArUcos:
+      std::vector<int> ids; std::vector<std::vector<cv::Point2f> > corners; std::vector<cv::Vec3d> rvecs, tvecs;
+      detectArUco(cvimg, ids, corners, rvecs, tvecs, h, &outimg);
+
+      // Send ArUco serial output:
+      itsArUco->sendSerial(this, ids, corners, w, h, rvecs, tvecs);
+
+      // Done with ArUco, gather the blobs and send the serial messages:
+      sendBlobs(w, h);
+
+      // Draw all detected contours in a thread:
+      std::future<void> draw_fut = std::async(std::launch::async, [&]() {
+	  // We reinterpret the top portion of our YUYV output image as an opencv 8UC2 image:
+	  cv::Mat outuc2 = jevois::rawimage::cvImage(outimg); // pixel data shared
+	  for (auto const & cc : itsContours)
+	  {
+	    int color = (cc.first.back() - '0') * 123;
+	    cv::drawContours(outuc2, cc.second, -1, color, 2, 8);
+	    for (auto const & cont : cc.second)
+	    {
+	      cv::Moments moment = cv::moments(cont);
+	      double const area = moment.m00;
+	      int const x = int(moment.m10 / area + 0.4999);
+	      int const y = int(moment.m01 / area + 0.4999);
+	      jevois::rawimage::drawCircle(outimg, x, y, 20, 1, color);
+	    }
+	  }
+	});
+
+      // Show number of detected objects:
+      std::string str = "Detected ";
+      for (auto const & cc : itsContours) str += std::to_string(cc.second.size()) + ' ';
+
+      jevois::rawimage::writeText(outimg, str + "blobs.", 3, h + 14, jevois::yuyv::White);
+      
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
+
+      // Wait until all contours are drawn, if they had been requested:
+      draw_fut.get();
+      
+      // Send the output image with our processing results to the host over USB:
+      outframe.send();
+    }
+
+    // ####################################################################################################
+  protected:
+    std::shared_ptr<ArUco> itsArUco;
+    std::vector<std::shared_ptr<BlobDetector> > itsBlobs;
+    cv::Mat itsImgHsv;
+    std::map<std::string, std::vector<std::vector<cv::Point>>> itsContours;
+    std::vector<std::future<void>> itsBlobFuts;
+    std::mutex itsBlobMtx;
+};
+
+// Allow the module to be loaded as a shared object (.so) file:
+JEVOIS_REGISTER_MODULE(ArUcoBlob);
