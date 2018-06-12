@@ -53,14 +53,14 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
 
     The module runs at about 50 frames/s with 3 parallel blob detectors plus ArUco, at 320x240 camera sensor
     resolution. Increasing to 10 parallel blob detectors will still get you about 25 frames/s (but finding robust
-    non-overlapping HSV ranges for all those detectors will become challenging!) Just make sure that both modules
-    have the same camera settings in their respective \b script.cfg files.
+    non-overlapping HSV ranges for all those detectors will become challenging!)
 
     To configure parameters \p hrange, \p srange, and \p vrange for each detector in the module's \b scrip.cfg, we
-    recommend that you do it one by one using the \jvmod{ObjectTracker} module (which shares the same color blog
-    detection code, just for one HSV range) and the tutorial on <A
+    recommend that you do it one by one for each kind of colored object you want, using the \jvmod{ObjectTracker} module
+    (which shares the same color blob detection code, just for one HSV range) and the tutorial on <A
     HREF="http://jevois.org/tutorials/UserColorTracking.html">Tuning the color-based object tracker using a python
-    graphical interface</A>, or the sliders in JeVois Inventor.
+    graphical interface</A>, or the sliders in JeVois Inventor. Just make sure that both modules have the same camera
+    settings in their respective \b script.cfg files.
 
     Using the serial outputs
     ------------------------
@@ -255,7 +255,7 @@ class ArUcoBlob : public jevois::StdModule,
           outimg = outframe.get();
           outimg.require("output", w, h + 26, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);
-          jevois::rawimage::writeText(outimg, "JeVois Color Object Tracker", 3, 3, jevois::yuyv::White);
+          jevois::rawimage::writeText(outimg, "JeVois ArUco + Color Blobs", 3, 3, jevois::yuyv::White);
           jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height-h, 0x8000);
         });
 
