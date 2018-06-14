@@ -48,8 +48,7 @@ JEVOIS_DECLARE_PARAMETER(quality, int, "Compression quality for MJPEG", 75, jevo
     - QQVGA (160 x 120): up to 60 fps
     - QQCIF (88 x 72): up to 120 fps
 
-    This module only converts pixel type, and is not capable of rescaling images. Thus, input and output image
-    resolutions must match.
+    This module also automatically rescales the image if input and output sizes differ.
 
     Things to try
     -------------
@@ -110,27 +109,11 @@ class Convert : public jevois::Module, public jevois::Parameter<quality>
     //! Processing function
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
-      // Wait for next available camera image:
-      jevois::RawImage inimg = inframe.get(true);
-      unsigned int const w = inimg.width, h = inimg.height;
-
-      // Convert it to BGR24:
-      cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
-  
-      // Let camera know we are done processing the input image:
-      inframe.done();
+      // Wait for next available camera image, convert it to OpenCV BGR:
+      cv::Mat imgbgr = inframe.getCvBGR();
       
-      // Wait for an image from our gadget driver into which we will put our results:
-      jevois::RawImage outimg = outframe.get();
-
-      // Require that output has same dims as input, allow any output format:
-      outimg.require("output", w, h, outimg.fmt);
-
-      // Convert from BGR to desired output format:
-      jevois::rawimage::convertCvBGRtoRawImage(imgbgr, outimg, quality::get());
-      
-      // Send the output image with our processing results to the host over USB:
-      outframe.send();
+      // Send the output image to the host over USB, after possible format conversion and size scaling:
+      outframe.sendCv(imgbgr, quality::get());
     }
 };
 

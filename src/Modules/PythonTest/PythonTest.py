@@ -77,7 +77,7 @@ class PythonTest:
         jevois.LINFO("parseserial received command [{}]".format(str))
         if str == "hello":
             return self.hello()
-        return "ERR: Unsupported command"
+        return "ERR Unsupported command"
     
     # ###################################################################################################
     ## Return a string that describes the custom commands we support, for the JeVois help message

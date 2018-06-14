@@ -91,7 +91,7 @@ namespace saliency
       set to zero, and instead the maps will be empty and the gist entries will be zeroed out. 
     
     See the research paper at http://ilab.usc.edu/publications/doc/Itti_etal98pami.pdf
-    \ingroup components*/
+    \ingroup components */
 class Saliency : public jevois::Component,
                  public jevois::Parameter<saliency::cweight, saliency::iweight, saliency::oweight, saliency::fweight,
                                           saliency::mweight, saliency::centermin, saliency::deltamin, saliency::smscale,

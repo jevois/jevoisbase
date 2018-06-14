@@ -35,9 +35,14 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
 			   3, ParamCateg);
  
 //! Combined ArUco marker + multiple color-based object detection
-/*! This modules 1) detects ArUco markers, and, in parallel, 2) isolates pixels within multiple given HSV ranges
-    (hue, saturation, and value of color pixels), does some cleanups, and extracts object contours.
-    It sends information about detected ArUco tags and color objects over serial.
+/*! This modules 1) detects ArUco markers (small black-and-white geometric patterns which can be used as tags for some
+    objects), and, in parallel, 2) isolates pixels within multiple given HSV ranges (hue, saturation, and value of color
+    pixels), does some cleanups, and extracts object contours.  It sends information about detected ArUco tags and color
+    objects over serial.
+
+    This module was developed to allow students to easily develop visually-guided robots that can at the same time
+    detect ArUco markers placed in the environment to signal certain key objects (e.g., charging station, home base) and
+    colored objects of different kinds (e.g., blue people, green trees, and yellow fires).
 
     This module usually works best with the camera sensor set to manual exposure, manual gain, manual color balance, etc
     so that HSV color values are reliable. See the file \b script.cfg file in this module's directory for an example of
@@ -59,7 +64,7 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
     recommend that you do it one by one for each kind of colored object you want, using the \jvmod{ObjectTracker} module
     (which shares the same color blob detection code, just for one HSV range) and the tutorial on <A
     HREF="http://jevois.org/tutorials/UserColorTracking.html">Tuning the color-based object tracker using a python
-    graphical interface</A>, or the sliders in JeVois Inventor. Just make sure that both modules have the same camera
+    graphical interface</A>, or the sliders in \jvinv. Just make sure that both modules have the same camera
     settings in their respective \b script.cfg files.
 
     Using the serial outputs
@@ -69,13 +74,14 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
     file):
     \code{.py}
     setpar serout USB      # to send to serial-over-USB, or use Hard to send to 4-pin serial port
-    setpar serstyle Normal # to get ID, center location, size
+    setpar serstyle Normal # to get ID, center location, size for every detected color blob and ArUco tag
     setpar serstamp Frame  # to add video frame number to all messages
     \endcode
 
     With a scene as shown in this module's screenshots, you would then get outputs like:
 
     \verbatim
+    ...
     1557 N2 U42 -328 -9 706 569
     1557 N2 U18 338 -241 613 444
     1557 N2 blob0 616 91 406 244
@@ -92,6 +98,7 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
     1559 N2 blob0 616 94 381 250
     1559 N2 blob1 28 581 881 338
     1559 N2 blob2 47 -553 469 206
+    ...
     \endverbatim
 
     which basically means that, on frame 1557, ArUco markers U42 and U18 were detected, then blob detector named "blob0"
@@ -99,6 +106,28 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
     detected one, and finally "blob2" (configured for green) found one too. That was all for frame 1157, and we then
     switch to frame 1158 (with essentially the same detections), then frame 1159 (note how blob0 detected 2 different
     blobs on that frame), and so on. See \ref UserSerialStyle for more info about these messages.
+
+    Running with no video output (standalone mode)
+    ----------------------------------------------
+
+    Try these settings in the global initialization script file of JeVois, which is executed when JeVois powers up, in
+    <b>JEVOIS:/config/initscript.cfg</b>:
+
+    \code{.py}
+    setmapping2 YUYV 320 240 45.0 JeVois ArUcoBlob # to select this module upon power up
+    setpar serout Hard     # to send detection messages to 4-pin serial port
+    setpar serstyle Normal # to get ID, center location, size
+    setpar serstamp Frame  # to add video frame number to all messages
+    streamon               # start capturing and processing camera sensor data
+    \endcode
+
+    Make sure you do not have conflicting settings in the module's \b params.cfg or \b script.cfg file; as a reminder,
+    the order of execution is: 1) \b initscript.cfg runs, which loads the module through the `setmapping2` command; 2)
+    as part of the loading process and before the module is initialized, settings in \b params.cfg are applied; 3) the
+    module is then initialized and commands in \b script.cfg are run; 4) the additional commands following `setmapping2`
+    in \b initscript.cfg are finally run. Next time JeVois starts up, it will automatically load this module and start
+    sending messages to the hardware 4-pin serial port, which you should then connect to an Arduino or other robot
+    controller.
 
     @author Laurent Itti
 

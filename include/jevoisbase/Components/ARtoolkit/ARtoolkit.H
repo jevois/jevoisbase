@@ -68,11 +68,11 @@ namespace artoolkit
   //! Parameter \relates ARtoolkit
   JEVOIS_DECLARE_PARAMETER(threshmode, DictThreshMode, "Dictionary threshold mode to use, affects "
                            "robustness to varying lighting conditions",
-                           DictThreshMode::AR_LABELING_THRESH_MODE_AUTO_OTSU, ParamCateg);
+                           DictThreshMode::AR_LABELING_THRESH_MODE_AUTO_OTSU, DictThreshMode_Values, ParamCateg);
 
   //! Parameter \relates ARtoolkit
   JEVOIS_DECLARE_PARAMETER(dictionary, Dict, "Symbol dictionary to use",
-                           Dict::AR_MATRIX_CODE_3x3_PARITY65, ParamCateg);
+                           Dict::AR_MATRIX_CODE_3x3_PARITY65, Dict_Values, ParamCateg);
 
   //! Parameter \relates ARtoolkit
   JEVOIS_DECLARE_PARAMETER(confthresh, double, "Minimum confidence threshold required for valid detections",

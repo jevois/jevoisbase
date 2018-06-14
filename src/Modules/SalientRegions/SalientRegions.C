@@ -47,7 +47,8 @@ JEVOIS_DECLARE_PARAMETER(inhsigma, float, "Sigma (pixels) used for inhibition of
 
     The number of regions extracted (N) is decided by the height of the desired USB output image, while the (square)
     region size (width and height) is determined by the output image width. Note that region width and height must be a
-    multiple of 4.
+    multiple of 4. ALso note that Mac computers may not be able to grab and display video of width that is not a
+    multiple of 16.
 
     The most salient region is on top, the second most salient region is below the first one, etc.
 

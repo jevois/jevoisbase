@@ -42,7 +42,7 @@ namespace aruco
                            (D7X7_100) (D7X7_250) (D7X7_1000) );
   
   //! Parameter \relates ArUco
-  JEVOIS_DECLARE_PARAMETER(dictionary, Dict, "Symbol dictionary to use", Dict::D4X4_50, ParamCateg);
+  JEVOIS_DECLARE_PARAMETER(dictionary, Dict, "Symbol dictionary to use", Dict::D4X4_50, Dict_Values, ParamCateg);
 
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(dopose, bool, "Compute (and show) pose vectors, requires a valid camera calibration",

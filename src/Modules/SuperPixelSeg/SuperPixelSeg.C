@@ -38,8 +38,8 @@
     ----------------------
 
     When you run this algorithm and obtain a low number of clusters, those may not be well visible to the human eye. For
-    example, if you end up with 10 clusters, they will be take grayscale value 0 to 9, which all look completely black
-    (on a standard monitor where 0 is black and 255 is white). To get started with this module, you may hence want to
+    example, if you end up with 10 clusters, they will take grayscale values 0 to 9, which all look completely black
+    on a standard monitor where 0 is black and 255 is white. To get started with this module, you may hence want to
     change the parameters a bit. For example:
 
     \verbatim

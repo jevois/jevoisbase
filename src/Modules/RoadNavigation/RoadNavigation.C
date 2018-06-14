@@ -42,7 +42,10 @@ JEVOIS_DECLARE_PARAMETER(vpconf, float, "Minimum vanishing point confidence requ
     http://ilab.usc.edu/publications/doc/Chang_etal12iros.pdf
 
     The algorithms combines detection and tracking of line segments at the edges of the road or on the road (e.g., lane
-    dividers), and texture analysis to distinguish the road region from its surroundings.
+    dividers), and texture analysis to distinguish the road region from its surroundings. One strength of this algorithm
+    is that it requires no training. No need to drive your robot on many roads to learn about the appearance of
+    roads. The flipside of this, of course, is that driving on roads which do not look like standard roads or trails may
+    fail.
 
     The algorithm outputs the horizontal coordinate of the vanishing point of the road, which usually is a good
     indication of the road heading (except in very tight bends or corners).

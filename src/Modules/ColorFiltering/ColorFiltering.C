@@ -70,6 +70,8 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
     How to use this module
     ----------------------
 
+    - Either try it with \jvinv using <b>YUYV 640x240 @@ 30 fps</b>, or:
+
     - Open a video viewer on your host computer and select <b>YUYV 640x240 @@ 30 fps</b> (see \ref UserQuick)
 
     - Open a serial communication to JeVois (see \ref UserCli)
