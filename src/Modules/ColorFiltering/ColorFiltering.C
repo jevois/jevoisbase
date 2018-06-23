@@ -70,9 +70,12 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
     How to use this module
     ----------------------
 
-    - Either try it with \jvinv using <b>YUYV 640x240 @@ 30 fps</b>, or:
+    - Either try it with JeVois Inventor using <b>YUYV 640x240 @@ 30 fps</b>. Note that each time you select a new \p
+      effect, this will affect the set of parameters that are available for that effect, but currently JeVois Inventor
+      has no way of being notified of that change. So just click to another tab (e.g., the \b Info tab), and then back
+      to the \b Parameters tab each time you change the effect. This will refresh the parameter list.
 
-    - Open a video viewer on your host computer and select <b>YUYV 640x240 @@ 30 fps</b> (see \ref UserQuick)
+    - Or, open a video viewer on your host computer and select <b>YUYV 640x240 @@ 30 fps</b> (see \ref UserQuick)
 
     - Open a serial communication to JeVois (see \ref UserCli)
 

@@ -64,7 +64,7 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
     recommend that you do it one by one for each kind of colored object you want, using the \jvmod{ObjectTracker} module
     (which shares the same color blob detection code, just for one HSV range) and the tutorial on <A
     HREF="http://jevois.org/tutorials/UserColorTracking.html">Tuning the color-based object tracker using a python
-    graphical interface</A>, or the sliders in \jvinv. Just make sure that both modules have the same camera
+    graphical interface</A>, or the sliders in JeVois Inventor. Just make sure that both modules have the same camera
     settings in their respective \b script.cfg files.
 
     Using the serial outputs
