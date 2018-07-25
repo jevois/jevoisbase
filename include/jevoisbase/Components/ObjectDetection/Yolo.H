@@ -38,18 +38,17 @@ namespace yolo
                            "the module's path.",
                            JEVOIS_SHARE_PATH "/darknet/yolo", ParamCateg);
 
-  
-  //! Parameter \relates Yolo
+    //! Parameter \relates Yolo
   JEVOIS_DECLARE_PARAMETER(datacfg, std::string, "Data configuration file (if relative, relative to dataroot)",
-                           "cfg/voc.data", ParamCateg);
+                           "cfg/coco.data", ParamCateg);
 
   //! Parameter \relates Yolo
   JEVOIS_DECLARE_PARAMETER(cfgfile, std::string, "Network configuration file (if relative, relative to dataroot)",
-                           "cfg/tiny-yolo-voc.cfg", ParamCateg);
+                           "cfg/yolov3-tiny.cfg", ParamCateg);
 
   //! Parameter \relates Yolo
   JEVOIS_DECLARE_PARAMETER(weightfile, std::string, "Network weights file (if relative, relative to dataroot)",
-                           "weights/tiny-yolo-voc.weights", ParamCateg);
+                           "weights/yolov3-tiny.weights", ParamCateg);
 
   //! Parameter \relates Yolo
   JEVOIS_DECLARE_PARAMETER(namefile, std::string, "Category names file, or empty to fetch it from the network "
@@ -57,8 +56,8 @@ namespace yolo
                            "", ParamCateg);
 
   //! Parameter \relates Yolo
-  JEVOIS_DECLARE_PARAMETER(nms, float, "Non-maximum suppression in percent confidence",
-                           40.0F, jevois::Range<float>(0.0F, 100.0F), ParamCateg);
+  JEVOIS_DECLARE_PARAMETER(nms, float, "Non-maximum suppression intersection-over-union threshold in percent",
+                           45.0F, jevois::Range<float>(0.0F, 100.0F), ParamCateg);
 
   //! Parameter \relates Yolo
   JEVOIS_DECLARE_PARAMETER(thresh, float, "Detection threshold in percent confidence",
@@ -129,7 +128,7 @@ class Yolo : public jevois::Component,
     /*! You must have called computeBoxes() first for this to not violently crash. The module given should be the owner
         of this component, we will use it to actually send each serial message using some variant of
         jevois::Module::sendSerial(). */
-    void sendSerial(jevois::StdModule * mod, int inw, int inh, unsigned long frame);
+    void sendSerial(jevois::StdModule * mod, int inw, int inh);
 
     //! Resize the network's input image dims
     /*! This will prepare the network to receive inputs of the specified size. It is optional and will be called
@@ -144,10 +143,11 @@ class Yolo : public jevois::Component,
 
     // We leave these in the open in case one wants to access the probs, names, etc but just be careful with them
     network * net;
-    char ** names = nullptr;
-    box * boxes = nullptr;
-    float ** probs = nullptr;
+    char ** names;
+    int nboxes;
+    detection * dets;
     int classes;
+    int * map;
     
   protected:
     std::future<void> itsReadyFut;

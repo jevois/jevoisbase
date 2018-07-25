@@ -1,22 +1,21 @@
 diff --git a/src/convolution-inference.c b/src/convolution-inference.c
-index b0e51b3..a380883 100644
+index 03b437f..d8d1d27 100644
 --- a/src/convolution-inference.c
 +++ b/src/convolution-inference.c
-@@ -858,6 +858,8 @@ static enum nnp_status compute_gemm_convolution_inference(
+@@ -872,6 +872,8 @@ static enum nnp_status compute_gemm_convolution_inference(
+ 				}
+ 			}
+ 			/* Add bias */
++			if (bias)
++			{
+ 			NNP_OUTPUT_TRANSFORM_START(profile)
+ 			switch (activation) {
+ 				case nnp_activation_identity:
+@@ -895,6 +897,7 @@ static enum nnp_status compute_gemm_convolution_inference(
+ 					NNP_UNREACHABLE;
+ 			}
+ 			NNP_OUTPUT_TRANSFORM_END(profile)
++			}
+ 			break;
  		}
- 	}
- 	/* Add bias */
-+    if (bias)
-+    {
- 	NNP_OUTPUT_TRANSFORM_START(profile)
- 	switch (activation) {
- 		case nnp_activation_identity:
-@@ -881,7 +883,7 @@ static enum nnp_status compute_gemm_convolution_inference(
- 			NNP_UNREACHABLE;
- 	}
- 	NNP_OUTPUT_TRANSFORM_END(profile)
--
-+    }
- 	if (memory_block != workspace_buffer) {
- 		release_memory(memory_block, memory_size);
- 	}
+ 		case nnp_convolution_transform_strategy_precompute:

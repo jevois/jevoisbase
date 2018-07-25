@@ -91,19 +91,14 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the foc
     Serial messages
     ---------------
 
-    - On every frame where detection results were obtained, this module sends a message
-      \verbatim
-      TFS framenum
-      T2 x y
-      \endverbatim
-      where \a framenum is the frame number (starts at 0). The T2 message is a standardized message about the location
-      and size of the salient region of interest in which the object was found. The message can be customized, see \ref
-      UserSerialStyle.
-    - In addition, when detections are found which are above threshold, up to \p top messages will be sent, for those
-      category candidates that have scored above \p thresh:
-      \verbatim
-      TFR category score
-      \endverbatim
+    On every frame where detection results were obtained that are above \p thresh, this module sends a standardized 2D
+    message as specified in \ref UserSerialStyle:
+      + Serial message type: \b 2D
+      + `id`: top-scoring category name of the recognized object, followed by ':' and the confidence score in percent
+      + `x`, `y`, or vertices: standardized 2D coordinates of object center or corners
+      + `w`, `h`: standardized object size
+      + `extra`: any number of additional category:score pairs which had an above-threshold score, in order of
+         decreasing score
       where \a category is the category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0
 
     Using your own network
@@ -146,8 +141,8 @@ class TensorFlowSaliency : public jevois::StdModule,
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    TensorFlowSaliency(std::string const & instance) : jevois::StdModule(instance), itsFrame(0),
-	itsRx(0), itsRy(0), itsRw(0), itsRh(0)
+    TensorFlowSaliency(std::string const & instance) : jevois::StdModule(instance), itsRx(0), itsRy(0),
+	itsRw(0), itsRh(0)
     {
       itsSaliency = addSubComponent<Saliency>("saliency");
       itsTensorFlow = addSubComponent<TensorFlow>("tensorflow");
@@ -172,14 +167,13 @@ class TensorFlowSaliency : public jevois::StdModule,
     // ####################################################################################################
     void sendAllSerial(int inw, int inh, int salx, int saly, int roiw, int roih)
     {
-      // Send frame marker:
-      sendSerial("TFS " + std::to_string(itsFrame));
+      std::string best, extra;
+      
+      for (auto const & r : itsResults)
+	if (best.empty()) best = jevois::sformat("%s:%.1f", r.second.c_str(), r.first);
+	else extra += jevois::sformat("%s:%.1f ", r.second.c_str(), r.first);
 
-      // Send saliency info to serial port (for arduino, etc):
-      sendSerialImg2D(inw, inh, salx, saly, roiw, roih, "sm");
-
-      // Send all detections:
-      for (auto const & r : itsResults) sendSerial("TFR " + r.second + ' ' + jevois::sformat("%.1f", r.first));
+      sendSerialImg2D(inw, inh, salx, saly, roiw, roih, best, extra);
     }
 
     // ####################################################################################################
@@ -256,8 +250,6 @@ class TensorFlowSaliency : public jevois::StdModule,
 	sendAllSerial(w, h, itsRx + itsRw/2, itsRy + itsRh/2, itsRw, itsRh);
       }
       catch (std::logic_error const & e) { } // network still loading
-      
-      ++itsFrame;
     }
 
     // ####################################################################################################
@@ -299,7 +291,7 @@ class TensorFlowSaliency : public jevois::StdModule,
         });
 
       // On even frames, update the salient ROI, on odd frames, run the deep network on the latest ROI:
-      if ((itsFrame & 1) == 0)
+      if ((frameNum() & 1) == 0 || itsRw == 0)
       {
 	// Run the saliency model, will update itsRx, itsRy, itsRw, and itsRh:
 	getSalROI(inimg);
@@ -387,9 +379,6 @@ class TensorFlowSaliency : public jevois::StdModule,
       
       // Send the output image with our processing results to the host over USB:
       outframe.send();
-
-      // Switch to next frame:
-      ++itsFrame;
     }
 
     // ####################################################################################################
@@ -401,7 +390,6 @@ class TensorFlowSaliency : public jevois::StdModule,
     cv::Mat itsRawInputCv;
     cv::Mat itsCvImg;
     cv::Mat itsRawPrevOutputCv;
-    unsigned long itsFrame;
     int itsRx, itsRy, itsRw, itsRh; // last computed saliency ROI
  };
 

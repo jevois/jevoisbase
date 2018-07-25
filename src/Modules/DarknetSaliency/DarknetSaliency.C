@@ -92,19 +92,14 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     Serial messages
     ---------------
 
-    - On every frame where detection results were obtained, this module sends a message
-      \verbatim
-      DKS framenum
-      T2 x y
-      \endverbatim
-      where \a framenum is the frame number (starts at 0). The T2 message is a standardized message about the location
-      and size of the salient region of interest in which the object was found. The message can be customized, see \ref
-      UserSerialStyle.
-    - In addition, when detections are found which are above threshold, up to \p top messages will be sent, for those
-      category candidates that have scored above \p thresh:
-      \verbatim
-      DKR category score
-      \endverbatim
+    On every frame where detection results were obtained that are above \p thresh, this module sends a standardized 2D
+    message as specified in \ref UserSerialStyle:
+      + Serial message type: \b 2D
+      + `id`: top-scoring category name of the recognized object, followed by ':' and the confidence score in percent
+      + `x`, `y`, or vertices: standardized 2D coordinates of object center or corners
+      + `w`, `h`: standardized object size
+      + `extra`: any number of additional category:score pairs which had an above-threshold score, in order of
+         decreasing score
       where \a category is the category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0
 
     @author Laurent Itti
@@ -131,7 +126,7 @@ class DarknetSaliency : public jevois::StdModule,
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    DarknetSaliency(std::string const & instance) : jevois::StdModule(instance), itsFrame(0)
+    DarknetSaliency(std::string const & instance) : jevois::StdModule(instance)
     {
       itsSaliency = addSubComponent<Saliency>("saliency");
       itsDarknet = addSubComponent<Darknet>("darknet");
@@ -156,14 +151,13 @@ class DarknetSaliency : public jevois::StdModule,
     // ####################################################################################################
     void sendAllSerial(int inw, int inh, int salx, int saly, int roiw, int roih)
     {
-      // Send frame marker:
-      sendSerial("DKS " + std::to_string(itsFrame));
+      std::string best, extra;
+      
+      for (auto const & r : itsResults)
+	if (best.empty()) best = jevois::sformat("%s:%.1f", r.second.c_str(), r.first);
+	else extra += jevois::sformat("%s:%.1f ", r.second.c_str(), r.first);
 
-      // Send saliency info to serial port (for arduino, etc):
-      sendSerialImg2D(inw, inh, salx, saly, roiw, roih, "sm");
-
-      // Send all detections:
-      for (auto const & r : itsResults) sendSerial("DKR " + r.second + ' ' + jevois::sformat("%.1f", r.first));
+      sendSerialImg2D(inw, inh, salx, saly, roiw, roih, best, extra);
     }
 
     // ####################################################################################################
@@ -240,8 +234,6 @@ class DarknetSaliency : public jevois::StdModule,
 	sendAllSerial(w, h, rx + rw/2, ry + rh/2, rw, rh);
       }
       catch (std::logic_error const & e) { } // network still loading
-      
-      ++itsFrame;
     }
 
     // ####################################################################################################
@@ -332,9 +324,6 @@ class DarknetSaliency : public jevois::StdModule,
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
 	    itsRawPrevOutputCv = cv::Mat(h, dispw, CV_8UC2);
 	    outimgcv(cv::Rect(w, 0, dispw, h)).copyTo(itsRawPrevOutputCv);
-
-            // Switch to next frame:
-            ++itsFrame;
           }
         }
         else
@@ -402,7 +391,6 @@ class DarknetSaliency : public jevois::StdModule,
     cv::Mat itsRawInputCv;
     cv::Mat itsCvImg;
     cv::Mat itsRawPrevOutputCv;
-    unsigned long itsFrame;
  };
 
 // Allow the module to be loaded as a shared object (.so) file:

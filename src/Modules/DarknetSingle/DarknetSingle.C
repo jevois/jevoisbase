@@ -89,18 +89,16 @@
     Serial messages
     ---------------
 
-    - On every frame where detection results were obtained, this module sends a message
-      \verbatim
-      DKF framenum
-      \endverbatim
-      where \a framenum is the frame number (starts at 0).
-    - In addition, when detections are found, up to \p top messages will be sent, for those category candidates
-      that have scored above \p thresh:
-      \verbatim
-      DKR category score
-      \endverbatim
-      where \a category is the category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0
+    When detections are found with confidence scores above \p thresh, a message containing up to \p top category:score
+    pairs will be sent per video frame:
 
+    \verbatim
+    RECO category:score category:score ... category:score
+    \endverbatim
+
+    where \a category is a category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0 that
+    this category was recognized. The pairs are in order of decreasing score. Beware that some category names contain
+    spaces, hence you should always look for a ':' to mark the end of a category name and the start of a score value.
 
     @author Laurent Itti
 
@@ -124,7 +122,7 @@ class DarknetSingle : public jevois::Module
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    DarknetSingle(std::string const & instance) : jevois::Module(instance), itsFrame(0)
+    DarknetSingle(std::string const & instance) : jevois::Module(instance)
     {
       itsDarknet = addSubComponent<Darknet>("darknet");
     }
@@ -148,8 +146,12 @@ class DarknetSingle : public jevois::Module
     // ####################################################################################################
     void sendAllSerial()
     {
-      sendSerial("DKF " + std::to_string(itsFrame));
-      for (auto const & r : itsResults) sendSerial("DKR " + r.second + ' ' + jevois::sformat("%.1f", r.first));
+      if (itsResults.empty()) return;
+      
+      std::string msg = "RECO";
+      for (auto const & r : itsResults) msg += jevois::sformat(" %s:%.1f", r.second.c_str(), r.first);
+
+      sendSerial(msg);
     }
     
     // ####################################################################################################
@@ -186,9 +188,8 @@ class DarknetSingle : public jevois::Module
       float const ptime = itsDarknet->predict(itsCvImg, itsResults);
       LINFO("Predicted in " << ptime << "ms");
 
-      // Send serial results and switch to next frame:
+      // Send serial results:
       sendAllSerial();
-      ++itsFrame;
     }
 
     // ####################################################################################################
@@ -274,9 +275,7 @@ class DarknetSingle : public jevois::Module
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
 	    itsRawPrevOutputCv = cv::Mat(h, netw, CV_8UC2);
 	    outimgcv(cv::Rect(w, 0, netw, h)).copyTo(itsRawPrevOutputCv);
-
-            // Switch to next frame:
-            ++itsFrame;
+	    
           } else { itsRawPrevOutputCv.release(); } // network is not ready yet
         }
         else
@@ -339,7 +338,6 @@ class DarknetSingle : public jevois::Module
     cv::Mat itsRawInputCv;
     cv::Mat itsCvImg;
     cv::Mat itsRawPrevOutputCv;
-    unsigned long itsFrame;
  };
 
 // Allow the module to be loaded as a shared object (.so) file:

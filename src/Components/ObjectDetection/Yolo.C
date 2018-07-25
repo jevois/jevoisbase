@@ -19,8 +19,8 @@
 #include <jevois/Core/Module.H>
 
 // ####################################################################################################
-Yolo::Yolo(std::string const & instance) : jevois::Component(instance), net(nullptr), names(nullptr), boxes(nullptr),
-    probs(nullptr), classes(0), itsReady(false)
+Yolo::Yolo(std::string const & instance) : jevois::Component(instance), net(nullptr), names(nullptr), nboxes(0),
+    dets(nullptr), classes(0), map(nullptr), itsReady(false)
 {
   // Get NNPACK ready to rock:
 #ifdef NNPACK
@@ -59,9 +59,21 @@ void Yolo::postInit()
 
       LINFO("Getting labels...");
       names = get_labels(const_cast<char *>(name_list.c_str()));
+      
+      char * mapf = option_find_str(options, "map", 0);
+      if (mapf) map = read_map(mapf);
+
       LINFO("Parsing network and loading weights...");
+
       net = load_network(const_cast<char *>(cfgfil.c_str()), const_cast<char *>(weightfil.c_str()), 0);
-      if (net == nullptr) LFATAL("Failed to load darknet network and/or weights -- ABORT");
+
+      if (net == nullptr)
+      {
+	free_list(options);
+	if (map) { free(map); map = nullptr; }
+	LFATAL("Failed to load YOLO network and/or weights -- ABORT");
+      }
+
       classes = option_find_int(options, "classes", 2);
 
       set_batch_network(net, 1);
@@ -79,10 +91,11 @@ void Yolo::postInit()
 // ####################################################################################################
 void Yolo::postUninit()
 {
-  try { itsReadyFut.get(); } catch (...) { }
+  if (itsReadyFut.valid()) try { itsReadyFut.get(); } catch (...) { }
 
-  if (boxes) { free(boxes); boxes = nullptr; }
-  if (probs) { layer & l = net->layers[net->n-1]; free_ptrs((void **)probs, l.w * l.h * l.n); probs = nullptr; }
+  if (dets) { free_detections(dets, nboxes); dets = nullptr; nboxes = 0; }
+
+  if (map) { free(map); map = nullptr; }
 
   if (net)
   {
@@ -90,9 +103,11 @@ void Yolo::postUninit()
     if (net->threadpool) pthreadpool_destroy(net->threadpool);
 #endif
     free_network(net);
+    net = nullptr;
   }
 
   free_ptrs((void**)names, classes);
+  names = nullptr; classes = 0;
 }
 
 // ####################################################################################################
@@ -126,7 +141,8 @@ float Yolo::predict(cv::Mat const & cvimg)
 float Yolo::predict(image & im)
 {
   image sized; bool need_free = false;
-  if (im.w == net->w && im.h == net->h) sized = im; else { sized = letterbox_image(im, net->w, net->h); need_free = true; }
+  if (im.w == net->w && im.h == net->h) sized = im;
+  else { sized = letterbox_image(im, net->w, net->h); need_free = true; }
       
   struct timeval start, stop;
 
@@ -146,78 +162,97 @@ void Yolo::computeBoxes(int inw, int inh)
 {
   layer & l = net->layers[net->n-1];
 
-  if (boxes == nullptr)
-    boxes = (box *)calloc(l.w * l.h * l.n, sizeof(box));
+  if (dets) { free_detections(dets, nboxes); dets = nullptr; nboxes = 0; }
 
-  if (probs == nullptr)
-  {
-    probs = (float **)calloc(l.w * l.h * l.n, sizeof(float *));
-    for (int j = 0; j < l.w * l.h * l.n; ++j) probs[j] = (float *)calloc(l.classes + 1, sizeof(float));
-  }
+  dets = get_network_boxes(net, 1, 1, thresh::get() * 0.01F, hierthresh::get() * 0.01F, map, 0, &nboxes);
 
-  get_region_boxes(l, inw, inh, net->w, net->h, thresh::get()*0.01F, probs, boxes, 0, 0, 0, hierthresh::get()*0.01F, 1);
-  
-  float const nmsval = nms::get()*0.01F;
-  if (nmsval) do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nmsval);
+  float const nmsval = nms::get() * 0.01F;
+
+  if (nmsval) do_nms_sort(dets, nboxes, l.classes, nmsval);
 }
 
 // ####################################################################################################
 void Yolo::drawDetections(jevois::RawImage & outimg, int inw, int inh, int xoff, int yoff)
 {
-  layer & l = net->layers[net->n-1];
-  int const num = l.w * l.h * l.n;
-
   float const thval = thresh::get();
-  float const hthval = hierthresh::get();
-  
-  for (int i = 0; i < num; ++i)
+
+  for (int i = 0; i < nboxes; ++i)
   {
-    int const cls = max_index(probs[i], l.classes);
-    float const prob = probs[i][cls] * 100.0F;
-
-    if (prob > thval)
+    // For each detection, We need to get a list of labels and probabilities, sorted by score:
+    std::vector<std::pair<float, std::string> > data;
+  
+    for (int j = 0; j < classes; ++j)
     {
-      box const & b = boxes[i];
-
-      int const left = xoff + (b.x - b.w / 2.0F) * inw;
-      int const bw = b.w * inw;
-      int const top = yoff + (b.y - b.h / 2.0F) * inh;
-      int const bh = b.h * inh;
-
-      jevois::rawimage::drawRect(outimg, left, top, bw, bh, 2, jevois::yuyv::LightGreen);
-      jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.1f", names[cls], prob),
-                                  left, top - 22, jevois::yuyv::LightGreen, jevois::rawimage::Font10x20);
+      float const p = dets[i].prob[j] * 100.0F;
+      if (p > thval) data.push_back(std::make_pair(p, names[j]));
     }
+
+    // End here if nothing above threshold:
+    if (data.empty()) continue;
+    
+    // Sort in ascending order:
+    std::sort(data.begin(), data.end(), [](auto a, auto b) { return (a.first < b.first); });
+
+    // Create our display label:
+    std::string labelstr;
+    for (auto itr = data.rbegin(); itr != data.rend(); ++itr)
+    {
+      if (labelstr.empty() == false) labelstr += ", ";
+      labelstr += jevois::sformat("%s:%.1f", itr->second.c_str(), itr->first);
+    }
+
+    box const & b = dets[i].bbox;
+
+    int const left = std::max(xoff, int(xoff + (b.x - b.w / 2.0F) * inw + 0.499F));
+    int const bw = std::min(inw, int(b.w * inw + 0.499F));
+    int const top = std::max(yoff, int(yoff + (b.y - b.h / 2.0F) * inh + 0.499F));
+    int const bh = std::min(inh, int(b.h * inh + 0.499F));
+    
+    jevois::rawimage::drawRect(outimg, left, top, bw, bh, 2, jevois::yuyv::LightGreen);
+    jevois::rawimage::writeText(outimg, labelstr,
+				left + 4, top + 2, jevois::yuyv::LightGreen, jevois::rawimage::Font10x20);
   }
 }
 
 // ####################################################################################################
-void Yolo::sendSerial(jevois::StdModule * mod, int inw, int inh, unsigned long frame)
+void Yolo::sendSerial(jevois::StdModule * mod, int inw, int inh)
 {
-  mod->sendSerial("DKY " + std::to_string(frame));
-
-  layer & l = net->layers[net->n-1];
-  int const num = l.w * l.h * l.n;
-
   float const thval = thresh::get();
-  float const hthval = hierthresh::get();
-  
-  for (int i = 0; i < num; ++i)
+
+  for (int i = 0; i < nboxes; ++i)
   {
-    int const cls = max_index(probs[i], l.classes);
-    float const prob = probs[i][cls] * 100.0F;
-
-    if (prob > thval)
+    // For each detection, We need to get a list of labels and probabilities, sorted by score:
+    std::vector<std::pair<float, std::string> > data;
+  
+    for (int j = 0; j < classes; ++j)
     {
-      box const & b = boxes[i];
-
-      int const left = (b.x - b.w / 2.0F) * inw;
-      int const bw = b.w * inw;
-      int const top = (b.y - b.h / 2.0F) * inh;
-      int const bh = b.h * inh;
-      
-      mod->sendSerialImg2D(inw, inh, left, top, bw, bh, names[cls], jevois::sformat("%.1f", prob));
+      float const p = dets[i].prob[j] * 100.0F;
+      if (p > thval) data.push_back(std::make_pair(p, names[j]));
     }
+
+    // End here if nothing above threshold:
+    if (data.empty()) continue;
+    
+    // Sort in ascending order:
+    std::sort(data.begin(), data.end(), [](auto a, auto b) { return (a.first < b.first); });
+
+    // The last one will be the returned 
+    auto const & last = data.back();
+    std::string const name = jevois::sformat("%s:%.1f", last.second.c_str(), last.first);
+    data.pop_back();
+
+    std::string extra;
+    for (auto itr = data.rbegin(); itr != data.rend(); ++itr)
+      extra += jevois::sformat("%s:%.1f ", itr->second.c_str(), itr->first);
+    
+    box const & b = dets[i].bbox;
+
+    int const left = (b.x - b.w / 2.0F) * inw;
+    int const bw = b.w * inw;
+    int const top = (b.y - b.h / 2.0F) * inh;
+    int const bh = b.h * inh;
+
+    mod->sendSerialImg2D(inw, inh, left, top, bw, bh, name, extra);
   }
 }
 

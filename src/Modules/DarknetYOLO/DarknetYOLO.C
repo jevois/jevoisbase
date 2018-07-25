@@ -28,8 +28,8 @@ static jevois::ParameterCategory const ParamCateg("Darknet YOLO Options");
 
 //! Parameter \relates DarknetYOLO
 JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the neural network input layer, or [0 0] "
-                         "to make it match camera frame size.",
-                         cv::Size(320, 240), ParamCateg);
+                         "to make it match camera frame size. NOTE: for YOLO v3 sizes must be multiples of 32.",
+                         cv::Size(320, 224), ParamCateg);
 
 
 //! Detect multiple objects in scenes using the Darknet YOLO deep neural network
@@ -47,31 +47,22 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     network inference speed (time taken to compute the predictions on one image) is shown at the bottom right. See
     below for how to trade-off speed and accuracy.
 
-    Note that by default this module runs the Pascal-VOC version of tiny-YOLO, with these object categories:
+    Note that by default this module runs tiny-YOLO V3 which can detect and recognize 80 different kinds of objects from
+    the Microsoft COCO dataset. This module can also run tiny-YOLO V2 for COCO, or tiny-YOLO V2 for the Pascal-VOC
+    dataset with 20 object categories.
 
-    - aeroplane
-    - bicycle
-    - bird
-    - boat
-    - bottle
-    - bus
-    - car
-    - cat
-    - chair
-    - cow
-    - diningtable
-    - dog
-    - horse
-    - motorbike
-    - person
-    - pottedplant
-    - sheep
-    - sofa
-    - train
-    - tvmonitor
+    The 80 COCO object categories are: person, bicycle, car, motorbike, aeroplane, bus, train, truck, boat, traffic,
+    fire, stop, parking, bench, bird, cat, dog, horse, sheep, cow, elephant, bear, zebra, giraffe, backpack, umbrella,
+    handbag, tie, suitcase, frisbee, skis, snowboard, sports, kite, baseball, baseball, skateboard, surfboard, tennis,
+    bottle, wine, cup, fork, knife, spoon, bowl, banana, apple, sandwich, orange, broccoli, carrot, hot, pizza, donut,
+    cake, chair, sofa, pottedplant, bed, diningtable, toilet, tvmonitor, laptop, mouse, remote, keyboard, cell,
+    microwave, oven, toaster, sink, refrigerator, book, clock, vase, scissors, teddy, hair, toothbrush,
 
-    Sometimes it will make mistakes! The performance of tiny-yolo-voc is about 57.1% correct (mean average precision) on
-    the test set.
+    The 20 Pascal-VOC object categories are: aeroplane, bicycle, bird, boat, bottle, bus, car, cat, chair, cow,
+    diningtable, dog, horse, motorbike, person, pottedplant, sheep, sofa, train, tvmonitor,
+
+    Sometimes it will make mistakes! The performance of yolov3-tiny is about 33.1% correct (mean average precision) on
+    the COCO test set.
 
     \youtube{d5CfljT5kec}
 
@@ -86,7 +77,7 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     the final input to the network is 416x416). This letterboxing can be completely avoided by just resizing the network
     to 320x240.
 
-    Here are expected processing speeds:
+    Here are expected processing speeds for yolov2-tiny-voc:
     - when netin = [0 0], processes letterboxed 416x416 inputs, about 2450ms/image
     - when netin = [320 240], processes 320x240 inputs, about 1350ms/image
     - when netin = [160 120], processes 160x120 inputs, about 695ms/image
@@ -96,19 +87,13 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     Serial messages
     ---------------
 
-    - On every frame where detection results were obtained, this module sends a message
-      \verbatim
-      DKY framenum
-      \endverbatim
-      where \a framenum is the frame number (starts at 0).
-    - In addition, when detections are found which are above threshold, one message will be sent for each detected
+    - When detections are found which are above threshold, one message will be sent for each detected
       object (i.e., for each box that gets drawn when USB outputs are used), using a standardized 2D message:
       + Serial message type: \b 2D
-      + `id`: the category name of the recognized object
+      + `id`: the category name of the recognized object, followed by ':' and the confidence score in percent
       + `x`, `y`, or vertices: standardized 2D coordinates of object center or corners
       + `w`, `h`: standardized object size
-      + `extra`: recognition score (in percent confidence)
-
+      + `extra`: any number of additional name:score pairs which had an above-threshold score for that box
 
     @author Laurent Itti
 
@@ -132,7 +117,7 @@ class DarknetYOLO : public jevois::StdModule,
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    DarknetYOLO(std::string const & instance) : jevois::StdModule(instance), itsFrame(0)
+    DarknetYOLO(std::string const & instance) : jevois::StdModule(instance)
     {
       itsYolo = addSubComponent<Yolo>("yolo");
     }
@@ -193,9 +178,8 @@ class DarknetYOLO : public jevois::StdModule,
         // Compute the boxes:
         itsYolo->computeBoxes(w, h);
 
-        // Send serial results and switch to next frame:
-        itsYolo->sendSerial(this, w, h, itsFrame);
-        ++itsFrame;
+        // Send serial results:
+        itsYolo->sendSerial(this, w, h);
       }
     }
     
@@ -267,7 +251,7 @@ class DarknetYOLO : public jevois::StdModule,
             itsYolo->drawDetections(outimg, w, h, w, 0);
 
             // Send serial messages:
-            itsYolo->sendSerial(this, w, h, itsFrame);
+            itsYolo->sendSerial(this, w, h);
             
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "JeVois Darknet YOLO - predictions", w + 3, 3, jevois::yuyv::White);
@@ -276,9 +260,6 @@ class DarknetYOLO : public jevois::StdModule,
 
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
             outimgcv(cv::Rect(w, 0, w, h)).copyTo(itsRawPrevOutputCv);
-
-            // Switch to next frame:
-            ++itsFrame;
           }
         }
         else
@@ -348,7 +329,6 @@ class DarknetYOLO : public jevois::StdModule,
     cv::Mat itsRawInputCv;
     cv::Mat itsRawPrevOutputCv;
     cv::Mat itsNetInput;
-    unsigned long itsFrame;
 };
 
 // Allow the module to be loaded as a shared object (.so) file:

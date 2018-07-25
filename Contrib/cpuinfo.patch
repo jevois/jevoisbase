@@ -1,0 +1,13 @@
+diff --git a/src/linux/processors.c b/src/linux/processors.c
+index 8df06f5..d96976f 100644
+--- a/src/linux/processors.c
++++ b/src/linux/processors.c
+@@ -78,7 +78,7 @@ inline static bool is_whitespace(char c) {
+ 		static const uint32_t default_max_processors_count = 32;
+ 	#endif
+ #else
+-	static const uint32_t default_max_processors_count = CPU_SETSIZE;
++	static const uint32_t default_max_processors_count = __CPU_SETSIZE;
+ #endif
+ 
+ static bool uint32_parser(const char* text_start, const char* text_end, void* context) {

@@ -1,0 +1,12 @@
+diff --git a/tensorflow/contrib/lite/tools/command_line_flags.cc b/tensorflow/contrib/lite/tools/command_line_flags.cc
+index ba72f40689..bc9646a2ad 100644
+--- a/tensorflow/contrib/lite/tools/command_line_flags.cc
++++ b/tensorflow/contrib/lite/tools/command_line_flags.cc
+@@ -15,6 +15,7 @@ limitations under the License.
+ #include <sstream>
+ #include <string>
+ #include <vector>
++#include <string.h> // for strcmp
+ 
+ namespace tflite {
+ namespace {

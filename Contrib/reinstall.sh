@@ -16,8 +16,13 @@ function get_github # owner, repo, revision
 ###################################################################################################
 function patchit # directory
 {
-    if [ ! -d ${1} ]; then echo "Ooops cannot patch ${1} because directory is missing"; fi
-    cd ${1} && patch -p1 < ../${1}.patch && cd ..
+    if [ ! -d ${1} ]; then
+	echo "Ooops cannot patch ${1} because directory is missing";
+    else
+	cd ${1}
+	patch -p1 < ../${1}.patch
+	cd ..
+    fi
 }
 
 ###################################################################################################
@@ -38,7 +43,7 @@ if [ "X$REPLY" = "Xy" ]; then
     # Get the packages:
 
     # Accelerator for convnets, used by tiny-dnn and darnket:
-    get_github Maratyszcza NNPACK 3627062907e01ba5f030730f1027dd773323e0e3
+    get_github Maratyszcza NNPACK af40ea7d12702f8ae55aeb13701c09cad09334c3
 
     # No new release in a while on tiny-dnn; fetch current state as of Sept 14, 2017:
     get_github tiny-dnn tiny-dnn dd906fed8c8aff8dc837657c42f9d55f8b793b0e
@@ -72,35 +77,42 @@ if [ "X$REPLY" = "Xy" ]; then
     #/bin/rm cvEyeTracker-1.2.5.tar.gz
 
     # NNPACK-accelerated darknet CNNs:
-    get_github digitalbrain79 darknet-nnpack 60ecf9e3dba2b30385c999c06389667957e57d6b
+    get_github digitalbrain79 darknet-nnpack 79df27c8006734412c72587df379ab3740938971
 
     # pthread-based thread pool for C/C++:
-    get_github Maratyszcza pthreadpool 097a0c8971176257d7d565c4d37b754a12b3566b
+    get_github Maratyszcza pthreadpool 16bd2290da7673199dec90823bbc5063264e4095
 
     #  C99/C++ header-only library for division via fixed-point multiplication by inverse:
-    get_github Maratyszcza FXdiv f7960924cb1f67e06f6529dba09eeda9baa4cacb
+    get_github Maratyszcza FXdiv 811b482bcd9e8d98ad80c6c78d5302bb830184b0
 
     # Conversion to/from half-precision floating point formats:
-    get_github Maratyszcza FP16 251d93e3b2776f0a97b572f1d5cae10958adf00e
+    get_github Maratyszcza FP16 4b37bd31c9cc1380ef9f205f7dd031efe0e847ab
 
     # Portable 128-bit SIMD intrinsics:
-    get_github Maratyszcza psimd c583161bf2097508b168fceb2f383a9d5ebde449
+    get_github Maratyszcza psimd 3d8bfe7318423462a6d9e0c6537e75efd4822c49
 
+    # NNPACK depends on cpuinfo from pytorch:
+    get_github pytorch cpuinfo 8c621ce3f46e51ac1d1a4d878b9ffc2b5dcac0e3
+    
     # Darknet original (used for training only):
     git clone https://github.com/pjreddie/darknet.git
 
-    # Tensorflow 1.7.0-rc1 (March 20, 2018):
-    get_github tensorflow tensorflow e79eb0b8de130bf905a101608681e9c18561356c
+    # Tensorflow 1.10.0-rc0 (July 23, 2018):
+    #get_github tensorflow tensorflow f2e8ef305e90151dfd3092a77880c9d046878ef8
+    # Tensorflow 1.9.9::
+    get_github tensorflow tensorflow 25c197e02393bd44f50079945409009dd4d434f8
     cd tensorflow
+    # oops, tensorflow does not compile anymore if it pulls the latest flatbuffers. Patch to pulling flatbuffers 1.8.0:
+    sed -i sXflatbuffers/archive/master.zipXflatbuffers/archive/v1.8.0.zipX \
+	./tensorflow/contrib/lite/download_dependencies.sh
     ./tensorflow/contrib/lite/download_dependencies.sh
     cd ..
     
     ###################################################################################################
     # Patching:
-    patchit OF_DIS
-    patchit NNPACK
-    patchit FXdiv
-    patchit darknet-nnpack
+    for f in *.patch; do
+	patchit ${f/.patch/}
+    done
     
     ###################################################################################################
     # Keep track of the last installed release:

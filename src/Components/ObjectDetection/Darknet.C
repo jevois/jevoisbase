@@ -149,8 +149,12 @@ void Darknet::loadNet()
       LINFO("Getting labels...");
       names = get_labels(const_cast<char *>(name_list.c_str()));
       LINFO("Parsing network and loading weights...");
+
       net = load_network(const_cast<char *>(cfgfil.c_str()), const_cast<char *>(weightfil.c_str()), 0);
-      if (net == nullptr) LFATAL("Failed to load darknet network and/or weights -- ABORT");
+
+      if (net == nullptr)
+      { free_list(options); LFATAL("Failed to load darknet network and/or weights -- ABORT"); }
+
       classes = option_find_int(options, "classes", 2);
 
       set_batch_network(net, 1);
