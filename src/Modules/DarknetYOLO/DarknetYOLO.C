@@ -49,17 +49,17 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
 
     Note that by default this module runs tiny-YOLO V3 which can detect and recognize 80 different kinds of objects from
     the Microsoft COCO dataset. This module can also run tiny-YOLO V2 for COCO, or tiny-YOLO V2 for the Pascal-VOC
-    dataset with 20 object categories.
+    dataset with 20 object categories. See the module's \b params.cfg file to switch network.
 
-    The 80 COCO object categories are: person, bicycle, car, motorbike, aeroplane, bus, train, truck, boat, traffic,
-    fire, stop, parking, bench, bird, cat, dog, horse, sheep, cow, elephant, bear, zebra, giraffe, backpack, umbrella,
-    handbag, tie, suitcase, frisbee, skis, snowboard, sports, kite, baseball, baseball, skateboard, surfboard, tennis,
-    bottle, wine, cup, fork, knife, spoon, bowl, banana, apple, sandwich, orange, broccoli, carrot, hot, pizza, donut,
-    cake, chair, sofa, pottedplant, bed, diningtable, toilet, tvmonitor, laptop, mouse, remote, keyboard, cell,
-    microwave, oven, toaster, sink, refrigerator, book, clock, vase, scissors, teddy, hair, toothbrush,
+    - The 80 COCO object categories are: person, bicycle, car, motorbike, aeroplane, bus, train, truck, boat, traffic,
+      fire, stop, parking, bench, bird, cat, dog, horse, sheep, cow, elephant, bear, zebra, giraffe, backpack, umbrella,
+      handbag, tie, suitcase, frisbee, skis, snowboard, sports, kite, baseball, baseball, skateboard, surfboard, tennis,
+      bottle, wine, cup, fork, knife, spoon, bowl, banana, apple, sandwich, orange, broccoli, carrot, hot, pizza, donut,
+      cake, chair, sofa, pottedplant, bed, diningtable, toilet, tvmonitor, laptop, mouse, remote, keyboard, cell,
+      microwave, oven, toaster, sink, refrigerator, book, clock, vase, scissors, teddy, hair, toothbrush.
 
-    The 20 Pascal-VOC object categories are: aeroplane, bicycle, bird, boat, bottle, bus, car, cat, chair, cow,
-    diningtable, dog, horse, motorbike, person, pottedplant, sheep, sofa, train, tvmonitor,
+    - The 20 Pascal-VOC object categories are: aeroplane, bicycle, bird, boat, bottle, bus, car, cat, chair, cow,
+      diningtable, dog, horse, motorbike, person, pottedplant, sheep, sofa, train, tvmonitor.
 
     Sometimes it will make mistakes! The performance of yolov3-tiny is about 33.1% correct (mean average precision) on
     the COCO test set.
@@ -82,18 +82,24 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     - when netin = [320 240], processes 320x240 inputs, about 1350ms/image
     - when netin = [160 120], processes 160x120 inputs, about 695ms/image
 
+    YOLO V3 is faster, more accurate, uses less memory, and can detect 80 COCO categories:
+    - when netin = [320 240], processes 320x240 inputs, about 870ms/image
+
     \youtube{77VRwFtIe8I}
 
     Serial messages
     ---------------
 
-    - When detections are found which are above threshold, one message will be sent for each detected
-      object (i.e., for each box that gets drawn when USB outputs are used), using a standardized 2D message:
-      + Serial message type: \b 2D
-      + `id`: the category name of the recognized object, followed by ':' and the confidence score in percent
-      + `x`, `y`, or vertices: standardized 2D coordinates of object center or corners
-      + `w`, `h`: standardized object size
-      + `extra`: any number of additional name:score pairs which had an above-threshold score for that box
+    When detections are found which are above threshold, one message will be sent for each detected
+    object (i.e., for each box that gets drawn when USB outputs are used), using a standardized 2D message:
+    + Serial message type: \b 2D
+    + `id`: the category of the recognized object, followed by ':' and the confidence score in percent
+    + `x`, `y`, or vertices: standardized 2D coordinates of object center or corners
+    + `w`, `h`: standardized object size
+    + `extra`: any number of additional category:score pairs which had an above-threshold score for that box
+    
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
 
     @author Laurent Itti
 
