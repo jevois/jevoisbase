@@ -189,7 +189,7 @@ void Darknet::postUninit()
 }
 
 // ####################################################################################################
-float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
+float Darknet::predict(cv::Mat const & cvimg, std::vector<jevois::ObjReco> & results)
 {
   if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
@@ -216,7 +216,7 @@ float Darknet::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
 }
 
 // ####################################################################################################
-float Darknet::predict(image & im, std::vector<predresult> & results)
+float Darknet::predict(image & im, std::vector<jevois::ObjReco> & results)
 {
   if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
@@ -245,7 +245,7 @@ float Darknet::predict(image & im, std::vector<predresult> & results)
   {
     int const index = indexes[i];
     float const score = float(predictions[index] * 100);
-    if (score >= th) results.push_back(std::make_pair(score, std::string(names[index])));
+    if (score >= th) results.push_back( { score, std::string(names[index]) } );
     else break;
   }
 

@@ -179,26 +179,26 @@ void Yolo::drawDetections(jevois::RawImage & outimg, int inw, int inh, int xoff,
   for (int i = 0; i < nboxes; ++i)
   {
     // For each detection, We need to get a list of labels and probabilities, sorted by score:
-    std::vector<std::pair<float, std::string> > data;
-  
+    std::vector<jevois::ObjReco> data;
+
     for (int j = 0; j < classes; ++j)
     {
       float const p = dets[i].prob[j] * 100.0F;
-      if (p > thval) data.push_back(std::make_pair(p, names[j]));
+      if (p > thval) data.push_back( { p, std::string(names[j]) } );
     }
 
     // End here if nothing above threshold:
     if (data.empty()) continue;
     
-    // Sort in ascending order:
-    std::sort(data.begin(), data.end(), [](auto a, auto b) { return (a.first < b.first); });
+    // Sort in descending order:
+    std::sort(data.begin(), data.end(), [](auto a, auto b) { return (b.score < a.score); });
 
     // Create our display label:
     std::string labelstr;
-    for (auto itr = data.rbegin(); itr != data.rend(); ++itr)
+    for (auto const & d : data)
     {
       if (labelstr.empty() == false) labelstr += ", ";
-      labelstr += jevois::sformat("%s:%.1f", itr->second.c_str(), itr->first);
+      labelstr += jevois::sformat("%s:%.1f", d.category.c_str(), d.score);
     }
 
     box const & b = dets[i].bbox;
@@ -210,7 +210,7 @@ void Yolo::drawDetections(jevois::RawImage & outimg, int inw, int inh, int xoff,
     
     jevois::rawimage::drawRect(outimg, left, top, bw, bh, 2, jevois::yuyv::LightGreen);
     jevois::rawimage::writeText(outimg, labelstr,
-				left + 4, top + 2, jevois::yuyv::LightGreen, jevois::rawimage::Font10x20);
+				left + 6, top + 2, jevois::yuyv::LightGreen, jevois::rawimage::Font10x20);
   }
 }
 
@@ -222,29 +222,20 @@ void Yolo::sendSerial(jevois::StdModule * mod, int inw, int inh)
   for (int i = 0; i < nboxes; ++i)
   {
     // For each detection, We need to get a list of labels and probabilities, sorted by score:
-    std::vector<std::pair<float, std::string> > data;
+    std::vector<jevois::ObjReco> data;
   
     for (int j = 0; j < classes; ++j)
     {
       float const p = dets[i].prob[j] * 100.0F;
-      if (p > thval) data.push_back(std::make_pair(p, names[j]));
+      if (p > thval) data.push_back({ p, std::string(names[j]) });
     }
 
     // End here if nothing above threshold:
     if (data.empty()) continue;
     
-    // Sort in ascending order:
-    std::sort(data.begin(), data.end(), [](auto a, auto b) { return (a.first < b.first); });
+    // Sort in descending order:
+    std::sort(data.begin(), data.end(), [](auto a, auto b) { return (b.score < a.score); });
 
-    // The last one will be the returned 
-    auto const & last = data.back();
-    std::string const name = jevois::sformat("%s:%.1f", last.second.c_str(), last.first);
-    data.pop_back();
-
-    std::string extra;
-    for (auto itr = data.rbegin(); itr != data.rend(); ++itr)
-      extra += jevois::sformat("%s:%.1f ", itr->second.c_str(), itr->first);
-    
     box const & b = dets[i].bbox;
 
     int const left = (b.x - b.w / 2.0F) * inw;
@@ -252,7 +243,7 @@ void Yolo::sendSerial(jevois::StdModule * mod, int inw, int inh)
     int const top = (b.y - b.h / 2.0F) * inh;
     int const bh = b.h * inh;
 
-    mod->sendSerialImg2D(inw, inh, left, top, bw, bh, name, extra);
+    mod->sendSerialObjDetImg2D(inw, inh, left, top, bw, bh, data);
   }
 }
 

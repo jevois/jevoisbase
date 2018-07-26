@@ -116,13 +116,13 @@
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DarknetSingle : public jevois::Module
+class DarknetSingle : public jevois::StdModule
 {
   public: 
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    DarknetSingle(std::string const & instance) : jevois::Module(instance)
+    DarknetSingle(std::string const & instance) : jevois::StdModule(instance)
     {
       itsDarknet = addSubComponent<Darknet>("darknet");
     }
@@ -139,19 +139,6 @@ class DarknetSingle : public jevois::Module
     virtual void postUninit() override
     {
       try { itsPredictFut.get(); } catch (...) { }
-    }
-    
-    // ####################################################################################################
-    //! Send serial messages
-    // ####################################################################################################
-    void sendAllSerial()
-    {
-      if (itsResults.empty()) return;
-      
-      std::string msg = "RECO";
-      for (auto const & r : itsResults) msg += jevois::sformat(" %s:%.1f", r.second.c_str(), r.first);
-
-      sendSerial(msg);
     }
     
     // ####################################################################################################
@@ -189,7 +176,7 @@ class DarknetSingle : public jevois::Module
       LINFO("Predicted in " << ptime << "ms");
 
       // Send serial results:
-      sendAllSerial();
+      sendSerialObjReco(itsResults);
     }
 
     // ####################################################################################################
@@ -260,13 +247,13 @@ class DarknetSingle : public jevois::Module
 
             for (auto const & p : itsResults)
             {
-              jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.second.c_str(), p.first),
+              jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.category.c_str(), p.score),
                                           w + 3, y, jevois::yuyv::White);
               y += 12;
             }
 
             // Send serial results:
-            sendAllSerial();
+	    sendSerialObjReco(itsResults);
 
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
@@ -333,7 +320,7 @@ class DarknetSingle : public jevois::Module
     // ####################################################################################################
   protected:
     std::shared_ptr<Darknet> itsDarknet;
-    std::vector<Darknet::predresult> itsResults;
+    std::vector<jevois::ObjReco> itsResults;
     std::future<float> itsPredictFut;
     cv::Mat itsRawInputCv;
     cv::Mat itsCvImg;

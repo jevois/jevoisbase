@@ -135,14 +135,14 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the fix
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class TensorFlowEasy : public jevois::Module,
+class TensorFlowEasy : public jevois::StdModule,
 		       public jevois::Parameter<foa>
 {
   public: 
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
-    TensorFlowEasy(std::string const & instance) : jevois::Module(instance)
+    TensorFlowEasy(std::string const & instance) : jevois::StdModule(instance)
     {
       itsTensorFlow = addSubComponent<TensorFlow>("tf");
     }
@@ -153,19 +153,6 @@ class TensorFlowEasy : public jevois::Module,
     virtual ~TensorFlowEasy()
     { }
 
-    // ####################################################################################################
-    //! Send serial messages
-    // ####################################################################################################
-    void sendAllSerial()
-    {
-      if (itsResults.empty()) return;
-      
-      std::string msg = "RECO";
-      for (auto const & r : itsResults) msg += jevois::sformat(" %s:%.1f", r.second.c_str(), r.first);
-
-      sendSerial(msg);
-    }
-    
     // ####################################################################################################
     //! Processing function, no video output
     // ####################################################################################################
@@ -207,7 +194,7 @@ class TensorFlowEasy : public jevois::Module,
 	LINFO("Predicted in " << ptime << "ms");
 
 	// Send serial results:
-	sendAllSerial();
+	sendSerialObjReco(itsResults);
       }
       catch (std::logic_error const & e) { } // network still loading
     }
@@ -283,7 +270,7 @@ class TensorFlowEasy : public jevois::Module,
 				    w - 7 * 6 - 2, h + 40, jevois::yuyv::White);
  
 	// Send serial results:
-	sendAllSerial();
+	sendSerialObjReco(itsResults);
       }
       catch (std::logic_error const & e)
       {
@@ -297,7 +284,7 @@ class TensorFlowEasy : public jevois::Module,
 
       for (auto const & p : itsResults)
       {
-	jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.second.c_str(), p.first),
+	jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.category.c_str(), p.score),
 				    3, y, jevois::yuyv::White);
 	y += 12;
       }
@@ -313,7 +300,7 @@ class TensorFlowEasy : public jevois::Module,
     // ####################################################################################################
   protected:
     std::shared_ptr<TensorFlow> itsTensorFlow;
-    std::vector<TensorFlow::predresult> itsResults;
+    std::vector<jevois::ObjReco> itsResults;
 };
 
 // Allow the module to be loaded as a shared object (.so) file:

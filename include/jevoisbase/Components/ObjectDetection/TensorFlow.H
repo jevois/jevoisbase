@@ -20,6 +20,7 @@
 #include <jevois/Component/Component.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevois/Types/Enum.H>
+#include <jevois/Types/ObjReco.H>
 #include <atomic>
 
 #include <tensorflow/contrib/lite/model.h>
@@ -87,15 +88,12 @@ class TensorFlow : public jevois::Component,
     //! Un-initialize and free resources
     void postUninit() override;
 
-    //! Typedef for one result: score, category name
-    typedef std::pair<float, std::string> predresult;
-
     //! Processing function, results are stored internally in the underlying TensorFlow network object
     /*! Expects an OpenCV byte RGB (CV_8UC3) or Gray (CV_8UC1) image, which may be further converted to float if that is
         what the network wants as input. The image dims and number of channels must match the network's input dims and
         channels.  Returns the prediction time (neural net forward pass) in milliseconds. Throws std::logic_error if the
         network is still loading and not ready. */
-    float predict(cv::Mat const & cvimg, std::vector<predresult> & results);
+    float predict(cv::Mat const & cvimg, std::vector<jevois::ObjReco> & results);
     
     //! Get input width, height, channels
     /*! Throws std::logic_error if the network is still loading and not ready. */
@@ -114,7 +112,8 @@ class TensorFlow : public jevois::Component,
     void readLabelsFile(std::string const & fname);
 
     template <class T>
-    void get_top_n(T * prediction, int prediction_size, std::vector<predresult> & top_results, bool input_floating);
+    void get_top_n(T * prediction, int prediction_size, std::vector<jevois::ObjReco> & top_results,
+		   bool input_floating);
 
     std::future<void> itsReadyFut;
     std::atomic<bool> itsReady;

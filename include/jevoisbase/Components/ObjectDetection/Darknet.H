@@ -19,6 +19,7 @@
 
 #include <jevois/Component/Component.H>
 #include <jevois/Image/RawImageOps.H>
+#include <jevois/Types/ObjReco.H>
 #include <jevois/Types/Enum.H>
 #include <atomic>
 
@@ -112,22 +113,19 @@ class Darknet : public jevois::Component,
     //! Un-initialize and free resources
     void postUninit() override;
 
-    //! Typedef for one result: score, category name
-    typedef std::pair<float, std::string> predresult;
-
     //! Processing function, results are stored internally in the underlying Darknet network object
     /*! This version expects an OpenCV RGB byte image which will be converted to float RGB planar. If the image dims do
         not match the network's input layer dims, we here resize the network (beware that this only works if the network
         is fully convolutional).  Returns the prediction time (neural net forward pass) in milliseconds. Throws
         std::logic_error if the network is still loading and not ready. */
-    float predict(cv::Mat const & cvimg, std::vector<predresult> & results);
+    float predict(cv::Mat const & cvimg, std::vector<jevois::ObjReco> & results);
     
     //! Processing function, results are stored internally in the underlying Darknet network object
     /*! This version expects a Darknet image input, RGB float planar normalized to [0..1]. If the image dims do not
         match the network's input layer dims, we here resize the network (beware that this only works if the network is
         fully convolutional). Returns the prediction time (neural net forward pass) in milliseconds. Throws
         std::logic_error if the network is still loading and not ready. */
-    float predict(image & im, std::vector<predresult> & results);
+    float predict(image & im, std::vector<jevois::ObjReco> & results);
 
     //! Resize the network's input image dims
     /*! This will prepare the network to receive inputs of the specified size. It is optional and will be called

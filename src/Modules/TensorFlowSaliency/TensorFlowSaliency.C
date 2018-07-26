@@ -163,20 +163,6 @@ class TensorFlowSaliency : public jevois::StdModule,
     }
     
     // ####################################################################################################
-    //! Send serial messages
-    // ####################################################################################################
-    void sendAllSerial(int inw, int inh, int salx, int saly, int roiw, int roih)
-    {
-      std::string best, extra;
-      
-      for (auto const & r : itsResults)
-	if (best.empty()) best = jevois::sformat("%s:%.1f", r.second.c_str(), r.first);
-	else extra += jevois::sformat("%s:%.1f ", r.second.c_str(), r.first);
-
-      sendSerialImg2D(inw, inh, salx, saly, roiw, roih, best, extra);
-    }
-
-    // ####################################################################################################
     //! Helper function: compute saliency ROI in a thread, return top-left corner and size
     // ####################################################################################################
     virtual void getSalROI(jevois::RawImage const & inimg)
@@ -247,7 +233,7 @@ class TensorFlowSaliency : public jevois::StdModule,
 	LINFO("Predicted in " << ptime << "ms");
 
 	// Send serial results and switch to next frame:
-	sendAllSerial(w, h, itsRx + itsRw/2, itsRy + itsRh/2, itsRw, itsRh);
+	sendSerialObjDetImg2D(w, h, itsRx + itsRw/2, itsRy + itsRh/2, itsRw, itsRh, itsResults);
       }
       catch (std::logic_error const & e) { } // network still loading
     }
@@ -348,13 +334,13 @@ class TensorFlowSaliency : public jevois::StdModule,
 
 	  for (auto const & p : itsResults)
 	  {
-	    jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.second.c_str(), p.first),
+	    jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.category.c_str(), p.score),
 					w + 3, y, jevois::yuyv::White);
 	    y += 12;
 	  }
 
 	  // Send serial results:
-	  sendAllSerial(w, h, itsRx + itsRw/2, itsRy + itsRh/2, itsRw, itsRh);
+	  sendSerialObjDetImg2D(w, h, itsRx + itsRw/2, itsRy + itsRh/2, itsRw, itsRh, itsResults);
 
 	  // Draw some text messages:
 	  jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
@@ -385,7 +371,7 @@ class TensorFlowSaliency : public jevois::StdModule,
   protected:
     std::shared_ptr<Saliency> itsSaliency;
     std::shared_ptr<TensorFlow> itsTensorFlow;
-    std::vector<TensorFlow::predresult> itsResults;
+    std::vector<jevois::ObjReco> itsResults;
     std::future<float> itsPredictFut;
     cv::Mat itsRawInputCv;
     cv::Mat itsCvImg;

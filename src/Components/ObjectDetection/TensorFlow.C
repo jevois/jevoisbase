@@ -91,7 +91,7 @@ void TensorFlow::postInit()
 
 // ####################################################################################################
 template <class T>
-void TensorFlow::get_top_n(T * prediction, int prediction_size, std::vector<TensorFlow::predresult> & top_results,
+void TensorFlow::get_top_n(T * prediction, int prediction_size, std::vector<jevois::ObjReco> & top_results,
 			   bool input_floating)
 {
   int const topn = top::get();
@@ -121,7 +121,7 @@ void TensorFlow::get_top_n(T * prediction, int prediction_size, std::vector<Tens
   while (!top_result_pq.empty())
   {
     auto const & tr = top_result_pq.top();
-    top_results.push_back(std::make_pair(tr.first * 100, std::string(labels[tr.second])));
+    top_results.push_back( { tr.first * 100, std::string(labels[tr.second]) } );
     top_result_pq.pop();
   }
   std::reverse(top_results.begin(), top_results.end());
@@ -213,7 +213,7 @@ void TensorFlow::postUninit()
 }
 
 // ####################################################################################################
-float TensorFlow::predict(cv::Mat const & cvimg, std::vector<predresult> & results)
+float TensorFlow::predict(cv::Mat const & cvimg, std::vector<jevois::ObjReco> & results)
 {
   if (itsNeedReload.load()) loadNet();
   if (itsReady.load() == false) throw std::logic_error("not ready yet...");
