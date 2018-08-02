@@ -400,15 +400,17 @@ ${TFS}/error_reporter.cc ${TFS}/interpreter.cc ${TFS}/optional_debug_tools.cc ${
 ${TFS}/allocation.cc ${TFS}/arena_planner.cc ${TFS}/context.c)
 
 ########################################################################################################################
-# Link to OpenCV libraries for superpixels, aruco, and others (from pkg-config --libs opencv and deleting a few):
+# Link to OpenCV libraries for superpixels, aruco, and others:
+# From this: ls /usr/share/jevois-opencv-3.4.2/lib/|grep ".so$"|sed -e s/.so//|sed -e s/^lib//|xargs
 
-target_link_libraries(jevoisbase ${JEVOIS_OPENCV_LIBS} opencv_stitching opencv_superres opencv_videostab
-  opencv_aruco opencv_bgsegm opencv_bioinspired opencv_ccalib opencv_dnn opencv_dpm opencv_fuzzy
-  opencv_line_descriptor opencv_optflow opencv_plot opencv_reg opencv_saliency opencv_stereo opencv_structured_light
-  opencv_rgbd opencv_surface_matching opencv_tracking opencv_datasets opencv_text opencv_face opencv_xfeatures2d
-  opencv_shape opencv_video opencv_ximgproc opencv_calib3d opencv_features2d opencv_flann opencv_xobjdetect
-  opencv_objdetect opencv_ml opencv_xphoto opencv_highgui opencv_videoio opencv_imgcodecs opencv_photo
-  opencv_imgproc opencv_core)
+target_link_libraries(jevoisbase ${JEVOIS_OPENCV_LIBS} opencv_aruco opencv_bgsegm opencv_bioinspired opencv_calib3d
+  opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dpm opencv_face opencv_features2d
+  opencv_flann opencv_fuzzy opencv_hfs opencv_highgui opencv_imgcodecs opencv_img_hash opencv_imgproc
+  opencv_line_descriptor opencv_ml opencv_objdetect opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot
+  opencv_reg opencv_rgbd opencv_saliency opencv_shape opencv_stereo opencv_stitching opencv_structured_light
+  opencv_superres opencv_surface_matching opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab
+  opencv_xfeatures2d opencv_ximgproc opencv_xobjdetect opencv_xphoto)
+# removed: opencv_freetype (not available on platform)
 
 ########################################################################################################################
 # Install shared resources (cascade classifiers, neural network weights, etc):
