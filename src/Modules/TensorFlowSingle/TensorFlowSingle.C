@@ -103,15 +103,15 @@
     ---------------
 
     When detections are found with confidence scores above \p thresh, a message containing up to \p top category:score
-    pairs will be sent per video frame:
+    pairs will be sent per video frame. Exact message format depends on the current \p serstyle setting and is described
+    in \ref UserSerialStyle. For example, when \p serstyle is \b Detail, this module sends:
 
     \verbatim
-    RECO category:score category:score ... category:score
+    DO category:score category:score ... category:score
     \endverbatim
 
     where \a category is a category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0 that
-    this category was recognized. The pairs are in order of decreasing score. Beware that some category names contain
-    spaces, hence you should always look for a ':' to mark the end of a category name and the start of a score value.
+    this category was recognized. The pairs are in order of decreasing score.
 
     Using your own network
     ----------------------

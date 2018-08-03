@@ -13,8 +13,34 @@ import sys
 # This module supports detection networks implemented in TensorFlow, Caffe,
 # Darknet, Torch, etc as supported by the OpenCV DNN module.
 #
+# Included with the standard JeVois distribution are:
+#
+# - OpenCV Face Detector, Caffe model
+# - MobileNet + SSD trained on Pascal VOC (20 object classes), Caffe model
+# - MobileNet + SSD trained on Coco (80 object classes), TensorFlow model
+# - MobileNet v2 + SSD trained on Coco (80 object classes), TensorFlow model
+# - Darknet Tiny YOLO v3 trained on Coco (80 object classes), Darknet model
+# - Darknet Tiny YOLO v2 trained on Pascal VOC (20 object classes), Darknet model
+#
+# See the module's constructor (__init__) code and select a value for \b model to switch network. Object categories are
+# as follows:
+# - The 80 COCO object categories are: person, bicycle, car, motorbike, aeroplane, bus, train, truck, boat, traffic,
+#   fire, stop, parking, bench, bird, cat, dog, horse, sheep, cow, elephant, bear, zebra, giraffe, backpack, umbrella,
+#   handbag, tie, suitcase, frisbee, skis, snowboard, sports, kite, baseball, baseball, skateboard, surfboard, tennis,
+#   bottle, wine, cup, fork, knife, spoon, bowl, banana, apple, sandwich, orange, broccoli, carrot, hot, pizza, donut,
+#   cake, chair, sofa, pottedplant, bed, diningtable, toilet, tvmonitor, laptop, mouse, remote, keyboard, cell,
+#   microwave, oven, toaster, sink, refrigerator, book, clock, vase, scissors, teddy, hair, toothbrush.
+#
+# - The 20 Pascal-VOC object categories are: aeroplane, bicycle, bird, boat, bottle, bus, car, cat, chair, cow,
+#   diningtable, dog, horse, motorbike, person, pottedplant, sheep, sofa, train, tvmonitor.
+#
+# Sometimes it will make mistakes! The performance of yolov3-tiny is about 33.1% correct (mean average precision) on
+# the COCO test set. The OpenCV Face Detector is quite fast and robust!
+#
 # This module is adapted from the sample OpenCV code:
 # https://github.com/opencv/opencv/blob/master/samples/dnn/object_detection.py
+#
+# More pre-trained models are available on github in opencv_extra
 #
 #
 # @author Laurent Itti
@@ -34,50 +60,59 @@ class PyDetectionDNN:
     # ####################################################################################################
     ## Constructor
     def __init__(self):
-        backend = cv.dnn.DNN_BACKEND_DEFAULT
-        target = cv.dnn.DNN_TARGET_CPU
-        self.confThreshold = 0.5 # Confidence threshold, higher for stricter.
-        self.nmsThreshold = 0.4  # Non-maximum suppression threshold, higher to remove duplicate boxes.
+        self.confThreshold = 0.5 # Confidence threshold (0..1), higher for stricter detection confidence.
+        self.nmsThreshold = 0.4  # Non-maximum suppression threshold (0..1), higher to remove more duplicate boxes.
         self.inpWidth = 160      # Resized image width passed to network
         self.inpHeight = 120     # Resized image width passed to network
-        self.scale = 2/255
-        self.mean = [127.5, 127.5, 127.5]
-        self.rgb = True
+        self.scale = 2/255       # Value scaling factor applied to input pixels
+        self.mean = [127.5, 127.5, 127.5] # Mean BGR value subtracted from input image
+        self.rgb = True          # True if model expects RGB inputs, otherwise it expects BGR
+
+        # Select one of the models:
+        model = 'Face'              # OpenCV Face Detector, Caffe model
+        #model = 'MobileNetV2SSD'   # MobileNet v2 + SSD trained on Coco (80 object classes), TensorFlow model
+        #model = 'MobileNetSSD'     # MobileNet + SSD trained on Pascal VOC (20 object classes), Caffe model
+        #model = 'MobileNetSSDcoco' # MobileNet + SSD trained on Coco (80 object classes), TensorFlow model
+        #model = 'YOLOv3'           # Darknet Tiny YOLO v3 trained on Coco (80 object classes), Darknet model
+        #model = 'YOLOv2'           # Darknet Tiny YOLO v2 trained on Pascal VOC (20 object classes), Darknet model
+
+        # You should not have to edit anything beyond this point.
+        backend = cv.dnn.DNN_BACKEND_DEFAULT
+        target = cv.dnn.DNN_TARGET_CPU
         self.classes = None
         classnames = None
-
-        # Select one of the models below:
-        
-        ##### MobileNet + SSD trained on Pascal VOC (20 object categories):
-        classnames = '/jevois/share/darknet/yolo/data/voc.names'
-        modelname = '/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.caffemodel'
-        configname = '/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.prototxt'
-        self.rgb = False
-
-        ##### OpenCV Face Detector:
-        #modelname = '/jevois/share/opencv-dnn/detection/opencv_face_detector.caffemodel'
-        #configname = '/jevois/share/opencv-dnn/detection/opencv_face_detector.prototxt'
-        #self.scale = 1.0
-        #self.mean = [104.0, 177.0, 123.0]
-        #self.rgb = False
-        #self.classes = [ 'Face' ]
-
-        ##### MobileNet v2 + SSD trained on Coco (80 object categories):
-        classnames = '/jevois/share/darknet/yolo/data/coco.names'
-        modelname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pb'
-        configname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pbtxt'
-
-        ##### Darknet Tiny YOLO v3 trained on Coco (80 object categories):
-        classnames = '/jevois/share/darknet/yolo/data/coco.names'
-        modelname = '/jevois/share/darknet/yolo/weights/yolov3-tiny.weights'
-        configname = '/jevois/share/darknet/yolo/cfg/yolov3-tiny.cfg'
-        self.scale = 1/255
-
-        ##### Darknet Tiny YOLO v2 trained on Pascal VOC (20 object categories):
-        classnames = '/jevois/share/darknet/yolo/data/voc.names'
-        modelname = '/jevois/share/darknet/yolo/weights/yolov2-tiny.weights'
-        configname = '/jevois/share/darknet/yolo/cfg/yolov2-tiny.cfg'
-        self.scale = 1/255
+        if (model == 'MobileNetSSD'):
+            classnames = '/jevois/share/darknet/yolo/data/voc.names'
+            modelname = '/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.caffemodel'
+            configname = '/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.prototxt'
+            self.rgb = False
+        elif (model == 'MobileNetV2SSD'):
+            classnames = '/jevois/share/darknet/yolo/data/coco.names'
+            modelname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pb'
+            configname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pbtxt'
+        elif (model == 'MobileNetSSDcoco'):
+            classnames = '/jevois/share/darknet/yolo/data/coco.names'
+            modelname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pb'
+            configname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pbtxt'
+            self.rgb = False
+            self.nmsThreshold = 0.1
+        elif (model == 'YOLOv3'):
+            classnames = '/jevois/share/darknet/yolo/data/coco.names'
+            modelname = '/jevois/share/darknet/yolo/weights/yolov3-tiny.weights'
+            configname = '/jevois/share/darknet/yolo/cfg/yolov3-tiny.cfg'
+        elif (model == 'YOLOv2'):
+            classnames = '/jevois/share/darknet/yolo/data/voc.names'
+            modelname = '/jevois/share/darknet/yolo/weights/yolov2-tiny-voc.weights'
+            configname = '/jevois/share/darknet/yolo/cfg/yolov2-tiny-voc.cfg'
+            self.inpWidth = 320
+            self.inpHeight = 240
+        else:
+            classnames = '/jevois/share/opencv-dnn/detection/opencv_face_detector.classes'
+            modelname = '/jevois/share/opencv-dnn/detection/opencv_face_detector.caffemodel'
+            configname = '/jevois/share/opencv-dnn/detection/opencv_face_detector.prototxt'
+            self.scale = 1.0
+            self.mean = [104.0, 177.0, 123.0]
+            self.rgb = False
 
         # Load names of classes
         if classnames:
@@ -89,6 +124,7 @@ class PyDetectionDNN:
         self.net.setPreferableBackend(backend)
         self.net.setPreferableTarget(target)
         self.timer = jevois.Timer('Neural detection', 10, jevois.LOG_DEBUG)
+        self.model = model
         
     # ####################################################################################################
     ## Get names of the network's output layers
@@ -110,8 +146,10 @@ class PyDetectionDNN:
 
             # Print a label of class.
             if self.classes:
-                assert(classId < len(self.classes))
-                label = '%s: %s' % (self.classes[classId], label)
+                if (classId >= len(self.classes)):
+                    label = 'Oooops id=%d: %s' % (classId, label)
+                else:
+                    label = '%s: %s' % (self.classes[classId], label)
 
             labelSize, baseLine = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 0.4, 1)
             top = max(top, labelSize[1])
@@ -221,8 +259,8 @@ class PyDetectionDNN:
         msgbox = np.zeros((22, frame.shape[1], 3), dtype = np.uint8) + 80
       
         # Put efficiency information.
-        cv.putText(frame, 'JeVois Python Object Detection DNN', (3, 15), cv.FONT_HERSHEY_SIMPLEX,
-                   0.4, (255, 255, 255), 1, cv.LINE_AA)
+        cv.putText(frame, 'JeVois Python Object Detection DNN - ' + self.model, (3, 15),
+                   cv.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv.LINE_AA)
         t, _ = self.net.getPerfProfile()
         fps = self.timer.stop()
         label = fps + ' - Inference time: %.2fms' % (t * 1000.0 / cv.getTickFrequency())

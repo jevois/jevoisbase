@@ -52,8 +52,9 @@ cv::Mat BufferedVideoReader::get()
 void BufferedVideoReader::run()
 {
   // Open the video file:
-  cv::VideoCapture vcap(absolutePath(filename::get()));
-  if (vcap.isOpened() == false) { itsBuf.push(cv::Mat()); LERROR("Could not open video file " << filename::get()); }
+  std::string const path = absolutePath(filename::get());
+  cv::VideoCapture vcap(path);
+  if (vcap.isOpened() == false) { itsBuf.push(cv::Mat()); LERROR("Could not open video file " << path); }
 
   cv::Mat frame;
   while (itsRunning.load())
