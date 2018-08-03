@@ -56,6 +56,9 @@
     Note that when \p serstyle is \b Fine, only 4 corners are returned for each detected QR-code, but many points are
     returned all over each detected barcode. Beware to not exceed your serial bandwidth in that case.
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
     @author Laurent Itti
 
     @displayname Demo QR-code

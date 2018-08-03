@@ -137,6 +137,9 @@ JEVOIS_DECLARE_PARAMETER(showwin, bool, "Show the interactive image capture wind
     - `w`, `h`, or vertices: Standardized bounding box around the object
     - `extra`: none (empty string)
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
     Programmer notes
     ----------------
 

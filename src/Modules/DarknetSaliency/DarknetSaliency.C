@@ -102,6 +102,10 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
          decreasing score
       where \a category is the category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
+
     @author Laurent Itti
 
     @displayname Darknet Saliency

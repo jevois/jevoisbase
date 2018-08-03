@@ -5,7 +5,7 @@ import sys
 
 ## Object detection and recognition using OpenCV Deep Neural Networks (DNN)
 #
-# This module runs an aobject detection deep neural network using the OpenCV DNN
+# This module runs an object detection deep neural network using the OpenCV DNN
 # library. Detection networks analyze a whole scene and produce a number of
 # bounding boxes around detected objects, together with identity labels
 # and confidence scores for each detected box.

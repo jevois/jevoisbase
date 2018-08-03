@@ -96,6 +96,9 @@
     \endverbatim
     In this example, we detected 5 blobs on frame 2940, then 4 blobs on frame 2941, then 3 blobs on frame 2942.
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
     Trying it out
     -------------
 

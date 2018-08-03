@@ -100,6 +100,9 @@
     where \a category is a category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0 that
     this category was recognized. The pairs are in order of decreasing score.
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
     @author Laurent Itti
 
     @displayname Darknet Single

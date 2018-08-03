@@ -59,6 +59,10 @@
     - `w`, `h`: standardized size of the pink square box around each attended point
     - `extra`: none (empty string)
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
+
     @author Laurent Itti
 
     @displayname Demo Saliency + Gist + Face Detection + Object Recognition

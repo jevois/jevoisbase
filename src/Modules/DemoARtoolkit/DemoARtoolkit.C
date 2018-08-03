@@ -67,6 +67,9 @@
     If you will use the quaternion data (Detail message style; see \ref UserSerialStyle), you should probably set the \p
     serprec parameter to something non-zero to get enough accuracy in the quaternion values.
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
 
     @author Shixian Wen
 

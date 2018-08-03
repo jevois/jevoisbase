@@ -107,6 +107,9 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
     switch to frame 1158 (with essentially the same detections), then frame 1159 (note how blob0 detected 2 different
     blobs on that frame), and so on. See \ref UserSerialStyle for more info about these messages.
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
     Running with no video output (standalone mode)
     ----------------------------------------------
 

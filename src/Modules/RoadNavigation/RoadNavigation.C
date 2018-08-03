@@ -72,6 +72,9 @@ JEVOIS_DECLARE_PARAMETER(vpconf, float, "Minimum vanishing point confidence requ
     - `w`: always 0.
     - `extra`: none (empty string)
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
     Trying it out
     -------------
 

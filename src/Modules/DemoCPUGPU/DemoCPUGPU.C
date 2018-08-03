@@ -70,6 +70,8 @@
     - `w`, `h`: always 0, 0
     - `extra`: none (empty string)
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
 
     @author Laurent Itti
 

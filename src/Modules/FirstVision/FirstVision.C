@@ -221,6 +221,9 @@ JEVOIS_DECLARE_PARAMETER(margin, size_t, "Margin from from frame borders (pixels
     HSV ranges very well if you want to operate at 120fps (see below). To operate more reliably at very low resolutions,
     one may want to improve this module by adding subpixel shape refinement and tracking across frames.
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
     Trying it out
     -------------
 

@@ -56,6 +56,9 @@
     every video frame at the temporally filtered attended location. The \p id field in the messages simply is \b salient
     for all messages.
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
 
     @author Laurent Itti
 

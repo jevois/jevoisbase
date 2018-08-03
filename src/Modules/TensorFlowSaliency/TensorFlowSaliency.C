@@ -101,6 +101,9 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the foc
          decreasing score
       where \a category is the category name (from \p namefile) and \a score is the confidence score from 0.0 to 100.0
 
+    See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
+    standardized coordinates.
+
     Using your own network
     ----------------------
 
