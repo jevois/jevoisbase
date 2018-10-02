@@ -483,7 +483,7 @@ class FirstVision : public jevois::StdModule,
 
       // Detect objects by finding contours:
       std::vector<std::vector<cv::Point> > contours; std::vector<cv::Vec4i> hierarchy;
-      cv::findContours(imgth, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+      cv::findContours(imgth, contours, hierarchy, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
       str += jevois::sformat("N=%03d ", hierarchy.size());
       
       double const epsi = epsilon::get();

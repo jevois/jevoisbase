@@ -178,7 +178,7 @@ class TensorFlowEasy : public jevois::StdModule,
       cv::Mat crop = cvimg(cv::Rect(offx, offy, foaw, foah));
         
       // Convert crop to RGB for predictions:
-      cv::Mat rgbroi; cv::cvtColor(crop, rgbroi, CV_YUV2RGB_YUYV);
+      cv::Mat rgbroi; cv::cvtColor(crop, rgbroi, cv::COLOR_YUV2RGB_YUYV);
       
       // Let camera know we are done processing the input image:
       inframe.done();
@@ -247,7 +247,7 @@ class TensorFlowEasy : public jevois::StdModule,
       cv::Mat crop = cvimg(cv::Rect(offx, offy, foaw, foah));
         
       // Convert crop to RGB for predictions:
-      cv::Mat rgbroi; cv::cvtColor(crop, rgbroi, CV_YUV2RGB_YUYV);
+      cv::Mat rgbroi; cv::cvtColor(crop, rgbroi, cv::COLOR_YUV2RGB_YUYV);
       
       // Let camera know we are done processing the input image:
       paste_fut.get(); inframe.done();

@@ -99,7 +99,7 @@ class DemoEyeTracker : public jevois::Module
       // Convert the input to grayscale, directly into the output's pixel buffer:
       cv::Mat cvin = jevois::rawimage::cvImage(inimg);
       cv::Mat cvout = jevois::rawimage::cvImage(outimg);
-      cv::cvtColor(cvin, cvout, CV_YUV2GRAY_YUYV);
+      cv::cvtColor(cvin, cvout, cv::COLOR_YUV2GRAY_YUYV);
 
       // Let camera know we are done processing the input image:
       inframe.done();

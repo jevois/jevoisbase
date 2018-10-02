@@ -51,6 +51,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+/*
 #include <jevoisbase/Contrib/cvEyeTracker-1.2.5/remove_corneal_reflection.h>
 #include <jevoisbase/Contrib/cvEyeTracker-1.2.5/svd.h>
 
@@ -133,6 +135,7 @@ void Reduce_Line_Noise(IplImage* in_image, double * avg_intensity_hori, double *
     for (int i = 0; i < in_image->width; ++i) { *pixel = FIX_UINT8(*pixel + adjustment); ++pixel; }
   }
 }
+*/
 
 // ##############################################################################################################
 EyeTracker::EyeTracker(std::string const & instance) :
@@ -150,6 +153,9 @@ EyeTracker::~EyeTracker()
 // ##############################################################################################################
 void EyeTracker::process(cv::Mat & eyeimg, double pupell[5], bool debugdraw)
 {
+  LFATAL("Sorry this module needs to be updated to work again...");
+  /*
+  
   int *inliers_index;
   CvSize ellipse_axis;
   CvPoint gaze_point;
@@ -222,10 +228,8 @@ void EyeTracker::process(cv::Mat & eyeimg, double pupell[5], bool debugdraw)
   if (debugdraw && corneal_reflection.x > 3 && corneal_reflection.y > 3 && pupil.x > 3 && pupil.y > 3)
     cvLine(eye_image, pupil, corneal_reflection, 100, 4, 8);
 
-  /*** JEVOIS comment out
-  printf("ellipse a:%lf; b:%lf, cx:%lf, cy:%lf, theta:%lf; inliers_num:%d\n\n", 
-         pupil_param[0], pupil_param[1], pupil_param[2], pupil_param[3], pupil_param[4], inliers_num);
-  */
+    //printf("ellipse a:%lf; b:%lf, cx:%lf, cy:%lf, theta:%lf; inliers_num:%d\n\n", 
+    //     pupil_param[0], pupil_param[1], pupil_param[2], pupil_param[3], pupil_param[4], inliers_num);
   for (int k = 0; k < 5; ++k) pupell[k] = pupil_param[k]; // send data to caller
 
   if (debugdraw)
@@ -264,5 +268,6 @@ void EyeTracker::process(cv::Mat & eyeimg, double pupell[5], bool debugdraw)
   // Cleanup:
   cvReleaseImageHeader(&eye_image);
   cvReleaseImage(&threshold_image);
+  */
 }
 

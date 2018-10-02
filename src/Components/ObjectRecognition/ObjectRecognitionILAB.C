@@ -155,7 +155,7 @@ namespace
 #ifndef JEVOIS_PLATFORM
                 cv::imshow("conversion", obj); cv::waitKey(1);
 #endif
-                cv::Mat rgbobj; cv::cvtColor(obj, rgbobj, CV_BGR2RGB); // opencv reads BGR by default
+                cv::Mat rgbobj; cv::cvtColor(obj, rgbobj, cv::COLOR_BGR2RGB); // opencv reads BGR by default
 
                 ofs.write((char const *)(&categ), 1);
                 ofs.write((char const *)(rgbobj.data), 32*32*3);

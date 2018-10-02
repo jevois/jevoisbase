@@ -58,7 +58,7 @@ void SuperPixel::process(cv::Mat const & inimg, cv::Mat & outimg)
     
     case superpixel::OutType::Contours:
     { 
-      cv::cvtColor(inimg, outimg, CV_RGB2GRAY);
+      cv::cvtColor(inimg, outimg, cv::COLOR_RGB2GRAY);
 
       cv::Mat mask; sp->getLabelContourMask(mask, false);
 
@@ -99,7 +99,7 @@ void SuperPixel::process(cv::Mat const & inimg, cv::Mat & outimg)
     
     case superpixel::OutType::Contours:
     { 
-      cv::cvtColor(inimg, outimg, CV_RGB2GRAY);
+      cv::cvtColor(inimg, outimg, cv::COLOR_RGB2GRAY);
 
       cv::Mat mask; sp->getLabelContourMask(mask, false);
 

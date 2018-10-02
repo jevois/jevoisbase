@@ -217,7 +217,7 @@ class TensorFlowSaliency : public jevois::StdModule,
 
       // Convert the ROI to RGB:
       cv::Mat rgbroi;
-      cv::cvtColor(rawroi, rgbroi, CV_YUV2RGB_YUYV);
+      cv::cvtColor(rawroi, rgbroi, cv::COLOR_YUV2RGB_YUYV);
 
       // Let camera know we are done processing the input image:
       inframe.done();
@@ -293,7 +293,7 @@ class TensorFlowSaliency : public jevois::StdModule,
 
         // Convert the ROI to RGB:
         cv::Mat rgbroi;
-        cv::cvtColor(rawroi, rgbroi, CV_YUV2RGB_YUYV);
+        cv::cvtColor(rawroi, rgbroi, cv::COLOR_YUV2RGB_YUYV);
 
         // Let camera know we are done processing the input image:
         inframe.done();

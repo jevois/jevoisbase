@@ -43,7 +43,7 @@ include_directories("include")
 include_directories("..")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with the current version number:
-jevois_setup_library(src/Components jevoisbase 1.9.0)
+jevois_setup_library(src/Components jevoisbase 1.10.0)
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)
@@ -227,8 +227,10 @@ add_definitions(-Wparentheses -w)
 ########################################################################################################################
 # cvEyeTracker eye-tracking
 
-target_sources(jevoisbase PRIVATE ${JVB}/Contrib/cvEyeTracker-1.2.5/ransac_ellipse.cpp
-  ${JVB}/Contrib/cvEyeTracker-1.2.5/remove_corneal_reflection.cpp ${JVB}/Contrib/cvEyeTracker-1.2.5/svd.c)
+# This uses legacy opencv API which is not supported anymore in opencv 4.x.
+
+#target_sources(jevoisbase PRIVATE ${JVB}/Contrib/cvEyeTracker-1.2.5/ransac_ellipse.cpp
+#  ${JVB}/Contrib/cvEyeTracker-1.2.5/remove_corneal_reflection.cpp ${JVB}/Contrib/cvEyeTracker-1.2.5/svd.c)
 
 ########################################################################################################################
 # Neon-accelerated NE10 support:
@@ -401,16 +403,16 @@ ${TFS}/allocation.cc ${TFS}/arena_planner.cc ${TFS}/context.c)
 
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others:
-# From this: ls /usr/share/jevois-opencv-3.4.2/lib/|grep ".so$"|sed -e s/.so//|sed -e s/^lib//|xargs
+# From this: ls /usr/share/jevois-opencv-4.*/lib/|grep ".so$"|sed -e s/.so//|sed -e s/^lib//|xargs
 
 target_link_libraries(jevoisbase ${JEVOIS_OPENCV_LIBS} opencv_aruco opencv_bgsegm opencv_bioinspired opencv_calib3d
   opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dpm opencv_face opencv_features2d
-  opencv_flann opencv_fuzzy opencv_hfs opencv_highgui opencv_imgcodecs opencv_img_hash opencv_imgproc
+  opencv_flann opencv_fuzzy opencv_hfs opencv_imgcodecs opencv_img_hash opencv_imgproc
   opencv_line_descriptor opencv_ml opencv_objdetect opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot
-  opencv_reg opencv_rgbd opencv_saliency opencv_shape opencv_stereo opencv_stitching opencv_structured_light
-  opencv_superres opencv_surface_matching opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab
-  opencv_xfeatures2d opencv_ximgproc opencv_xobjdetect opencv_xphoto)
-# removed: opencv_freetype (not available on platform)
+  opencv_reg opencv_saliency opencv_shape opencv_stereo opencv_stitching opencv_structured_light opencv_superres
+  opencv_surface_matching opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_xfeatures2d
+  opencv_ximgproc opencv_xobjdetect opencv_xphoto)
+# removed: opencv_freetype (not available on platform), opencv_highgui (not needed), opencv_rgbd (not needed)
 
 ########################################################################################################################
 # Install shared resources (cascade classifiers, neural network weights, etc):

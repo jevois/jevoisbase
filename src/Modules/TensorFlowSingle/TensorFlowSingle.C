@@ -200,7 +200,7 @@ class TensorFlowSingle : public jevois::StdModule
       cv::Mat crop = cvimg(cv::Rect(offx, offy, netw, neth));
         
       // Convert crop to RGB for predictions:
-      cv::cvtColor(crop, itsCvImg, CV_YUV2RGB_YUYV);
+      cv::cvtColor(crop, itsCvImg, cv::COLOR_YUV2RGB_YUYV);
         
       // Let camera know we are done processing the input image:
       inframe.done();
@@ -331,7 +331,7 @@ class TensorFlowSingle : public jevois::StdModule
         cv::Mat crop = cvimg(cv::Rect(offx, offy, cropw, croph));
         
         // Convert crop to RGB for predictions:
-        cv::cvtColor(crop, itsCvImg, CV_YUV2RGB_YUYV);
+        cv::cvtColor(crop, itsCvImg, cv::COLOR_YUV2RGB_YUYV);
         
         // Also make a raw YUYV copy of the crop for later displays:
         crop.copyTo(itsRawInputCv);

@@ -54,7 +54,8 @@ void FaceDetector::process(cv::Mat const & img, std::vector<cv::Rect> & faces,
   eyes.clear();
   
   // First, detect the faces:
-  itsFaceCascade->detectMultiScale(img, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(img.cols / 2, img.rows / 2));
+  itsFaceCascade->detectMultiScale(img, faces, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,
+                                   cv::Size(img.cols / 2, img.rows / 2));
 
   // Create one entry in eyes vector for each face:
   eyes.resize(faces.size());
@@ -67,7 +68,7 @@ void FaceDetector::process(cv::Mat const & img, std::vector<cv::Rect> & faces,
       cv::Mat faceROI = img(faces[i]);
       
       // Detect eyes in the ROI:
-      itsEyesCascade->detectMultiScale(faceROI, eyes[i], 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE,
+      itsEyesCascade->detectMultiScale(faceROI, eyes[i], 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,
                                        cv::Size(img.cols / 8, img.rows / 8), cv::Size(img.cols / 2, img.rows / 2));
     }
 }

@@ -111,7 +111,7 @@ class DiceCounter : public jevois::Module
       cv::Mat grayImage = jevois::rawimage::convertToCvGray(inimg);
 
       // filter noise
-      cv::GaussianBlur(grayImage, grayImage, cvSize(5, 5), 0, 0);
+      cv::GaussianBlur(grayImage, grayImage, cv::Size(5, 5), 0, 0);
 
       // apply automatic threshold
       cv::threshold(grayImage, grayImage, 0.0, 255, cv::THRESH_BINARY_INV | cv::THRESH_OTSU);

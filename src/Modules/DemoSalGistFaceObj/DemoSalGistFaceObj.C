@@ -206,7 +206,7 @@ class DemoSalGistFaceObj : public jevois::StdModule
           // mnist is white letters on black background, so invert the image before we send it for recognition, as we
           // assume here black letters on white backgrounds. We also need to provide a clean crop around the digit for
           // the deep network to work well:
-          cv::cvtColor(rawroi, objroi, CV_YUV2GRAY_YUYV);
+          cv::cvtColor(rawroi, objroi, cv::COLOR_YUV2GRAY_YUYV);
 
           // Find the 10th percentile gray value:
           size_t const elem = (objroi.cols * objroi.rows * 10) / 100;
@@ -232,7 +232,7 @@ class DemoSalGistFaceObj : public jevois::StdModule
         break;
           
         case 3: // color input
-          cv::cvtColor(rawroi, objroi, CV_YUV2RGB_YUYV);
+          cv::cvtColor(rawroi, objroi, cv::COLOR_YUV2RGB_YUYV);
           cv::resize(objroi, objroi, cv::Size(objsz.width_, objsz.height_), 0, 0, cv::INTER_AREA);
           break;
           
@@ -273,7 +273,7 @@ class DemoSalGistFaceObj : public jevois::StdModule
         // #################### Face detection:
         
         // Prepare a grey ROI from our raw YUYV roi:
-        cv::Mat grayroi; cv::cvtColor(rawroi, grayroi, CV_YUV2GRAY_YUYV);
+        cv::Mat grayroi; cv::cvtColor(rawroi, grayroi, cv::COLOR_YUV2GRAY_YUYV);
         cv::equalizeHist(grayroi, grayroi);
         
         // Launch the face detector:

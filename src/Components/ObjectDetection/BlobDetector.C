@@ -44,7 +44,7 @@ std::vector<std::vector<cv::Point> > BlobDetector::detect(cv::Mat const & imghsv
 
   // Detect objects by finding contours:
   std::vector<std::vector<cv::Point> > contours; std::vector<cv::Vec4i> hierarchy;
-  cv::findContours(imgth, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+  cv::findContours(imgth, contours, hierarchy, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
   
   // Identify the "good" objects:
   if (hierarchy.size() > 0 && hierarchy.size() <= maxnumobj::get())
