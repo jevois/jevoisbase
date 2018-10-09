@@ -34,7 +34,15 @@ JEVOIS_DECLARE_PARAMETER(gfac, float, "Factor applied to gyroscope values for di
                          0.01F, ParamCateg);
 
 //! Plot raw IMU readings on top of video
-/*! Only works for sensors that include an IMU!
+/*! As an optional hardware upgrade, one can install a global shutter sensor into JeVois (an OnSemi AR0135 1.3MP), which
+    also includes an inertial measurement unit (IMU). The IMU is a 9-degrees-of-freedom (9DOF) TDK InvenSense ICM-20948
+    (with 3-axis accelerometer, 3-axis gyroscope, and 3-axis magnetometer). It also includes a digital motion processing
+    unit, which allows it to compute and filter Euler angles or quaternions directly inside the IMU chip.
+
+    This module only works with optional JeVois sensors that include an IMU!
+
+    In this module, we directly access raw registers of the IMU chip. In future versions, some of this low-level work
+    will be abstracted into a higher-level IMU driver for JeVois.
 
     @author Laurent Itti
 
