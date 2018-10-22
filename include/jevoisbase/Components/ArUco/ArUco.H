@@ -30,11 +30,14 @@ namespace aruco
   JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera resolution "
                            "will be appended, as well as a .yaml extension. For example, specifying 'calibration' "
                            "here and running the camera sensor at 320x240 will attempt to load "
-                           "calibration320x240.yaml from within directory " JEVOIS_SHARE_PATH "/camera/",
+                           "calibration320x240.yaml from within directory " JEVOIS_SHARE_PATH "/camera/ - Note that "
+                           "this parameter cannot be changed at runtime (must be set in the module's params.cfg).",
                            "calibration", ParamCateg);
 
   //! Parameter \relates ArUco
-  JEVOIS_DECLARE_PARAMETER(detparams, std::string, "Filename of detector parameters, or empty", "", ParamCateg);
+  JEVOIS_DECLARE_PARAMETER(detparams, std::string, "Filename of detector parameters, or empty - Note that "
+                           "this parameter cannot be changed at runtime (must be set in the module's params.cfg).",
+                           "", ParamCateg);
 
   //! Enum for parameter \relates ArUco
   JEVOIS_DEFINE_ENUM_CLASS(Dict, (Original) (D4X4_50) (D4X4_100) (D4X4_250) (D4X4_1000) (D5X5_50) (D5X5_100)
@@ -42,7 +45,9 @@ namespace aruco
                            (D7X7_100) (D7X7_250) (D7X7_1000) );
   
   //! Parameter \relates ArUco
-  JEVOIS_DECLARE_PARAMETER(dictionary, Dict, "Symbol dictionary to use", Dict::D4X4_50, Dict_Values, ParamCateg);
+  JEVOIS_DECLARE_PARAMETER(dictionary, Dict, "Symbol dictionary to use - Note that "
+                           "this parameter cannot be changed at runtime (must be set in the module's params.cfg).",
+                           Dict::D4X4_50, Dict_Values, ParamCateg);
 
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(dopose, bool, "Compute (and show) pose vectors, requires a valid camera calibration",

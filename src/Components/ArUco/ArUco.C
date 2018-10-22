@@ -69,7 +69,8 @@ void ArUco::postInit()
     else LERROR("Failed to read detector parameters from file [" << dpf << "] -- IGNORED");
   }
   
-  // Instantiate the disctionary:
+  // Instantiate the dictionary:
+  aruco::dictionary::freeze();
   switch (aruco::dictionary::get())
   {
   case aruco::Dict::Original: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);break;
@@ -95,12 +96,13 @@ void ArUco::postInit()
 // ##############################################################################################################
 void ArUco::postUninit()
 {
-  aruco::camparams::unFreeze();
-  aruco::detparams::unFreeze();
   itsDictionary.release();
   itsDetectorParams.release();
   itsCamMatrix = cv::Mat();
   itsDistCoeffs = cv::Mat();
+  aruco::camparams::unFreeze();
+  aruco::detparams::unFreeze();
+  aruco::dictionary::unFreeze();
 }
 
 // ##############################################################################################################
