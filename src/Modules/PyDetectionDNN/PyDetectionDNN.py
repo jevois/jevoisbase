@@ -250,7 +250,7 @@ class PyDetectionDNN:
         self.net.setInput(blob)
         if self.net.getLayer(0).outputNameToIndex('im_info') != -1:  # Faster-RCNN or R-FCN
             frame = cv.resize(frame, (self.inpWidth, self.inpHeight))
-            self.net.setInput(np.array([inpHeight, inpWidth, 1.6], dtype=np.float32), 'im_info')
+            self.net.setInput(np.array([self.inpHeight, self.inpWidth, 1.6], dtype=np.float32), 'im_info')
         outs = self.net.forward(self.getOutputsNames(self.net))
         
         self.postprocess(frame, outs)
