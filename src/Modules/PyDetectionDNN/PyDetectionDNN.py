@@ -63,7 +63,7 @@ class PyDetectionDNN:
         self.confThreshold = 0.5 # Confidence threshold (0..1), higher for stricter detection confidence.
         self.nmsThreshold = 0.4  # Non-maximum suppression threshold (0..1), higher to remove more duplicate boxes.
         self.inpWidth = 160      # Resized image width passed to network
-        self.inpHeight = 120     # Resized image width passed to network
+        self.inpHeight = 120     # Resized image height passed to network
         self.scale = 2/255       # Value scaling factor applied to input pixels
         self.mean = [127.5, 127.5, 127.5] # Mean BGR value subtracted from input image
         self.rgb = True          # True if model expects RGB inputs, otherwise it expects BGR
