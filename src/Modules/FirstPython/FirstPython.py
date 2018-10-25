@@ -139,7 +139,7 @@ class FirstPython:
         imgth = cv2.dilate(imgth, self.dilateElement)
 
         # Detect objects by finding contours:
-        im2, contours, hierarchy = cv2.findContours(imgth, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(imgth, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         str += "N={} ".format(len(contours))
 
         # Only consider the 5 biggest objects by area:
