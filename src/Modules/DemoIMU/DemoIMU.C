@@ -67,11 +67,24 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac>
     virtual ~DemoIMU() { }
 
     //! Get a 16-bit value from the IMU
-    inline short imuget(unsigned char hreg)
+    inline short imushortget(unsigned char hreg)
     {
-      short val = short(readIMUregister(hreg) & 0xff) << 8;
-      val |= readIMUregister(hreg + 1) & 0xff;
-      return val;
+      unsigned char data[2];
+      readIMUregisterArray(hreg, data, 2);
+      return (short(data[0] & 0xff) << 8) | (data[1] & 0xff);
+    }
+
+    //! Get several 16-bit values from the IMU. Arg count is the number of shorts you want.
+    inline std::vector<short> imushortget(unsigned char hreg, size_t count)
+    {
+      unsigned char data[2 * count];
+      readIMUregisterArray(hreg, data, 2 * count);
+
+      std::vector<short> ret;
+      for (int i = 0; i < 2 * count; i += 2)
+        ret.push_back((short(data[i + 0] & 0xff) << 8) | (data[i + 1] & 0xff));
+
+      return ret;
     }
     
     //! Processing function
@@ -94,20 +107,16 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac>
       // Let camera know we are done processing the input image:
       inframe.done();
 
-      // Get one IMU reading:
+      // Get one IMU reading. Starting at register 45, we het 3 16-bit accel and 3 16-bit gyro values;
       IMUdata d; float const a = afac::get(); float const g = gfac::get();
-      short rawx, rawy, rawz;
-      
-      rawx = imuget(45); rawy = imuget(47); rawz = imuget(49);
-      jevois::rawimage::writeText(outimg, jevois::sformat("Accel: x=%6d y=%6d z=%6d", rawx, rawy, rawz),
+      std::vector<short> raw = imushortget(45, 12);
+      jevois::rawimage::writeText(outimg, jevois::sformat("Accel: x=%6d y=%6d z=%6d", raw[0], raw[1], raw[2]),
                                   3, h + 3, jevois::yuyv::White);
-      d.ax = rawx * a; d.ay = rawy * a; d.az = rawz * a;
+      d.ax = raw[0] * a; d.ay = raw[1] * a; d.az = raw[2] * a;
 
-
-      rawx = imuget(51); rawy = imuget(53); rawz = imuget(55);
-      jevois::rawimage::writeText(outimg, jevois::sformat("Gyro:  x=%6d y=%6d z=%6d", rawx, rawy, rawz),
+      jevois::rawimage::writeText(outimg, jevois::sformat("Gyro:  x=%6d y=%6d z=%6d", raw[3], raw[4], raw[5]),
                                   3, h + 15, jevois::yuyv::White);
-      d.gx = rawx * g; d.gy = rawy * g; d.gz = rawz * g;
+      d.gx = raw[3] * g; d.gy = raw[4] * g; d.gz = raw[5] * g;
 
       itsIMUdata.push_front(d);
       while (itsIMUdata.size() > w/2) itsIMUdata.pop_back();
