@@ -16,6 +16,7 @@
 /*! \file */
 
 #include <jevois/Core/Module.H>
+#include <jevois/Core/ICM20948.H>
 
 #include <jevois/Image/RawImageOps.H>
 #include <linux/videodev2.h>
@@ -27,11 +28,11 @@ static jevois::ParameterCategory const ParamCateg("DemoIMU Options");
 
 //! Parameter \relates DemoIMU
 JEVOIS_DECLARE_PARAMETER(afac, float, "Factor applied to acceleration values for display",
-                         0.01F, ParamCateg);
+                         100.0F, ParamCateg);
 
 //! Parameter \relates DemoIMU
 JEVOIS_DECLARE_PARAMETER(gfac, float, "Factor applied to gyroscope values for display",
-                         0.01F, ParamCateg);
+                         1.0F, ParamCateg);
 
 //! Plot raw IMU readings on top of video
 /*! As an optional hardware upgrade, one can install a global shutter sensor into JeVois (an OnSemi AR0135 1.3MP), which
@@ -60,32 +61,14 @@ JEVOIS_DECLARE_PARAMETER(gfac, float, "Factor applied to gyroscope values for di
 class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac>
 {
   public:
-    //! Default base class constructor ok
-    using jevois::Module::Module;
+    //! Constructor
+    DemoIMU(std::string const & instance) : jevois::Module(instance)
+    {
+      itsIMU = addSubComponent<jevois::ICM20948>("imu");
+    }
 
     //! Virtual destructor for safe inheritance
     virtual ~DemoIMU() { }
-
-    //! Get a 16-bit value from the IMU
-    inline short imushortget(unsigned char hreg)
-    {
-      unsigned char data[2];
-      readIMUregisterArray(hreg, data, 2);
-      return (short(data[0] & 0xff) << 8) | (data[1] & 0xff);
-    }
-
-    //! Get several 16-bit values from the IMU. Arg count is the number of shorts you want.
-    inline std::vector<short> imushortget(unsigned char hreg, size_t count)
-    {
-      unsigned char data[2 * count];
-      readIMUregisterArray(hreg, data, 2 * count);
-
-      std::vector<short> ret;
-      for (int i = 0; i < 2 * count; i += 2)
-        ret.push_back((short(data[i + 0] & 0xff) << 8) | (data[i + 1] & 0xff));
-
-      return ret;
-    }
     
     //! Processing function
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
@@ -107,38 +90,37 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac>
       // Let camera know we are done processing the input image:
       inframe.done();
 
-      // Get one IMU reading. Starting at register 45, we het 3 16-bit accel and 3 16-bit gyro values;
-      IMUdata d; float const a = afac::get(); float const g = gfac::get();
-      std::vector<short> raw = imushortget(45, 12);
-      jevois::rawimage::writeText(outimg, jevois::sformat("Accel: x=%6d y=%6d z=%6d", raw[0], raw[1], raw[2]),
-                                  3, h + 3, jevois::yuyv::White);
-      d.ax = raw[0] * a; d.ay = raw[1] * a; d.az = raw[2] * a;
+      // Get one IMU reading:
+      jevois::IMUdata d = itsIMU->get();
+      jevois::rawimage::writeText(outimg, jevois::sformat("Accel: x=%+02.2fg y=%+02.2fg z=%+02.2fg",
+                                                          d.ax(), d.ay(), d.az()), 3, h + 3, jevois::yuyv::White);
 
-      jevois::rawimage::writeText(outimg, jevois::sformat("Gyro:  x=%6d y=%6d z=%6d", raw[3], raw[4], raw[5]),
-                                  3, h + 15, jevois::yuyv::White);
-      d.gx = raw[3] * g; d.gy = raw[4] * g; d.gz = raw[5] * g;
+      jevois::rawimage::writeText(outimg, jevois::sformat("Gyro:  x=%+04.1fdps y=%+04.1fdps z=%+04.1fdps",
+                                                          d.gx(), d.gy(), d.gz()), 3, h + 15, jevois::yuyv::White);
 
       itsIMUdata.push_front(d);
       while (itsIMUdata.size() > w/2) itsIMUdata.pop_back();
 
       // Plot the IMU data:
-      float const hh = h * 0.5F; int const sz = itsIMUdata.size(); int x = w - 1; IMUdata const * pd = nullptr;
-      for (IMUdata const & dd : itsIMUdata)
+      float const hh = h * 0.5F; int const sz = itsIMUdata.size(); int x = w - 1;
+      float const a = afac::get(); float const g = gfac::get(); jevois::IMUdata const * pd = nullptr;
+
+      for (jevois::IMUdata const & dd : itsIMUdata)
       {
         if (pd)
         {
           if (a)
           {
-            jevois::rawimage::drawLine(outimg, x + 2, pd->ax + hh, x, dd.ax + hh, 1, jevois::yuyv::LightGreen);
-            jevois::rawimage::drawLine(outimg, x + 2, pd->ay + hh, x, dd.ay + hh, 1, jevois::yuyv::LightPink);
-            jevois::rawimage::drawLine(outimg, x + 2, pd->az + hh, x, dd.az + hh, 1, jevois::yuyv::White);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->ax()*a + hh, x, dd.ax()*a + hh, 1, jevois::yuyv::LightGreen);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->ay()*a + hh, x, dd.ay()*a + hh, 1, jevois::yuyv::LightPink);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->az()*a + hh, x, dd.az()*a + hh, 1, jevois::yuyv::White);
           }
           
           if (g)
           {
-            jevois::rawimage::drawLine(outimg, x + 2, pd->gx + hh, x, dd.gx + hh, 1, jevois::yuyv::DarkGreen);
-            jevois::rawimage::drawLine(outimg, x + 2, pd->gy + hh, x, dd.gy + hh, 1, jevois::yuyv::DarkPink);
-            jevois::rawimage::drawLine(outimg, x + 2, pd->gz + hh, x, dd.gz + hh, 1, jevois::yuyv::DarkGrey);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->gx()*g + hh, x, dd.gx()*g + hh, 1, jevois::yuyv::DarkGreen);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->gy()*g + hh, x, dd.gy()*g + hh, 1, jevois::yuyv::DarkPink);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->gz()*g + hh, x, dd.gz()*g + hh, 1, jevois::yuyv::DarkGrey);
           }
           
         }
@@ -151,14 +133,8 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac>
     }
 
   private:
-    struct IMUdata
-    {
-        float ax, ay, az;
-        float gx, gy, gz;
-        float mx, my, mz;
-    };
-    
-    std::list<IMUdata> itsIMUdata;    
+    std::shared_ptr<jevois::ICM20948> itsIMU;
+    std::list<jevois::IMUdata> itsIMUdata;    
 };
 
 // Allow the module to be loaded as a shared object (.so) file:
