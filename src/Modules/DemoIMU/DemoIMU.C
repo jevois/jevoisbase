@@ -27,23 +27,26 @@
 static jevois::ParameterCategory const ParamCateg("DemoIMU Options");
 
 //! Parameter \relates DemoIMU
-JEVOIS_DECLARE_PARAMETER(afac, float, "Factor applied to acceleration values for display",
+JEVOIS_DECLARE_PARAMETER(afac, float, "Factor applied to acceleration values for display, or 0 to not display",
                          100.0F, ParamCateg);
 
 //! Parameter \relates DemoIMU
-JEVOIS_DECLARE_PARAMETER(gfac, float, "Factor applied to gyroscope values for display",
-                         1.0F, ParamCateg);
+JEVOIS_DECLARE_PARAMETER(gfac, float, "Factor applied to gyroscope values for display, or 0 to not display",
+                         0.5F, ParamCateg);
+
+//! Parameter \relates DemoIMU
+JEVOIS_DECLARE_PARAMETER(mfac, float, "Factor applied to magnetometer values for display, or 0 to not display",
+                         3.0F, ParamCateg);
 
 //! Plot raw IMU readings on top of video
-/*! As an optional hardware upgrade, one can install a global shutter sensor into JeVois (an OnSemi AR0135 1.3MP), which
-    also includes an inertial measurement unit (IMU). The IMU is a 9-degrees-of-freedom (9DOF) TDK InvenSense ICM-20948
-    (with 3-axis accelerometer, 3-axis gyroscope, and 3-axis magnetometer). It also includes a digital motion processing
-    unit, which allows it to compute and filter Euler angles or quaternions directly inside the IMU chip.
+/*! As an optional hardware upgrade, one can install a global shutter sensor into JeVois (an OnSemi AR0135 1.2MP), which
+    also includes on its custom circuit board for JeVois an inertial measurement unit (IMU). The IMU is a
+    9-degrees-of-freedom (9DOF) TDK InvenSense ICM-20948 (with 3-axis accelerometer, 3-axis gyroscope, and 3-axis
+    magnetometer). This IMU also includes a digital motion processing unit (small programmable processor inside the IMU
+    chip), which allows it to compute and filter Euler angles or quaternions directly inside the IMU chip.
 
-    This module only works with optional JeVois sensors that include an IMU!
-
-    In this module, we directly access raw registers of the IMU chip. In future versions, some of this low-level work
-    will be abstracted into a higher-level IMU driver for JeVois.
+    This module only works with optional JeVois sensors that include an IMU! The base JeVois-A33 smart camera does not
+    have an onboard IMU.
 
     @author Laurent Itti
 
@@ -58,7 +61,7 @@ JEVOIS_DECLARE_PARAMETER(gfac, float, "Factor applied to gyroscope values for di
     @distribution Unrestricted
     @restrictions None
     \ingroup modules */
-class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac>
+class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac, mfac>
 {
   public:
     //! Constructor
@@ -92,18 +95,24 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac>
 
       // Get one IMU reading:
       jevois::IMUdata d = itsIMU->get();
-      jevois::rawimage::writeText(outimg, jevois::sformat("Accel: x=%+02.2fg y=%+02.2fg z=%+02.2fg",
-                                                          d.ax(), d.ay(), d.az()), 3, h + 3, jevois::yuyv::White);
+      jevois::rawimage::writeText(outimg,
+         jevois::sformat("Accel: x=%+06.2fg    y=%+06.2fg    z=%+06.2fg         Magn: %+09.2fuT %+09.2fuT %+09.2fuT",
+                         d.ax(), d.ay(), d.az(), d.mx(), d.my(), d.mz()),
+                         3, h + 3, jevois::yuyv::White);
 
-      jevois::rawimage::writeText(outimg, jevois::sformat("Gyro:  x=%+04.1fdps y=%+04.1fdps z=%+04.1fdps",
-                                                          d.gx(), d.gy(), d.gz()), 3, h + 15, jevois::yuyv::White);
+      jevois::rawimage::writeText(outimg,
+         jevois::sformat("Gyro:  x=%+07.1fdps y=%+07.1fdps z=%+07.1fdps      Temp: %05.1fC  %s",
+                         d.gx(), d.gy(), d.gz(), d.temp(), d.magovf ? "Magn overflow" : " "),
+                         3, h + 15, jevois::yuyv::White);
 
       itsIMUdata.push_front(d);
       while (itsIMUdata.size() > w/2) itsIMUdata.pop_back();
 
       // Plot the IMU data:
       float const hh = h * 0.5F; int const sz = itsIMUdata.size(); int x = w - 1;
-      float const a = afac::get(); float const g = gfac::get(); jevois::IMUdata const * pd = nullptr;
+      // Plot so that positive values go up (so, negate all values):
+      float const a = -afac::get(); float const g = -gfac::get(); float const m = -mfac::get();
+      jevois::IMUdata const * pd = nullptr;
 
       for (jevois::IMUdata const & dd : itsIMUdata)
       {
@@ -111,18 +120,25 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac>
         {
           if (a)
           {
-            jevois::rawimage::drawLine(outimg, x + 2, pd->ax()*a + hh, x, dd.ax()*a + hh, 1, jevois::yuyv::LightGreen);
-            jevois::rawimage::drawLine(outimg, x + 2, pd->ay()*a + hh, x, dd.ay()*a + hh, 1, jevois::yuyv::LightPink);
-            jevois::rawimage::drawLine(outimg, x + 2, pd->az()*a + hh, x, dd.az()*a + hh, 1, jevois::yuyv::White);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->ax()*a + hh, x, dd.ax()*a + hh, 1, jevois::yuyv::DarkGreen);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->ay()*a + hh, x, dd.ay()*a + hh, 1, jevois::yuyv::MedGreen);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->az()*a + hh, x, dd.az()*a + hh, 1, jevois::yuyv::LightGreen);
           }
           
           if (g)
           {
-            jevois::rawimage::drawLine(outimg, x + 2, pd->gx()*g + hh, x, dd.gx()*g + hh, 1, jevois::yuyv::DarkGreen);
-            jevois::rawimage::drawLine(outimg, x + 2, pd->gy()*g + hh, x, dd.gy()*g + hh, 1, jevois::yuyv::DarkPink);
-            jevois::rawimage::drawLine(outimg, x + 2, pd->gz()*g + hh, x, dd.gz()*g + hh, 1, jevois::yuyv::DarkGrey);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->gx()*g + hh, x, dd.gx()*g + hh, 1, jevois::yuyv::DarkPink);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->gy()*g + hh, x, dd.gy()*g + hh, 1, jevois::yuyv::MedPink);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->gz()*g + hh, x, dd.gz()*g + hh, 1, jevois::yuyv::LightPink);
           }
-          
+
+          if (m)
+          {
+            jevois::rawimage::drawLine(outimg, x + 2, pd->mx()*m + hh, x, dd.mx()*m + hh, 1, jevois::yuyv::DarkTeal);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->my()*m + hh, x, dd.my()*m + hh, 1, jevois::yuyv::MedTeal);
+            jevois::rawimage::drawLine(outimg, x + 2, pd->mz()*m + hh, x, dd.mz()*m + hh, 1, jevois::yuyv::LightTeal);
+          }
+         
         }
         pd = &dd;
         x -= 2;
