@@ -39,10 +39,11 @@ namespace artoolkit
 
   //! Parameter \relates ARtoolkit
   JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera resolution "
-                           "will be appended, as well as a .cfg extension. For example, specifying 'camera_para' "
+                           "will be appended, as well as a .dat extension. For example, specifying 'camera_para' "
                            "here and running the camera sensor at 320x240 will attempt to load "
-                           "camera_para320x240.dat from within the module's directory.",
-                           "camera_para", ParamCateg);
+                           "camera_para320x240.dat from within the module's directory (if relative stem) or "
+                           "from the specified absolute location (if absolute stem).",
+                           "/jevois/share/camera/camera_para", ParamCateg);
 
   //! Parameter \relates ARtoolkit
   JEVOIS_DECLARE_PARAMETER(contpose, bool, "Use continuous pose estimation in good quality video",

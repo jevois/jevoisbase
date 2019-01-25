@@ -113,6 +113,8 @@
     actual physical markers. Knowing that size will allow the pose estimation algorithm to know where in the world your
     detected markers are.
 
+    For more about camera calibration, see http://jevois.org/basedoc/ArUco_8H_source.html
+
     Tutorial and video
     ------------------
 
