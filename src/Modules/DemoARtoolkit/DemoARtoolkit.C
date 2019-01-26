@@ -70,6 +70,8 @@
     See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
     standardized coordinates.
 
+    For information about camera calibration and obtaining precise location, distance and pose estimates, see [this
+    tutorial](http://jevois.org/tutorials/UserARcalib.html).
 
     @author Shixian Wen
 
