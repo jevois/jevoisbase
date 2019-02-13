@@ -9,19 +9,26 @@ release=`cat RELEASE`
 ###################################################################################################
 function get_github # owner, repo, revision
 {
+    echo "### JeVois: downloading ${1} / ${2} ..."
     git clone --recursive "https://github.com/${1}/${2}.git"
-    if [ "X${3}" != "X" ]; then cd "${2}" ; git checkout -q ${3}; cd .. ; fi
+    if [ "X${3}" != "X" ]; then
+        echo "### JeVois: moving ${1} / ${2} to checkout ${3} ..."
+        cd "${2}"
+        git checkout -q ${3}
+        cd ..
+    fi
 }
 
 ###################################################################################################
 function patchit # directory
 {
     if [ ! -d ${1} ]; then
-	echo "Ooops cannot patch ${1} because directory is missing";
+	    echo "Ooops cannot patch ${1} because directory is missing";
     else
-	cd ${1}
-	patch -p1 < ../${1}.patch
-	cd ..
+        echo "### JeVois: patching ${1} ..."
+	    cd ${1}
+	    patch -p1 < ../${1}.patch
+	    cd ..
     fi
 }
 
@@ -37,7 +44,7 @@ if [ "X$REPLY" = "Xy" ]; then
     ###################################################################################################
     # Cleanup:
     /bin/rm -rf generalized-hough-tranform Ne10 NNPACK OF_DIS pixy pthreadpool tiny-dnn vlfeat ZBar NNPACK-darknet \
-	    FXdiv FP16 psimd darknet-nnpack darknet tensorflow
+	    FXdiv FP16 psimd darknet-nnpack cpuinfo darknet tensorflow yolo2_light
 
     ###################################################################################################
     # Get the packages:
@@ -52,7 +59,8 @@ if [ "X$REPLY" = "Xy" ]; then
     # To avoid surprises, checkout a specific version of tiny-dnn (since it has been a while since the last release):
     #cd tiny-dnn; git checkout dd906fed8c8aff8dc837657c42f9d55f8b793b0e; cd ..
 
-    get_github ZBar ZBar 854a5d97059e395807091ac4d80c53f7968abb8f # Barcode/QRcode detection
+    # Barcode/QRcode detection:
+    get_github ZBar ZBar 854a5d97059e395807091ac4d80c53f7968abb8f
     cp zbar-config.h ZBar/include/config.h
 
     # CMUcam5 (pixy) color blob tracker:
@@ -97,9 +105,7 @@ if [ "X$REPLY" = "Xy" ]; then
     # Darknet original (used for training only):
     git clone https://github.com/pjreddie/darknet.git
 
-    # Tensorflow 1.10.0-rc0 (July 23, 2018):
-    #get_github tensorflow tensorflow f2e8ef305e90151dfd3092a77880c9d046878ef8
-    # Tensorflow 1.9.9::
+    # Tensorflow 1.9.9:
     get_github tensorflow tensorflow 25c197e02393bd44f50079945409009dd4d434f8
     cd tensorflow
     # oops, tensorflow does not compile anymore if it pulls the latest flatbuffers. Patch to pulling flatbuffers 1.8.0:
@@ -107,6 +113,9 @@ if [ "X$REPLY" = "Xy" ]; then
 	./tensorflow/contrib/lite/download_dependencies.sh
     ./tensorflow/contrib/lite/download_dependencies.sh
     cd ..
+
+    # YOLO2-light with XNOR support
+    get_github AlexeyAB yolo2_light 85fc1b388aa00f0243220ed48dac95ac18401b22
     
     ###################################################################################################
     # Patching:

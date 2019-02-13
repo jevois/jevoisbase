@@ -370,7 +370,7 @@ include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads
 include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/absl")
 
 # in jevoisbase/Contrib/tensorflow/tensorflow/contrib/lite run:
-# find . -name "*.cc" |grep -v test|grep -v python|grep -v bench|grep -v farmhash/dev|grep -v example|grep -v smartreply|grep -v absl|grep -v toco|grep -v grpc|grep -v java|grep -v profiling|grep -v registration|sed -e 's/\.\//\$\{TFS\}\//g | xargs'
+# find . -name "*.cc" |grep -v test|grep -v python|grep -v bench|grep -v farmhash/dev|grep -v example|grep -v smartreply|grep -v absl|grep -v toco|grep -v grpc|grep -v java|grep -v profiling|grep -v registration|sed -e 's/\.\//\$\{TFS\}\//g' | xargs
 #
 # then add: ${TFS}/context.c
 
