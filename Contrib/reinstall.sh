@@ -44,7 +44,7 @@ if [ "X$REPLY" = "Xy" ]; then
     ###################################################################################################
     # Cleanup:
     /bin/rm -rf generalized-hough-tranform Ne10 NNPACK OF_DIS pixy pthreadpool tiny-dnn vlfeat ZBar NNPACK-darknet \
-	    FXdiv FP16 psimd darknet-nnpack cpuinfo darknet tensorflow yolo2_light
+	    FXdiv FP16 psimd darknet-nnpack cpuinfo darknet tensorflow
 
     ###################################################################################################
     # Get the packages:
@@ -114,9 +114,6 @@ if [ "X$REPLY" = "Xy" ]; then
     ./tensorflow/contrib/lite/download_dependencies.sh
     cd ..
 
-    # YOLO2-light with XNOR support
-    get_github AlexeyAB yolo2_light 85fc1b388aa00f0243220ed48dac95ac18401b22
-    
     ###################################################################################################
     # Patching:
     for f in *.patch; do
