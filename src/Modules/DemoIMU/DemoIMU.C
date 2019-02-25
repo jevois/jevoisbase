@@ -93,7 +93,7 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac, mfac
       // Let camera know we are done processing the input image:
       inframe.done();
 
-      // Get one IMU reading:
+      // Get one or more IMU readings:
       jevois::IMUdata d = itsIMU->get();
       jevois::rawimage::writeText(outimg,
          jevois::sformat("Accel: x=%+06.2fg    y=%+06.2fg    z=%+06.2fg         Magn: %+09.2fuT %+09.2fuT %+09.2fuT",
@@ -106,6 +106,11 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac, mfac
                          3, h + 15, jevois::yuyv::White);
 
       itsIMUdata.push_front(d);
+
+      // In FIFO mode at high data rates, we may have more samples in the FIFO; read a bunch:
+      while (itsIMU->dataReady() > 32) itsIMUdata.push_front(itsIMU->get());
+
+      // Only keep as much data as we can display:
       while (itsIMUdata.size() > w/2) itsIMUdata.pop_back();
 
       // Plot the IMU data:

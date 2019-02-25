@@ -424,25 +424,25 @@ class FirstVision : public jevois::StdModule,
       corners.clear();
       for (detection const & d : itsDetections)
       {
-	corners.push_back(std::vector<cv::Point2f>());
-	std::vector<cv::Point2f> & v = corners.back();
-	for (auto const & p : d.hull) v.push_back(cv::Point2f(p));
+        corners.push_back(std::vector<cv::Point2f>());
+        std::vector<cv::Point2f> & v = corners.back();
+        for (auto const & p : d.hull) v.push_back(cv::Point2f(p));
       }
-
+      
       if (dopose::get())
       {
-	// set coordinate system in the middle of the object, with Z pointing out
-	cv::Mat objPoints(4, 1, CV_32FC3);
-	objPoints.ptr< cv::Vec3f >(0)[0] = cv::Vec3f(-osiz.width * 0.5F, -osiz.height * 0.5F, 0);
-	objPoints.ptr< cv::Vec3f >(0)[1] = cv::Vec3f(-osiz.width * 0.5F, osiz.height * 0.5F, 0);
-	objPoints.ptr< cv::Vec3f >(0)[2] = cv::Vec3f(osiz.width * 0.5F, osiz.height * 0.5F, 0);
-	objPoints.ptr< cv::Vec3f >(0)[3] = cv::Vec3f(osiz.width * 0.5F, -osiz.height * 0.5F, 0);
-	
-	int nobj = (int)corners.size();
-	_rvecs.create(nobj, 1, CV_64FC3); _tvecs.create(nobj, 1, CV_64FC3);
-	cv::Mat rvecs = _rvecs.getMat(), tvecs = _tvecs.getMat();
-	cv::parallel_for_(cv::Range(0, nobj), SinglePoseEstimationParallel(objPoints, corners, itsCamMatrix,
-									   itsDistCoeffs, rvecs, tvecs));
+        // set coordinate system in the middle of the object, with Z pointing out
+        cv::Mat objPoints(4, 1, CV_32FC3);
+        objPoints.ptr< cv::Vec3f >(0)[0] = cv::Vec3f(-osiz.width * 0.5F, -osiz.height * 0.5F, 0);
+        objPoints.ptr< cv::Vec3f >(0)[1] = cv::Vec3f(-osiz.width * 0.5F, osiz.height * 0.5F, 0);
+        objPoints.ptr< cv::Vec3f >(0)[2] = cv::Vec3f(osiz.width * 0.5F, osiz.height * 0.5F, 0);
+        objPoints.ptr< cv::Vec3f >(0)[3] = cv::Vec3f(osiz.width * 0.5F, -osiz.height * 0.5F, 0);
+        
+        int nobj = (int)corners.size();
+        _rvecs.create(nobj, 1, CV_64FC3); _tvecs.create(nobj, 1, CV_64FC3);
+        cv::Mat rvecs = _rvecs.getMat(), tvecs = _tvecs.getMat();
+        cv::parallel_for_(cv::Range(0, nobj), SinglePoseEstimationParallel(objPoints, corners, itsCamMatrix,
+                                                                           itsDistCoeffs, rvecs, tvecs));
       }
     }
 
@@ -453,14 +453,14 @@ class FirstVision : public jevois::StdModule,
       camparams::freeze();
       
       std::string const cpf = std::string(JEVOIS_SHARE_PATH) + "/camera/" + camparams::get() +
-	std::to_string(w) + 'x' + std::to_string(h) + ".yaml";
-    
+        std::to_string(w) + 'x' + std::to_string(h) + ".yaml";
+      
       cv::FileStorage fs(cpf, cv::FileStorage::READ);
       if (fs.isOpened())
       {
-	fs["camera_matrix"] >> itsCamMatrix;
-	fs["distortion_coefficients"] >> itsDistCoeffs;
-	LINFO("Loaded camera calibration from " << cpf);
+        fs["camera_matrix"] >> itsCamMatrix;
+        fs["distortion_coefficients"] >> itsDistCoeffs;
+        LINFO("Loaded camera calibration from " << cpf);
       }
       else LFATAL("Failed to read camera parameters from file [" << cpf << "]");
     }
@@ -474,13 +474,13 @@ class FirstVision : public jevois::StdModule,
       hsvcue const & hsv = itsHSV[tnum]; cv::Scalar const rmin = hsv.rmin(), rmax = hsv.rmax();
       cv::inRange(imghsv, rmin, rmax, imgth);
       std::string str = jevois::sformat("T%zu: H=%03d-%03d S=%03d-%03d V=%03d-%03d ", tnum, int(rmin.val[0]),
-					int(rmax.val[0]), int(rmin.val[1]), int(rmax.val[1]),
-					int(rmin.val[2]), int(rmax.val[2]));
-					
+                                        int(rmax.val[0]), int(rmin.val[1]), int(rmax.val[1]),
+                                        int(rmin.val[2]), int(rmax.val[2]));
+      
       // Apply morphological operations to cleanup the image noise:
       if (itsErodeElement.empty() == false) cv::erode(imgth, imgth, itsErodeElement);
       if (itsDilateElement.empty() == false) cv::dilate(imgth, imgth, itsDilateElement);
-
+      
       // Detect objects by finding contours:
       std::vector<std::vector<cv::Point> > contours; std::vector<cv::Vec4i> hierarchy;
       cv::findContours(imgth, contours, hierarchy, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
@@ -488,113 +488,113 @@ class FirstVision : public jevois::StdModule,
       
       double const epsi = epsilon::get();
       int const m = margin::get();
-
+      
       // Identify the "good" objects:
       std::string str2, beststr2;
       if (hierarchy.size() > 0 && hierarchy.size() <= maxnumobj::get())
       {
         for (int index = 0; index >= 0; index = hierarchy[index][0])
         {
-	  // Keep track of our best detection so far:
-	  if (str2.length() > beststr2.length()) beststr2 = str2;
-	  str2.clear();
-
-	  // Let's examine this contour:
-	  std::vector<cv::Point> const & c = contours[index];
-	  detection d;
-	  
-	  // Compute contour area:
+          // Keep track of our best detection so far:
+          if (str2.length() > beststr2.length()) beststr2 = str2;
+          str2.clear();
+          
+          // Let's examine this contour:
+          std::vector<cv::Point> const & c = contours[index];
+          detection d;
+          
+          // Compute contour area:
           double const area = cv::contourArea(c, false);
-
-	  // Compute convex hull:
-	  std::vector<cv::Point> rawhull;
-	  cv::convexHull(c, rawhull, true);
-	  double const rawhullperi = cv::arcLength(rawhull, true);
-	  cv::approxPolyDP(rawhull, d.hull, epsi * rawhullperi * 3.0, true);
-
-	  // Is it the right shape?
-	  if (d.hull.size() != 4) continue;  // 4 vertices for the rectangular convex outline (shows as a trapezoid)
-	  str2 += "H"; // Hull is quadrilateral
-	  
+          
+          // Compute convex hull:
+          std::vector<cv::Point> rawhull;
+          cv::convexHull(c, rawhull, true);
+          double const rawhullperi = cv::arcLength(rawhull, true);
+          cv::approxPolyDP(rawhull, d.hull, epsi * rawhullperi * 3.0, true);
+          
+          // Is it the right shape?
+          if (d.hull.size() != 4) continue;  // 4 vertices for the rectangular convex outline (shows as a trapezoid)
+          str2 += "H"; // Hull is quadrilateral
+          
           double const huarea = cv::contourArea(d.hull, false);
-	  if ( ! hullarea::get().contains(int(huarea + 0.4999))) continue;
-	  str2 += "A"; // Hull area ok
-	  
-	  int const hufill = int(area / huarea * 100.0 + 0.4999);
-	  if (hufill > hullfill::get()) continue;
-	  str2 += "F"; // Fill is ok
-	  
-	  // Check object shape:
-	  double const peri = cv::arcLength(c, true);
-	  cv::approxPolyDP(c, d.approx, epsi * peri, true);
-	  if (d.approx.size() < 7 || d.approx.size() > 9) continue;  // 8 vertices for a U shape
-	  str2 += "S"; // Shape is ok
-
-	  // Compute contour serr:
-	  d.serr = 100.0 * cv::matchShapes(c, d.approx, cv::CONTOURS_MATCH_I1, 0.0);
-	  if (d.serr > ethresh::get()) continue;
-	  str2 += "E"; // Shape error is ok
-	  
-	  // Reject the shape if any of its vertices gets within the margin of the image bounds. This is to avoid
-	  // getting grossly incorrect 6D pose estimates as the shape starts getting truncated as it partially exits the
-	  // camera field of view:
-	  bool reject = false;
-	  for (int i = 0; i < c.size(); ++i)
-	    if (c[i].x < m || c[i].x >= imghsv.cols - m || c[i].y < m || c[i].y >= imghsv.rows - m)
-	    { reject = true; break; }
-	  if (reject) continue;
-	  str2 += "M"; // Margin ok
-	  
-	  // Re-order the 4 points in the hull if needed: In the pose estimation code, we will assume vertices ordered
-	  // as follows:
-	  //
-	  //    0|        |3
-	  //     |        |
-	  //     |        |
-	  //    1----------2
-
-	  // v10+v23 should be pointing outward the U more than v03+v12 is:
-	  std::complex<float> v10p23(float(d.hull[0].x - d.hull[1].x + d.hull[3].x - d.hull[2].x),
-				     float(d.hull[0].y - d.hull[1].y + d.hull[3].y - d.hull[2].y));
-	  float const len10p23 = std::abs(v10p23);
-	  std::complex<float> v03p12(float(d.hull[3].x - d.hull[0].x + d.hull[2].x - d.hull[1].x),
-				     float(d.hull[3].y - d.hull[0].y + d.hull[2].y - d.hull[1].y));
-	  float const len03p12 = std::abs(v03p12);
-
-	  // Vector from centroid of U shape to centroid of its hull should also point outward of the U:
-	  cv::Moments const momC = cv::moments(c);
-	  cv::Moments const momH = cv::moments(d.hull);
-	  std::complex<float> vCH(momH.m10 / momH.m00 - momC.m10 / momC.m00, momH.m01 / momH.m00 - momC.m01 / momC.m00);
-	  float const lenCH = std::abs(vCH);
-
-	  if (len10p23 < 0.1F || len03p12 < 0.1F || lenCH < 0.1F) continue;
-	  str2 += "V"; // Shape vectors ok
-
-	  float const good = (v10p23.real() * vCH.real() + v10p23.imag() * vCH.imag()) / (len10p23 * lenCH);
-	  float const bad = (v03p12.real() * vCH.real() + v03p12.imag() * vCH.imag()) / (len03p12 * lenCH);
-
-	  // We reject upside-down detections as those are likely to be spurious:
-	  if (vCH.imag() >= -2.0F) continue;
-	  str2 += "U"; // U shape is upright
-	
-	  // Fixup the ordering of the vertices if needed:
-	  if (bad > good) { d.hull.insert(d.hull.begin(), d.hull.back()); d.hull.pop_back(); }
-
-	  // This detection is a keeper:
-	  str2 += " OK";
-	  d.contour = c;
-	  std::lock_guard<std::mutex> _(itsDetMtx);
-	  itsDetections.push_back(d);
-	}
-	if (str2.length() > beststr2.length()) beststr2 = str2;
+          if ( ! hullarea::get().contains(int(huarea + 0.4999))) continue;
+          str2 += "A"; // Hull area ok
+          
+          int const hufill = int(area / huarea * 100.0 + 0.4999);
+          if (hufill > hullfill::get()) continue;
+          str2 += "F"; // Fill is ok
+          
+          // Check object shape:
+          double const peri = cv::arcLength(c, true);
+          cv::approxPolyDP(c, d.approx, epsi * peri, true);
+          if (d.approx.size() < 7 || d.approx.size() > 9) continue;  // 8 vertices for a U shape
+          str2 += "S"; // Shape is ok
+          
+          // Compute contour serr:
+          d.serr = 100.0 * cv::matchShapes(c, d.approx, cv::CONTOURS_MATCH_I1, 0.0);
+          if (d.serr > ethresh::get()) continue;
+          str2 += "E"; // Shape error is ok
+          
+          // Reject the shape if any of its vertices gets within the margin of the image bounds. This is to avoid
+          // getting grossly incorrect 6D pose estimates as the shape starts getting truncated as it partially exits the
+          // camera field of view:
+          bool reject = false;
+          for (int i = 0; i < c.size(); ++i)
+            if (c[i].x < m || c[i].x >= imghsv.cols - m || c[i].y < m || c[i].y >= imghsv.rows - m)
+            { reject = true; break; }
+          if (reject) continue;
+          str2 += "M"; // Margin ok
+          
+          // Re-order the 4 points in the hull if needed: In the pose estimation code, we will assume vertices ordered
+          // as follows:
+          //
+          //    0|        |3
+          //     |        |
+          //     |        |
+          //    1----------2
+          
+          // v10+v23 should be pointing outward the U more than v03+v12 is:
+          std::complex<float> v10p23(float(d.hull[0].x - d.hull[1].x + d.hull[3].x - d.hull[2].x),
+                                     float(d.hull[0].y - d.hull[1].y + d.hull[3].y - d.hull[2].y));
+          float const len10p23 = std::abs(v10p23);
+          std::complex<float> v03p12(float(d.hull[3].x - d.hull[0].x + d.hull[2].x - d.hull[1].x),
+                                     float(d.hull[3].y - d.hull[0].y + d.hull[2].y - d.hull[1].y));
+          float const len03p12 = std::abs(v03p12);
+          
+          // Vector from centroid of U shape to centroid of its hull should also point outward of the U:
+          cv::Moments const momC = cv::moments(c);
+          cv::Moments const momH = cv::moments(d.hull);
+          std::complex<float> vCH(momH.m10 / momH.m00 - momC.m10 / momC.m00, momH.m01 / momH.m00 - momC.m01 / momC.m00);
+          float const lenCH = std::abs(vCH);
+          
+          if (len10p23 < 0.1F || len03p12 < 0.1F || lenCH < 0.1F) continue;
+          str2 += "V"; // Shape vectors ok
+          
+          float const good = (v10p23.real() * vCH.real() + v10p23.imag() * vCH.imag()) / (len10p23 * lenCH);
+          float const bad = (v03p12.real() * vCH.real() + v03p12.imag() * vCH.imag()) / (len03p12 * lenCH);
+          
+          // We reject upside-down detections as those are likely to be spurious:
+          if (vCH.imag() >= -2.0F) continue;
+          str2 += "U"; // U shape is upright
+          
+          // Fixup the ordering of the vertices if needed:
+          if (bad > good) { d.hull.insert(d.hull.begin(), d.hull.back()); d.hull.pop_back(); }
+          
+          // This detection is a keeper:
+          str2 += " OK";
+          d.contour = c;
+          std::lock_guard<std::mutex> _(itsDetMtx);
+          itsDetections.push_back(d);
+        }
+        if (str2.length() > beststr2.length()) beststr2 = str2;
       }
-
+      
       // Display any results requested by the users:
       if (outimg && outimg->valid())
       {
-	if (tnum == showthread::get() && outimg->width == 2 * imgth.cols)
-	  jevois::rawimage::pasteGreyToYUYV(imgth, *outimg, imgth.cols, 0);
-	jevois::rawimage::writeText(*outimg, str + beststr2, dispx, dispy + 12*tnum, jevois::yuyv::White);
+        if (tnum == showthread::get() && outimg->width == 2 * imgth.cols)
+          jevois::rawimage::pasteGreyToYUYV(imgth, *outimg, imgth.cols, 0);
+        jevois::rawimage::writeText(*outimg, str + beststr2, dispx, dispy + 12*tnum, jevois::yuyv::White);
       }
     }
     
@@ -606,43 +606,43 @@ class FirstVision : public jevois::StdModule,
       
       if (itsHSV.empty() || itsCueChanged)
       {
-	// Initialize or reset because of user parameter change:
-	itsHSV.clear(); itsCueChanged = false;
-	for (size_t i = 0; i < nthreads; ++i)
-	{
-	  hsvcue cue(hcue::get(), scue::get(), vcue::get());
-	  cue.sih *= (1.0F + spread * i); cue.sis *= (1.0F + spread * i); cue.siv *= (1.0F + spread * i); 
-	  cue.fix();
-	  itsHSV.push_back(cue);
-	}
-	if (nthreads > 2)
-	{
-	  itsKalH->set(hcue::get()); itsKalH->get();
-	  itsKalS->set(scue::get()); itsKalS->get();
-	  itsKalV->set(vcue::get()); itsKalV->get();
-	}
+        // Initialize or reset because of user parameter change:
+        itsHSV.clear(); itsCueChanged = false;
+        for (size_t i = 0; i < nthreads; ++i)
+        {
+          hsvcue cue(hcue::get(), scue::get(), vcue::get());
+          cue.sih *= (1.0F + spread * i); cue.sis *= (1.0F + spread * i); cue.siv *= (1.0F + spread * i); 
+          cue.fix();
+          itsHSV.push_back(cue);
+        }
+        if (nthreads > 2)
+        {
+          itsKalH->set(hcue::get()); itsKalH->get();
+          itsKalS->set(scue::get()); itsKalS->get();
+          itsKalV->set(vcue::get()); itsKalV->get();
+        }
       }
       else
       {
-	// Kalman update:
-	if (nthreads > 2)
-	{
-	  itsHSV[2].muh = itsKalH->get();
-	  itsHSV[2].mus = itsKalS->get();
-	  itsHSV[2].muv = itsKalV->get();
-	  itsHSV[2].fix();
-	  for (size_t i = 3; i < itsHSV.size(); ++i)
-	  {
-	    itsHSV[i] = itsHSV[2];
-	    itsHSV[i].sih *= (1.0F + spread * i);
-	    itsHSV[i].sis *= (1.0F + spread * i);
-	    itsHSV[i].siv *= (1.0F + spread * i); 
-	    itsHSV[i].fix();
-	  }
-	}
+        // Kalman update:
+        if (nthreads > 2)
+        {
+          itsHSV[2].muh = itsKalH->get();
+          itsHSV[2].mus = itsKalS->get();
+          itsHSV[2].muv = itsKalV->get();
+          itsHSV[2].fix();
+          for (size_t i = 3; i < itsHSV.size(); ++i)
+          {
+            itsHSV[i] = itsHSV[2];
+            itsHSV[i].sih *= (1.0F + spread * i);
+            itsHSV[i].sis *= (1.0F + spread * i);
+            itsHSV[i].siv *= (1.0F + spread * i); 
+            itsHSV[i].fix();
+          }
+        }
       }
     }
-
+    
     // ####################################################################################################
     //! Clean up the detections by eliminating duplicates:
     void cleanupDetections()
@@ -652,33 +652,33 @@ class FirstVision : public jevois::StdModule,
 
       while (keepgoing)
       {
-	// We will stop if we do not eliminate any more objects:
-	keepgoing = false; int delidx = -1;
-
-	// Loop over all pairs of objects:
-	size_t const siz = itsDetections.size();
-	for (size_t i = 0; i < siz; ++i)
-	{
-	  for (size_t j = 0; j < i; ++j)
-	  {
-	    std::vector<cv::Point> pts = itsDetections[i].hull;
-	    for (cv::Point const & p : itsDetections[j].hull) pts.push_back(p);
-	    std::vector<cv::Point> hull;
-	    cv::convexHull(pts, hull); // FIXME should do a true union! this is just an approximation to it
-	    double uarea = cv::contourArea(hull);
-	    double iarea = cv::contourArea(itsDetections[i].hull) + cv::contourArea(itsDetections[j].hull) - uarea;
-	    
-	    // note: object detection code guarantees non-zero area:
-	    double const inoun = iarea / uarea;
-	    if (inoun >= iouth)
-	    {
-	      if (itsDetections[i].serr > itsDetections[j].serr) delidx = j; else delidx = i;
-	      break;
-	    }
-	  }
-	  if (delidx != -1) break;
-	}
-	if (delidx != -1) { itsDetections.erase(itsDetections.begin() + delidx); keepgoing = true; }
+        // We will stop if we do not eliminate any more objects:
+        keepgoing = false; int delidx = -1;
+        
+        // Loop over all pairs of objects:
+        size_t const siz = itsDetections.size();
+        for (size_t i = 0; i < siz; ++i)
+        {
+          for (size_t j = 0; j < i; ++j)
+          {
+            std::vector<cv::Point> pts = itsDetections[i].hull;
+            for (cv::Point const & p : itsDetections[j].hull) pts.push_back(p);
+            std::vector<cv::Point> hull;
+            cv::convexHull(pts, hull); // FIXME should do a true union! this is just an approximation to it
+            double uarea = cv::contourArea(hull);
+            double iarea = cv::contourArea(itsDetections[i].hull) + cv::contourArea(itsDetections[j].hull) - uarea;
+            
+            // note: object detection code guarantees non-zero area:
+            double const inoun = iarea / uarea;
+            if (inoun >= iouth)
+            {
+              if (itsDetections[i].serr > itsDetections[j].serr) delidx = j; else delidx = i;
+              break;
+            }
+          }
+          if (delidx != -1) break;
+        }
+        if (delidx != -1) { itsDetections.erase(itsDetections.begin() + delidx); keepgoing = true; }
       }
     }
     
@@ -687,7 +687,7 @@ class FirstVision : public jevois::StdModule,
     void learnHSV(size_t nthreads, cv::Mat const & imgbgr, jevois::RawImage *outimg = nullptr)
     {
       int const w = imgbgr.cols, h = imgbgr.rows;
-
+      
       // Compute the median filtered BGR image in a thread:
       cv::Mat medimgbgr;
       auto median_fut = std::async(std::launch::async, [&](){ cv::medianBlur(imgbgr, medimgbgr, 3); } );
@@ -695,16 +695,16 @@ class FirstVision : public jevois::StdModule,
       // Get all the cleaned-up contours:
       std::vector<std::vector<cv::Point> > contours;
       for (detection const & d : itsDetections) contours.push_back(d.contour);
-	
+      
       // If desired, draw all contours:
       std::future<void> drawc_fut;
       if (debug::get() && outimg && outimg->valid())
-	drawc_fut = std::async(std::launch::async, [&]() {
-	    // We reinterpret the top portion of our YUYV output image as an opencv 8UC2 image:
-	    cv::Mat outuc2(outimg->height, outimg->width, CV_8UC2, outimg->pixelsw<unsigned char>());
-	    cv::drawContours(outuc2, contours, -1, jevois::yuyv::LightPink, 2);
-	  } );
-
+        drawc_fut = std::async(std::launch::async, [&]() {
+            // We reinterpret the top portion of our YUYV output image as an opencv 8UC2 image:
+            cv::Mat outuc2(outimg->height, outimg->width, CV_8UC2, outimg->pixelsw<unsigned char>());
+            cv::drawContours(outuc2, contours, -1, jevois::yuyv::LightPink, 2);
+          } );
+      
       // Draw all the filled contours into a binary mask image:
       cv::Mat mask(h, w, CV_8UC1, (unsigned char)0);
       cv::drawContours(mask, contours, -1, 255, -1); // last -1 is for filled
@@ -725,56 +725,56 @@ class FirstVision : public jevois::StdModule,
 
       cv::Vec3b sighsv = hsvmean.at<cv::Vec3b>(1, 0);
       int sH = sighsv.val[0], sS = sighsv.val[1], sV = sighsv.val[2];
-
+      
       // Set the new measurements:
       itsKalH->set(H); itsKalS->set(S); itsKalV->set(V);
-
+      
       if (nthreads > 2)
       {
-	float const eta = 0.4F;
-	itsHSV[2].sih = (1.0F - eta) * itsHSV[2].sih + eta * sH;
-	itsHSV[2].sis = (1.0F - eta) * itsHSV[2].sis + eta * sS;
-	itsHSV[2].siv = (1.0F - eta) * itsHSV[2].siv + eta * sV;
-	itsHSV[2].fix();
+        float const eta = 0.4F;
+        itsHSV[2].sih = (1.0F - eta) * itsHSV[2].sih + eta * sH;
+        itsHSV[2].sis = (1.0F - eta) * itsHSV[2].sis + eta * sS;
+        itsHSV[2].siv = (1.0F - eta) * itsHSV[2].siv + eta * sV;
+        itsHSV[2].fix();
       }
-
+      
       // note: drawc_fut may block us here until it is complete.
     }
-
+    
     // ####################################################################################################
     //! Send serial messages about each detection:
     void sendAllSerial(int w, int h, std::vector<std::vector<cv::Point2f> > const & corners,
-		       std::vector<cv::Vec3d> const & rvecs, std::vector<cv::Vec3d> const & tvecs)
+                       std::vector<cv::Vec3d> const & rvecs, std::vector<cv::Vec3d> const & tvecs)
     {
       if (rvecs.empty() == false)
       {
-	// If we have rvecs and tvecs, we are doing 3D pose estimation, so send a 3D message:
-	auto const osiz = objsize::get();
-	for (size_t i = 0; i < corners.size(); ++i)
-	{
-	  std::vector<cv::Point2f> const & curr = corners[i];
-	  cv::Vec3d const & rv = rvecs[i];
-	  cv::Vec3d const & tv = tvecs[i];
-	  
-	  // Compute quaternion:
-	  float theta = std::sqrt(rv[0] * rv[0] + rv[1] * rv[1] + rv[2] * rv[2]);
-	  Eigen::Vector3f axis(rv[0], rv[1], rv[2]);
-	  Eigen::Quaternion<float> q(Eigen::AngleAxis<float>(theta, axis));
-	  
-	  sendSerialStd3D(tv[0], tv[1], tv[2],             // position
-			  osiz.width, osiz.height, 1.0F,   // size
-			  q.w(), q.x(), q.y(), q.z(),      // pose
-			  "FIRST");                        // FIRST robotics shape
-	}
+        // If we have rvecs and tvecs, we are doing 3D pose estimation, so send a 3D message:
+        auto const osiz = objsize::get();
+        for (size_t i = 0; i < corners.size(); ++i)
+        {
+          std::vector<cv::Point2f> const & curr = corners[i];
+          cv::Vec3d const & rv = rvecs[i];
+          cv::Vec3d const & tv = tvecs[i];
+          
+          // Compute quaternion:
+          float theta = std::sqrt(rv[0] * rv[0] + rv[1] * rv[1] + rv[2] * rv[2]);
+          Eigen::Vector3f axis(rv[0], rv[1], rv[2]);
+          Eigen::Quaternion<float> q(Eigen::AngleAxis<float>(theta, axis));
+          
+          sendSerialStd3D(tv[0], tv[1], tv[2],             // position
+                          osiz.width, osiz.height, 1.0F,   // size
+                          q.w(), q.x(), q.y(), q.z(),      // pose
+                          "FIRST");                        // FIRST robotics shape
+        }
       }
       else
       {
-	// Send one 2D message per object:
-	for (size_t i = 0; i < corners.size(); ++i)
-	  sendSerialContour2D(w, h, corners[i], "FIRST");
+        // Send one 2D message per object:
+        for (size_t i = 0; i < corners.size(); ++i)
+          sendSerialContour2D(w, h, corners[i], "FIRST");
       }
     }
-
+    
     // ####################################################################################################
     //! Update the morphology structuring elements if needed
     void updateStructuringElements()
@@ -782,15 +782,15 @@ class FirstVision : public jevois::StdModule,
       int e = erodesize::get();
       if (e != itsErodeElement.cols)
       {
-	if (e) itsErodeElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(e, e));
-	else itsErodeElement.release();
+        if (e) itsErodeElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(e, e));
+        else itsErodeElement.release();
       }
-
+      
       int d = dilatesize::get();
       if (d != itsDilateElement.cols)
       {
-	if (d) itsDilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(d, d));
-	else itsDilateElement.release();
+        if (d) itsDilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(d, d));
+        else itsDilateElement.release();
       }
     }
     
@@ -799,10 +799,10 @@ class FirstVision : public jevois::StdModule,
     virtual void process(jevois::InputFrame && inframe) override
     {
       static jevois::Timer timer("processing");
-
+      
       // Wait for next available camera image. Any resolution ok:
       jevois::RawImage inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
-
+      
       timer.start();
 
       // Load camera calibration if needed:
@@ -823,21 +823,21 @@ class FirstVision : public jevois::StdModule,
       // Launch our workers: run nthreads-1 new threads, and last worker in our current thread:
       std::vector<std::future<void> > dfut;
       for (size_t i = 0; i < nthreads - 1; ++i)
-	dfut.push_back(std::async(std::launch::async, [&](size_t tn) { detect(imghsv, tn, 3, h+2); }, i));
+        dfut.push_back(std::async(std::launch::async, [&](size_t tn) { detect(imghsv, tn, 3, h+2); }, i));
       detect(imghsv, nthreads - 1, 3, h+2);
-
+      
       // Wait for all threads to complete:
       for (auto & f : dfut) try { f.get(); } catch (...) { jevois::warnAndIgnoreException(); }
-
+      
       // Let camera know we are done processing the input image:
       inframe.done();
-
+      
       // Clean up the detections by eliminating duplicates:
       cleanupDetections();
-
+      
       // Learn the object's HSV value over time:
       auto learn_fut = std::async(std::launch::async, [&]() { learnHSV(nthreads, imgbgr); });
-
+      
       // Map to 6D (inverse perspective):
       std::vector<std::vector<cv::Point2f> > corners; std::vector<cv::Vec3d> rvecs, tvecs;
       estimatePose(corners, rvecs, tvecs);
@@ -851,7 +851,7 @@ class FirstVision : public jevois::StdModule,
       // Show processing fps:
       timer.stop();
     }
-
+    
     // ####################################################################################################
     //! Processing function, with USB video output
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
@@ -861,7 +861,7 @@ class FirstVision : public jevois::StdModule,
       // Wait for next available camera image. Any resolution ok, but require YUYV since we assume it for drawings:
       jevois::RawImage inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
       inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
-
+      
       timer.start();
 
       // Load camera calibration if needed:
@@ -877,7 +877,7 @@ class FirstVision : public jevois::StdModule,
           jevois::rawimage::writeText(outimg, "JeVois FIRST Vision", 3, 3, jevois::yuyv::White);
           jevois::rawimage::drawFilledRect(outimg, 0, h, outimg.width, outimg.height-h, jevois::yuyv::Black);
         });
-
+      
       // Convert input image to BGR24, then to HSV:
       cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
       cv::Mat imghsv; cv::cvtColor(imgbgr, imghsv, cv::COLOR_BGR2HSV);
@@ -893,18 +893,18 @@ class FirstVision : public jevois::StdModule,
       // Launch our workers: run nthreads-1 new threads, and last worker in our current thread:
       std::vector<std::future<void> > dfut;
       for (size_t i = 0; i < nthreads - 1; ++i)
-	dfut.push_back(std::async(std::launch::async, [&](size_t tn) { detect(imghsv, tn, 3, h+2, &outimg); }, i));
+        dfut.push_back(std::async(std::launch::async, [&](size_t tn) { detect(imghsv, tn, 3, h+2, &outimg); }, i));
       detect(imghsv, nthreads - 1, 3, h+2, &outimg);
-
+      
       // Wait for all threads to complete:
       for (auto & f : dfut) try { f.get(); } catch (...) { jevois::warnAndIgnoreException(); }
-
+      
       // Wait for paste to finish up:
       paste_fut.get();
       
       // Let camera know we are done processing the input image:
       inframe.done();
-
+      
       // Clean up the detections by eliminating duplicates:
       cleanupDetections();
 
@@ -914,17 +914,17 @@ class FirstVision : public jevois::StdModule,
       // Map to 6D (inverse perspective):
       std::vector<std::vector<cv::Point2f> > corners; std::vector<cv::Vec3d> rvecs, tvecs;
       estimatePose(corners, rvecs, tvecs);
-
+      
       // Send all serial messages:
       sendAllSerial(w, h, corners, rvecs, tvecs);
       
       // Draw all detections in 3D:
       drawDetections(outimg, corners, rvecs, tvecs);
-
+      
       // Show number of detected objects:
       jevois::rawimage::writeText(outimg, "Detected " + std::to_string(itsDetections.size()) + " objects.",
-				  w + 3, 3, jevois::yuyv::White);
-
+                                  w + 3, 3, jevois::yuyv::White);
+      
       // Wait for all threads:
       try { learn_fut.get(); } catch (...) { jevois::warnAndIgnoreException(); }
       
@@ -935,94 +935,94 @@ class FirstVision : public jevois::StdModule,
       // Send the output image with our processing results to the host over USB:
       outframe.send();
     }
-
+    
     // ####################################################################################################
     void drawDetections(jevois::RawImage & outimg, std::vector<std::vector<cv::Point2f> > corners,
 			std::vector<cv::Vec3d> const & rvecs, std::vector<cv::Vec3d> const & tvecs)
     {
       auto const osiz = objsize::get(); float const w = osiz.width, h = osiz.height;
       int nobj = int(corners.size());
-
+      
       // This code is like drawDetectedMarkers() in cv::aruco, but for YUYV output image:
       if (rvecs.empty())
       {
-	// We are not doing 3D pose estimation. Just draw object outlines in 2D:
-	for (int i = 0; i < nobj; ++i)
-	{
-	  std::vector<cv::Point2f> const & obj = corners[i];
-        
-	  // draw marker sides:
-	  for (int j = 0; j < 4; ++j)
-	  {
-	    cv::Point2f const & p0 = obj[j];
-	    cv::Point2f const & p1 = obj[ (j+1) % 4 ];
-	    jevois::rawimage::drawLine(outimg, int(p0.x + 0.5F), int(p0.y + 0.5F),
-				       int(p1.x + 0.5F), int(p1.y + 0.5F), 1, jevois::yuyv::LightPink);
-	    //jevois::rawimage::writeText(outimg, std::to_string(j),
-	    //			      int(p0.x + 0.5F), int(p0.y + 0.5F), jevois::yuyv::White);
-	  }
-	}
+        // We are not doing 3D pose estimation. Just draw object outlines in 2D:
+        for (int i = 0; i < nobj; ++i)
+        {
+          std::vector<cv::Point2f> const & obj = corners[i];
+          
+          // draw marker sides:
+          for (int j = 0; j < 4; ++j)
+          {
+            cv::Point2f const & p0 = obj[j];
+            cv::Point2f const & p1 = obj[ (j+1) % 4 ];
+            jevois::rawimage::drawLine(outimg, int(p0.x + 0.5F), int(p0.y + 0.5F),
+                                       int(p1.x + 0.5F), int(p1.y + 0.5F), 1, jevois::yuyv::LightPink);
+            //jevois::rawimage::writeText(outimg, std::to_string(j),
+            //			      int(p0.x + 0.5F), int(p0.y + 0.5F), jevois::yuyv::White);
+          }
+        }
       }
       else
       {
-	// Show trihedron and parallelepiped centered on object:
-	float const hw = w * 0.5F, hh = h * 0.5F, dd = -0.5F * std::max(w, h);
-
-	for (int i = 0; i < nobj; ++i)
-	{
-	  // Project axis points:
-	  std::vector<cv::Point3f> axisPoints;
-	  axisPoints.push_back(cv::Point3f(0.0F, 0.0F, 0.0F));
-	  axisPoints.push_back(cv::Point3f(hw, 0.0F, 0.0F));
-	  axisPoints.push_back(cv::Point3f(0.0F, hh, 0.0F));
-	  axisPoints.push_back(cv::Point3f(0.0F, 0.0F, dd));
-	  
-	  std::vector<cv::Point2f> imagePoints;
-	  cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, imagePoints);
-	  
-	  // Draw axis lines:
-	  jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
-				     int(imagePoints[1].x + 0.5F), int(imagePoints[1].y + 0.5F),
-				     2, jevois::yuyv::MedPurple);
-	  jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
-				     int(imagePoints[2].x + 0.5F), int(imagePoints[2].y + 0.5F),
-				     2, jevois::yuyv::MedGreen);
-	  jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
-				     int(imagePoints[3].x + 0.5F), int(imagePoints[3].y + 0.5F),
-				     2, jevois::yuyv::MedGrey);
-	  
-	  // Also draw a parallelepiped:
-	  std::vector<cv::Point3f> cubePoints;
-	  cubePoints.push_back(cv::Point3f(-hw, -hh, 0.0F));
-	  cubePoints.push_back(cv::Point3f(hw, -hh, 0.0F));
-	  cubePoints.push_back(cv::Point3f(hw, hh, 0.0F));
-	  cubePoints.push_back(cv::Point3f(-hw, hh, 0.0F));
-	  cubePoints.push_back(cv::Point3f(-hw, -hh, dd));
-	  cubePoints.push_back(cv::Point3f(hw, -hh, dd));
-	  cubePoints.push_back(cv::Point3f(hw, hh, dd));
-	  cubePoints.push_back(cv::Point3f(-hw, hh, dd));
-	  
-	  std::vector<cv::Point2f> cuf;
-	  cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, cuf);
-	
-	  // Round all the coordinates:
-	  std::vector<cv::Point> cu;
-	  for (auto const & p : cuf) cu.push_back(cv::Point(int(p.x + 0.5F), int(p.y + 0.5F)));
-	  
-	  // Draw parallelepiped lines:
-	  jevois::rawimage::drawLine(outimg, cu[0].x, cu[0].y, cu[1].x, cu[1].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[1].x, cu[1].y, cu[2].x, cu[2].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[2].x, cu[2].y, cu[3].x, cu[3].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[3].x, cu[3].y, cu[0].x, cu[0].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[4].x, cu[4].y, cu[5].x, cu[5].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[5].x, cu[5].y, cu[6].x, cu[6].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[6].x, cu[6].y, cu[7].x, cu[7].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[7].x, cu[7].y, cu[4].x, cu[4].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[0].x, cu[0].y, cu[4].x, cu[4].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[1].x, cu[1].y, cu[5].x, cu[5].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[2].x, cu[2].y, cu[6].x, cu[6].y, 1, jevois::yuyv::LightGreen);
-	  jevois::rawimage::drawLine(outimg, cu[3].x, cu[3].y, cu[7].x, cu[7].y, 1, jevois::yuyv::LightGreen);
-	}
+        // Show trihedron and parallelepiped centered on object:
+        float const hw = w * 0.5F, hh = h * 0.5F, dd = -0.5F * std::max(w, h);
+        
+        for (int i = 0; i < nobj; ++i)
+        {
+          // Project axis points:
+          std::vector<cv::Point3f> axisPoints;
+          axisPoints.push_back(cv::Point3f(0.0F, 0.0F, 0.0F));
+          axisPoints.push_back(cv::Point3f(hw, 0.0F, 0.0F));
+          axisPoints.push_back(cv::Point3f(0.0F, hh, 0.0F));
+          axisPoints.push_back(cv::Point3f(0.0F, 0.0F, dd));
+          
+          std::vector<cv::Point2f> imagePoints;
+          cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, imagePoints);
+          
+          // Draw axis lines:
+          jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
+                                     int(imagePoints[1].x + 0.5F), int(imagePoints[1].y + 0.5F),
+                                     2, jevois::yuyv::MedPurple);
+          jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
+                                     int(imagePoints[2].x + 0.5F), int(imagePoints[2].y + 0.5F),
+                                     2, jevois::yuyv::MedGreen);
+          jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
+                                     int(imagePoints[3].x + 0.5F), int(imagePoints[3].y + 0.5F),
+                                     2, jevois::yuyv::MedGrey);
+          
+          // Also draw a parallelepiped:
+          std::vector<cv::Point3f> cubePoints;
+          cubePoints.push_back(cv::Point3f(-hw, -hh, 0.0F));
+          cubePoints.push_back(cv::Point3f(hw, -hh, 0.0F));
+          cubePoints.push_back(cv::Point3f(hw, hh, 0.0F));
+          cubePoints.push_back(cv::Point3f(-hw, hh, 0.0F));
+          cubePoints.push_back(cv::Point3f(-hw, -hh, dd));
+          cubePoints.push_back(cv::Point3f(hw, -hh, dd));
+          cubePoints.push_back(cv::Point3f(hw, hh, dd));
+          cubePoints.push_back(cv::Point3f(-hw, hh, dd));
+          
+          std::vector<cv::Point2f> cuf;
+          cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, cuf);
+          
+          // Round all the coordinates:
+          std::vector<cv::Point> cu;
+          for (auto const & p : cuf) cu.push_back(cv::Point(int(p.x + 0.5F), int(p.y + 0.5F)));
+          
+          // Draw parallelepiped lines:
+          jevois::rawimage::drawLine(outimg, cu[0].x, cu[0].y, cu[1].x, cu[1].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[1].x, cu[1].y, cu[2].x, cu[2].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[2].x, cu[2].y, cu[3].x, cu[3].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[3].x, cu[3].y, cu[0].x, cu[0].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[4].x, cu[4].y, cu[5].x, cu[5].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[5].x, cu[5].y, cu[6].x, cu[6].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[6].x, cu[6].y, cu[7].x, cu[7].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[7].x, cu[7].y, cu[4].x, cu[4].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[0].x, cu[0].y, cu[4].x, cu[4].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[1].x, cu[1].y, cu[5].x, cu[5].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[2].x, cu[2].y, cu[6].x, cu[6].y, 1, jevois::yuyv::LightGreen);
+          jevois::rawimage::drawLine(outimg, cu[3].x, cu[3].y, cu[7].x, cu[7].y, 1, jevois::yuyv::LightGreen);
+        }
       }
     }
 };
