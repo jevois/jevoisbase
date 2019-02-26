@@ -48,9 +48,54 @@ JEVOIS_DECLARE_PARAMETER(mfac, float, "Factor applied to magnetometer values for
     This module only works with optional JeVois sensors that include an IMU! The base JeVois-A33 smart camera does not
     have an onboard IMU.
 
+    This module demonstrates the RAW and FIFO modes of the IMU.
+
+    The specifications of this chip are quite impressive:
+    - 3-axis 16-bit accelerometer with full-range sensitivity selectable to +/-2g, +/-4g, +/-8g, and +/-16g.
+    - Accelerometer data rate from 4 Hz to 1125 Hz.
+    - 3-axis 16-bit gyroscope with full-range sensitivity selectable to +/-250dps (degrees/s), +/-500dps,
+      +/-1000dps, and +/-2000dps.
+    - Gyroscope data rate from 4 Hz to 1125 Hz.
+    - 3-axis 16-bit magnetometer (compass) with wide range of +/-4900uT (micro Tesla).
+    - Magnetometer data rates 10 Hz, 20 Hz, 50 Hz, or 100 Hz.
+    - 16-bit temperature sensor with readout rate of up to 8 kHz.
+    - RAW data mode (get current sensor values at any time), buffered (FIFO) data mode (sensor values accumulate into
+      a FIFO at a fixed rate), and digital motion processing mode (DMP; raw data is processed on-chip).
+    - On-chip digital motion processor (DMP) can compute, inside the IMU chip itself:
+      + quaternion 6 (uses accel + gyro),
+      + quaternion 9 (uses accel + gyro + compass),
+      + geomag quaternion (uses accel + compass),
+      + flip/pickup detection,
+      + step detection and counting,
+      + basic activity recognition: drive, walk, run, bike, tilt, still.
+
+    With quaternions computed on-chip, with an algorithm that gets sensor data at a highly accurate, fixed rate, and
+    applies various calibrations, drift corrections, and compensations on the fly, one gets highly accurate real-time
+    estimate of the sensor's pose in the 3D world and of how it is moving.
+
+    Note that communication with the IMU is over a 400kHz I2C bus, which may limit data readout rate depending on
+    which data is requested from the IMU.
+
+    This IMU has 3 basic modes of operation (parameter mode, which can only be set in params.cfg):
+
+    - RAW: One can access the latest raw sensor data at any time using the getRaw() or get() functions. This is the
+      simplest mode of operation. One disadvantage is that if you are not calling get() at a perfectly regular
+      interval, there will be some time jitter in your readouts. The IMU does not provide any time stamps for its
+      data.
+
+    - FIFO: In this mode, data from the sensor is piled up into a 1 kbyte FIFO buffer at a precise, constant rate
+      (when all three of accelerometer, gyroscope, and magnetometer are on, the gyro rate determines the FIFO
+      buffering rate). Main advantage is that you can then read out the data without having to worry about calling
+      getRaw() or get() at a highly precise interval. But you need to be careful that the FIFO can fill up and
+      overflow very quickly when using high sensor data rates.
+
+    - DMP: In this mode, data is captured from the sensor at an accurate, fixed rate, and is fed to the on-chip
+      digital motion processor (DMP). The DMP then computes quaternions, activity recognition, etc and pushes data
+      packets into the FIFO as results from these algorithms become available.
+
     @author Laurent Itti
 
-    @videomapping YUYV 640 512 40.0 YUYV 640 480 40.0 JeVois DemoIMU
+    @videomapping YUYV 640 512 30.0 YUYV 640 480 30.0 JeVois DemoIMU
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2018 by Laurent Itti, iLab and the University of Southern California
