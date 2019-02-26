@@ -110,7 +110,6 @@ class DemoDMP : public jevois::Module
       static long step_ts = 0;
       static long steps = 0;
       static std::vector<std::string> bac;
-      static int bactim = 0; // number of frames for which we display the activity
       static cv::Vec3d rvec(0.0, 0.0, 0.0); // Euler angles computed from quaternion
       static cv::Vec3d tvec(0.0, 0.0, 0.5); // Place cube 0.5 meters in front of the camera
       float const hsz = 0.075F; // half size of cube, in meters
@@ -225,16 +224,15 @@ class DemoDMP : public jevois::Module
                                   3, h + 15, jevois::yuyv::White);
 
       // ---------- Activity recognition:
-      if (d.header2 & JEVOIS_DMP_ACT_RECOG) { LINFO("bac = 0x" << std::hex << d.bacstate);bac = d.activity(); bactim = 20; }
-      if (bactim) jevois::rawimage::writeText(outimg, jevois::join(bac, ", "), 260, h + 15, jevois::yuyv::White);
+      if (d.header2 & JEVOIS_DMP_ACT_RECOG) bac = d.activity2();
+      if (bac.size()) jevois::rawimage::writeText(outimg, jevois::join(bac, ", "), 260, h + 15, jevois::yuyv::White);
       
       // ---------- Pickup/flip detection:
-      if (d.header2 & JEVOIS_DMP_FLIP_PICKUP) { LINFO("pickup = 0x" << std::hex << d.pickup); pickup = 20; }
+      if (d.header2 & JEVOIS_DMP_FLIP_PICKUP) { pickup = 20; }
       if (pickup) jevois::rawimage::writeText(outimg, "pickup/flip", 260, h + 3, jevois::yuyv::White);
 
       // Decay counters for some ephemerous messages:
       if (pickup > 0) --pickup;
-      if (bactim > 0) --bactim;
 
       // Send the output image with our processing results to the host over USB:
       outframe.send();
