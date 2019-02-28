@@ -63,8 +63,8 @@ class PyEmotion:
         
         frameHeight = frame.shape[0]
         frameWidth = frame.shape[1]
-        mid = int((frameWidth - 110) / 2) + 110
-        leng = frameWidth - mid - 6
+        mid = int((frameWidth - 110) / 2) + 110 # x coord of midpoint of our bars
+        leng = frameWidth - mid - 6             # max length of our bars
         maxconf = 999
 
         # Create a 4D blob from a frame.
@@ -80,7 +80,6 @@ class PyEmotion:
 
         # Show the scores for each class:
         out = out.flatten()
-
         for i in range(8):
             conf = out[i] * 100
             if conf > maxconf: conf = maxconf
