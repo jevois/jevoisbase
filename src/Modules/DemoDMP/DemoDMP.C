@@ -40,6 +40,8 @@ static jevois::ParameterCategory const ParamCateg("DemoDMP Options");
     This module only works with optional JeVois sensors that include an IMU! The base JeVois-A33 smart camera does not
     have an onboard IMU.
 
+    \youtube{MFGpN_Vp7mg}
+
     This module demonstrates the digital motion processing (DMP) mode of the IMU.
 
     The specifications of this chip are quite impressive:

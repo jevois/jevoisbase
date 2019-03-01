@@ -47,6 +47,8 @@ JEVOIS_DECLARE_PARAMETER(mfac, float, "Factor applied to magnetometer values for
 
     This module only works with optional JeVois sensors that include an IMU! The base JeVois-A33 smart camera does not
     have an onboard IMU.
+    
+    \youtube{MFGpN_Vp7mg}
 
     This module demonstrates the RAW and FIFO modes of the IMU.
 
