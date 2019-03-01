@@ -8,8 +8,12 @@ import numpy as np
 # FER+ emotion recognition project, "Training Deep Networks for Facial Expression Recognition with Crowd-Sourced Label
 # Distribution" arXiv:1608.01041
 #
-# The module outputs a score from 0 to 100 for each of: neutral, happiness, surprise, sadness, anger, disgust, fear,
-# contempt.
+# The module outputs a score from -1000 to 1000 for each of: neutral, happiness, surprise, sadness, anger, disgust,
+# fear, contempt.
+#
+# Note that this module does not include any face detection. Hence it always assumes that there is a face well centered
+# in the image. You should enhance this module with first applying a face detector (see, e.g.,
+# \jvmod{PyClassificationDNN}) and to only run the emotion recognition network on the detected faces.
 #
 # @author Laurent Itti
 # 
