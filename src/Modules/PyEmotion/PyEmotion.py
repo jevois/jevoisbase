@@ -13,7 +13,7 @@ import numpy as np
 #
 # Note that this module does not include any face detection. Hence it always assumes that there is a face well centered
 # in the image. You should enhance this module with first applying a face detector (see, e.g.,
-# \jvmod{PyClassificationDNN}) and to only run the emotion recognition network on the detected faces.
+# \jvmod{PyDetectionDNN}) and to only run the emotion recognition network on the detected faces.
 #
 # @author Laurent Itti
 # 
