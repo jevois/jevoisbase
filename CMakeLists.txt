@@ -43,7 +43,7 @@ include_directories("include")
 include_directories("..")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with the current version number:
-jevois_setup_library(src/Components jevoisbase 1.12.0)
+jevois_setup_library(src/Components jevoisbase 1.13.0)
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)
@@ -233,7 +233,8 @@ add_definitions(-Wparentheses -w)
 #  ${JVB}/Contrib/cvEyeTracker-1.2.5/remove_corneal_reflection.cpp ${JVB}/Contrib/cvEyeTracker-1.2.5/svd.c)
 
 ########################################################################################################################
-# Neon-accelerated NE10 support:
+# Neon-accelerated Ne10 support. NOTE: as of JeVois 1.13.0, Ne10 is also installed on platform by default as a library,
+# may want to use that in new code:
 include_directories(Contrib/Ne10/inc)
 
 target_sources(jevoisbase PRIVATE ${JVB}/Contrib/Ne10/modules/imgproc/NE10_boxfilter.c)
@@ -407,12 +408,13 @@ ${TFS}/allocation.cc ${TFS}/arena_planner.cc ${TFS}/context.c)
 
 target_link_libraries(jevoisbase ${JEVOIS_OPENCV_LIBS} opencv_aruco opencv_bgsegm opencv_bioinspired opencv_calib3d
   opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dpm opencv_face opencv_features2d
-  opencv_flann opencv_fuzzy opencv_hfs opencv_imgcodecs opencv_img_hash opencv_imgproc
+  opencv_flann opencv_fuzzy opencv_gapi opencv_hfs opencv_imgcodecs opencv_img_hash opencv_imgproc
   opencv_line_descriptor opencv_ml opencv_objdetect opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot
-  opencv_reg opencv_saliency opencv_shape opencv_stereo opencv_stitching opencv_structured_light opencv_superres
-  opencv_surface_matching opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_xfeatures2d
-  opencv_ximgproc opencv_xobjdetect opencv_xphoto)
+  opencv_quality opencv_reg opencv_saliency opencv_shape opencv_stereo opencv_stitching opencv_structured_light
+  opencv_superres opencv_surface_matching opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab
+  opencv_xfeatures2d opencv_ximgproc opencv_xobjdetect opencv_xphoto)
 # removed: opencv_freetype (not available on platform), opencv_highgui (not needed), opencv_rgbd (not needed)
+
 
 ########################################################################################################################
 # Install shared resources (cascade classifiers, neural network weights, etc):
@@ -465,7 +467,7 @@ else (JEVOIS_PLATFORM)
   set(JEVOIS_DEPEND "jevois-host (>=${JEVOIS_VERSION_MAJOR}.${JEVOIS_VERSION_MINOR}.${JEVOIS_VERSION_PATCH})")
 endif (JEVOIS_PLATFORM)
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${JEVOIS_DEPEND}, libgles2-mesa, libgles2-mesa-dev, curl")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${JEVOIS_DEPEND}, libgles2-mesa, libgles2-mesa-dev, curl, libdmtx-dev, python3-scipy")
 
 # Use helper from JeVois.cmake for all other settings:
 jevois_setup_cpack("jevoisbase")
