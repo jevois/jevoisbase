@@ -27,6 +27,17 @@
 
 static jevois::ParameterCategory const ParamCateg("Darknet YOLO Options");
 
+//! Enum \relates DetectionDNN
+JEVOIS_DEFINE_ENUM_CLASS(Model, (Custom) (Face) (MobileNetSSDvoc) (MobileNetSSDcoco) (MobileNet2SSDcoco)
+                         (TinyYOLOv3) (TinyYOLOv2) );
+
+//! Parameter \relates DetectionDNN
+JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(model, Model, "Shortcut parameter to load a model. This sets parameters "
+                                       "classnames, configname, modelname, etc for the selected network. When "
+                                       "the selected model is Custom, those other parameters will be set instead "
+                                       "from the module's params.cfg config file.",
+                                       Model::Custom, Model_Values, ParamCateg);
+
 //! Parameter \relates DetectionDNN
 JEVOIS_DECLARE_PARAMETER(classnames, std::string, "Path to a text file with names of classes to label detected objects",
                          "/jevois/share/opencv-dnn/detection/opencv_face_detector.classes", ParamCateg);
@@ -148,7 +159,8 @@ JEVOIS_DECLARE_PARAMETER(mean, cv::Scalar, "Mean BGR value subtracted from input
     @restrictions None
     \ingroup modules */
 class DetectionDNN : public jevois::StdModule,
-                     public jevois::Parameter<classnames, configname, modelname, netin, thresh, nms, rgb, scale, mean>
+                     public jevois::Parameter<model, classnames, configname, modelname, netin,
+                                              thresh, nms, rgb, scale, mean>
 {
   public: 
     // ####################################################################################################
@@ -164,11 +176,92 @@ class DetectionDNN : public jevois::StdModule,
     { }
 
     // ####################################################################################################
-    //! Initialization
+    //! Parameter callback: set the selected model
     // ####################################################################################################
-    virtual void postInit() override
+    void onParamChange(model const & param, Model const & val)
     {
+      // Un-freeze the dependent parameters:
+      classnames::unFreeze();
+      configname::unFreeze();
+      modelname::unFreeze();
+
+      // Reset the other parameters:
+      netin::reset();
+      thresh::reset();
+      rgb::reset();
+      scale::reset();
+      nms::reset();
+      mean::reset();
+
+      // Now set the parameters for the chosen model:
+      switch (val)
+      {
+      case Model::Custom:
+        break;
+
+      case Model::Face:
+        classnames::set("/jevois/share/opencv-dnn/detection/opencv_face_detector.classes");
+        modelname::set("/jevois/share/opencv-dnn/detection/opencv_face_detector.caffemodel");
+        configname::set("/jevois/share/opencv-dnn/detection/opencv_face_detector.prototxt");
+        scale::set(1.0F);
+        mean::set(cv::Scalar(104.0F, 177.0F, 123.0F));
+        rgb::set(false);
+        break;
+        
+      case Model::MobileNetSSDvoc:
+        classnames::set("/jevois/share/darknet/yolo/data/voc.names");
+        modelname::set("/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.caffemodel");
+        configname::set("/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.prototxt");
+        break;
+        
+      case Model::MobileNetSSDcoco:
+        classnames::set("/jevois/share/opencv-dnn/detection/coco_tf.names");
+        modelname::set("/jevois/share/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pb");
+        configname::set("/jevois/share/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pbtxt");
+        nms::set(10.0F);
+        break;
+
+      case Model::MobileNet2SSDcoco:
+        classnames::set("/jevois/share/opencv-dnn/detection/coco_tf.names");
+        modelname::set("/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pb");
+        configname::set("/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pbtxt");
+        break;
+        
+      case Model::TinyYOLOv3:
+        classnames::set("/jevois/share/darknet/yolo/data/coco.names");
+        modelname::set("/jevois/share/darknet/yolo/weights/yolov3-tiny.weights");
+        configname::set("/jevois/share/darknet/yolo/cfg/yolov3-tiny.cfg");
+        break;
+        
+      case Model::TinyYOLOv2:
+        classnames::set("/jevois/share/darknet/yolo/data/voc.names");
+        modelname::set("/jevois/share/darknet/yolo/weights/yolov2-tiny-voc.weights");
+        configname::set("/jevois/share/darknet/yolo/cfg/yolov2-tiny-voc.cfg");
+        netin::set(cv::Size(320, 240));
+      }
+
+      // Freeze the dependent parameters unless we are in custom mode:
+      if (val != Model::Custom)
+      {
+        classnames::freeze();
+        configname::freeze();
+        modelname::freeze();
+      }
+
+      // Load/re-load the model:
+      load();
+    }
+
+    // ####################################################################################################
+    //! Load and initialize a model
+    // ####################################################################################################
+    void load()
+    {
+      // Need to nuke the network first if it exists or we could run out of RAM:
+      if (itsNet.empty() == false) itsNet = cv::dnn::Net();
+      
       // Load the class names:
+      itsClasses.clear();
       std::ifstream ifs(classnames::get());
       if (ifs.is_open() == false) LFATAL("Class names file " << classnames::get() << " not found");
       std::string line;
@@ -186,13 +279,7 @@ class DetectionDNN : public jevois::StdModule,
       for (size_t i = 0; i < itsOutLayers.size(); ++i) itsOutNames[i] = layersNames[itsOutLayers[i] - 1];
       itsOutLayerType = itsNet.getLayer(itsOutLayers[0])->type;
     }
-
-    // ####################################################################################################
-    //! Un-initialization
-    // ####################################################################################################
-    virtual void postUninit() override
-    { }
-
+    
     // ####################################################################################################
     //! Post-processing to extract boxes from network outputs
     // ####################################################################################################
@@ -381,14 +468,14 @@ class DetectionDNN : public jevois::StdModule,
       // Wait for paste to finish up:
       paste_fut.get();
 
-      // Post-process the outputs, draw them. and send serial messages:
+      // Post-process the outputs, draw them, and send serial messages:
       postprocess(cvimg, outs, &outimg);
 
       // Display efficiency information:
       std::vector<double> layersTimes;
       double freq = cv::getTickFrequency() / 1000;
       double t = itsNet.getPerfProfile(layersTimes) / freq;
-      std::string label = jevois::sformat("Inference time: %.2f ms", t);
+      std::string label = model::strget() + jevois::sformat(" inference time: %.2f ms", t);
       jevois::rawimage::writeText(outimg, label, 3, h + 3, jevois::yuyv::White);
       
       // Show processing fps:
