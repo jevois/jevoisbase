@@ -35,7 +35,21 @@ void ArUco::postInit()
 
   // Initialize default detector parameters:
   itsDetectorParams = cv::aruco::DetectorParameters::create();
-  itsDetectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+  
+  // Init detector parameters:
+  aruco::dictionary::freeze();
+  switch (aruco::dictionary::get())
+  {
+  case aruco::Dict::ATAG_16h5:
+  case aruco::Dict::ATAG_25h9:
+  case aruco::Dict::ATAG_36h10:
+  case aruco::Dict::ATAG_36h11:
+    itsDetectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_APRILTAG;
+    break;
+    
+  default:
+    itsDetectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+  }
   
   // Read detector parameters if any:
   aruco::detparams::freeze();
@@ -65,12 +79,21 @@ void ArUco::postInit()
       fs["maxErroneousBitsInBorderRate"] >> itsDetectorParams->maxErroneousBitsInBorderRate;
       fs["minOtsuStdDev"] >> itsDetectorParams->minOtsuStdDev;
       fs["errorCorrectionRate"] >> itsDetectorParams->errorCorrectionRate;
+
+      fs["aprilTagQuadDecimate"] >> itsDetectorParams->aprilTagQuadDecimate;
+      fs["aprilTagQuadSigma"] >> itsDetectorParams->aprilTagQuadSigma;
+      fs["aprilTagMinClusterPixels"] >> itsDetectorParams->aprilTagMinClusterPixels;
+      fs["aprilTagMaxNmaxima"] >> itsDetectorParams->aprilTagMaxNmaxima;
+      fs["aprilTagCriticalRad"] >> itsDetectorParams->aprilTagCriticalRad;
+      fs["aprilTagMaxLineFitMse"] >> itsDetectorParams->aprilTagMaxLineFitMse;
+      fs["aprilTagMinWhiteBlackDiff"] >> itsDetectorParams->aprilTagMinWhiteBlackDiff;
+      fs["aprilTagDeglitch"] >> itsDetectorParams->aprilTagDeglitch;
+      fs["detectInvertedMarker"] >> itsDetectorParams->detectInvertedMarker;
     }
     else LERROR("Failed to read detector parameters from file [" << dpf << "] -- IGNORED");
   }
   
   // Instantiate the dictionary:
-  aruco::dictionary::freeze();
   switch (aruco::dictionary::get())
   {
   case aruco::Dict::Original: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);break;
@@ -90,6 +113,11 @@ void ArUco::postInit()
   case aruco::Dict::D7X7_100: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_100); break;
   case aruco::Dict::D7X7_250: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_250); break;
   case aruco::Dict::D7X7_1000: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_1000); break;
+
+  case aruco::Dict::ATAG_16h5: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_16h5); break;
+  case aruco::Dict::ATAG_25h9: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_25h9); break;
+  case aruco::Dict::ATAG_36h10: itsDictionary=cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h10); break;
+  case aruco::Dict::ATAG_36h11: itsDictionary=cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h11); break;
   }
 }
 

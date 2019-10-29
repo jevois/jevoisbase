@@ -114,7 +114,14 @@ class DemoARtoolkit :public jevois::StdModule
       timer.start();
       
       // ARtoolkit component can process YUYV images directly with no conversion required:
-      itsARtoolkit->detectMarkers(inimg);
+      if (inimg.fmt == V4L2_PIX_FMT_YUYV)
+        itsARtoolkit->detectMarkers(inimg);
+      else
+      {
+        // Otherwise, convert to gray:
+        cv::Mat incv = jevois::rawimage::convertToCvGray(inimg);
+        itsARtoolkit->detectMarkers(incv);
+      }
       
       // We are done with the input frame:
       inframe.done();

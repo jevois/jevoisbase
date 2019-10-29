@@ -42,7 +42,7 @@ namespace aruco
   //! Enum for parameter \relates ArUco
   JEVOIS_DEFINE_ENUM_CLASS(Dict, (Original) (D4X4_50) (D4X4_100) (D4X4_250) (D4X4_1000) (D5X5_50) (D5X5_100)
                            (D5X5_250) (D5X5_1000) (D6X6_50) (D6X6_100) (D6X6_250) (D6X6_1000) (D7X7_50)
-                           (D7X7_100) (D7X7_250) (D7X7_1000) );
+                           (D7X7_100) (D7X7_250) (D7X7_1000) (ATAG_16h5) (ATAG_25h9) (ATAG_36h10) (ATAG_36h11) );
   
   //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(dictionary, Dict, "Symbol dictionary to use - Note that "

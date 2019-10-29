@@ -162,6 +162,7 @@ class DemoDMP : public jevois::Module
       std::string qtype;
       jevois::IMUrawData rd;
       bool has_accel = false, has_gyro = false, has_cpass = false;
+      float fsync = -1.0F;
       
       // Get as many IMU readings as we can so we keep the FIFO empty:
       jevois::DMPdata d; int npkt= 0;
@@ -198,6 +199,9 @@ class DemoDMP : public jevois::Module
       
         // ---------- Pickup/flip detection:
         if (d.header2 & JEVOIS_DMP_FLIP_PICKUP) pickup = 20;
+
+        // ---------- FSYNC detection:
+        if (d.header2 & JEVOIS_DMP_FSYNC) fsync = d.fsync_us();
 
         // ---------- Raw accel, gyro, mag:
         if (d.header1 & JEVOIS_DMP_ACCEL)
@@ -297,6 +301,10 @@ class DemoDMP : public jevois::Module
       // ---------- Step detection:
       jevois::rawimage::writeText(outimg, jevois::sformat("Steps: %6u (last at %010u)", steps, step_ts),
                                   3, h + 15, jevois::yuyv::White);
+
+      // ---------- FSYNC detection:
+      if (fsync >= 0.0F) jevois::rawimage::writeText(outimg, jevois::sformat("FSYNC: %4d", int(fsync + 0.499F)),
+                                                     w - 130, h + 3, jevois::yuyv::White);
 
       // ---------- Activity recognition:
       if (bac.size()) jevois::rawimage::writeText(outimg, jevois::join(bac, ", "), 290, h + 15, jevois::yuyv::White);
