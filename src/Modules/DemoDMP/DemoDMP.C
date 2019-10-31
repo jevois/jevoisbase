@@ -87,6 +87,50 @@ static jevois::ParameterCategory const ParamCateg("DemoDMP Options");
       digital motion processor (DMP). The DMP then computes quaternions, activity recognition, etc and pushes data
       packets into the FIFO as results from these algorithms become available.
 
+    Low-level tweaking of the IMU and DMP
+    -------------------------------------
+
+    The ICM-20948 IMU chip is a very sophisticated and complex computer on its own right. There are many settings and
+    modes that are supported. Unfortunately, the full documentation is not open. But you can obtain it after
+    registration with TDK InvenSense. We provide the following user-level functions in the command-line interface of
+    JeVois to allow you to get/set raw registers of the IMU and DMP:
+
+    - setimureg <reg> <val> - set raw IMU register <reg> to value <val>
+    - getimureg <reg> - get value of raw IMU register <reg>
+    - setimuregs <reg> <num> <val1> ... <valn> - set array of raw IMU register values
+    - getimuregs <reg> <num> - get array of raw IMU register values
+    - setdmpreg <reg> <val> - set raw DMP register <reg> to value <val>
+    - getdmpreg <reg> - get value of raw DMP register <reg>
+    - setdmpregs <reg> <num> <val1> ... <valn> - set array of raw DMP register values
+    - getdmpregs <reg> <num> - get array of raw DMP register values
+
+    The registers and values can be specified in decimal, hex (with prefix 0x), or octal (with prefix 0 - beware of this
+    and be careful). The values returned are always in hex (with no prefix). Note that the above functions are not
+    activated by default, to prevent mistakes by rookie users. To activate them, issue a `setpar camreg 1` on the JeVois
+    console.
+
+    For example, to set the output data rate (ODR) of the DMP quaternion-9; this is in DMP register DMP_ODR_QUAT9 = 168
+    (see definitions in file ICM20948_regs.H of the JeVois core software):
+
+    \verbatim
+    setpar camreg 1
+    getdmpreg 168 # shows default divider value of 5; ODR is DMP engine rate / (1 + divider)
+    setdmpreg 168 2
+    \endverbatim
+
+    To see the effect, you should first turn on FSYNC as one of the DMP outputs (e.g., set `dmp` parameter to QF). Then
+    turn on parameter `pktdbg` and turn on log messages to USB see how many quaternion packets (long packets that start
+    with 4 0) you get between two FSYNC packets (short packets that start with 0 8 8 0). By default it is about 2 (with
+    camera sensor at 25fps and DMP engine running at 56Hz). Then increase the `arate` and `grate` to 112 Hz. You should
+    still get about 2 quaternion packets between two FSYNC packets. Finally, apply the above DMP register change. You
+    should now see 4 quaternion packets between two FSYNC packets. Note that sometimes quaternion and FSYNC packets get
+    combined.
+
+    As you experiment, keep in mind that the IMU can easily saturate the 400 kHz bandwidth of the i2c bus that connects
+    it to the JeVois main processor. If you start getting errors in the console from IMUdata::parsePacket() then likely
+    your data rate is too high for the i2c bus. One of the nice things about the DMP is that you can still run the
+    quaternion computation very fast (e.g., at 450 Hz or even 1125 Hz) while maintaining a low output data rate.
+
     @author Laurent Itti
 
     @videomapping YUYV 640 520 25.0 YUYV 640 480 25.0 JeVois DemoDMP
@@ -304,7 +348,7 @@ class DemoDMP : public jevois::Module
 
       // ---------- FSYNC detection:
       if (fsync >= 0.0F) jevois::rawimage::writeText(outimg, jevois::sformat("FSYNC: %4d", int(fsync + 0.499F)),
-                                                     w - 130, h + 3, jevois::yuyv::White);
+                                                     w - 11*6, h + 15, jevois::yuyv::White);
 
       // ---------- Activity recognition:
       if (bac.size()) jevois::rawimage::writeText(outimg, jevois::join(bac, ", "), 290, h + 15, jevois::yuyv::White);
@@ -337,7 +381,7 @@ class DemoDMP : public jevois::Module
       }
 
       // ---------- Show number of IMU packets processed:
-      jevois::rawimage::writeText(outimg, jevois::sformat("%03d pkts", npkt), 586, h + 3, jevois::yuyv::White);
+      jevois::rawimage::writeText(outimg, jevois::sformat("%03d pkts", npkt), 592, h + 3, jevois::yuyv::White);
       
       // Decay counters for some ephemerous messages:
       if (pickup > 0) --pickup;
