@@ -23,8 +23,8 @@
 #include <jevois/Types/ObjReco.H>
 #include <atomic>
 
-#include <tensorflow/contrib/lite/model.h>
-#include <tensorflow/contrib/lite/interpreter.h>
+#include <tensorflow/lite/model.h>
+#include <tensorflow/lite/interpreter.h>
 
 namespace tflow
 {

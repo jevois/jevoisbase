@@ -70,6 +70,7 @@ include_directories(Contrib/tiny-dnn)
 include_directories(Contrib/pthreadpool/include)
 
 target_sources(jevoisbase PRIVATE Contrib/pthreadpool/src/threadpool-pthreads.c)
+add_definitions(-DTBB_SUPPRESS_DEPRECATED_MESSAGES) # avoid message about deprecated code in tbb.h
 
 ########################################################################################################################
 # darknet with NNPACK support: (on top of things already pulled in by tiny-dnn)
@@ -191,6 +192,7 @@ add_definitions(-DNNPACK)
 
 # Now darknet-nnpack proper:
 include_directories(Contrib/darknet-nnpack/include)
+include_directories(Contrib/darknet-nnpack/3rdparty/stb/include)
 set(DKNS "${JVB}/Contrib/darknet-nnpack/src")
 add_definitions(-DDARKNET_NNPACK)
 
@@ -198,15 +200,25 @@ add_definitions(-DDARKNET_NNPACK)
 #include_directories(Contrib/darknet/include)
 #set(DKNS "${JVB}/Contrib/darknet/src")
 
-target_sources(jevoisbase PRIVATE ${DKNS}/gemm.c ${DKNS}/utils.c ${DKNS}/cuda.c ${DKNS}/deconvolutional_layer.c
-  ${DKNS}/convolutional_layer.c ${DKNS}/list.c ${DKNS}/image.c ${DKNS}/activations.c ${DKNS}/im2col.c ${DKNS}/col2im.c
-  ${DKNS}/blas.c ${DKNS}/crop_layer.c ${DKNS}/dropout_layer.c ${DKNS}/maxpool_layer.c ${DKNS}/softmax_layer.c
-  ${DKNS}/data.c ${DKNS}/matrix.c ${DKNS}/network.c ${DKNS}/connected_layer.c ${DKNS}/cost_layer.c ${DKNS}/parser.c
-  ${DKNS}/option_list.c ${DKNS}/detection_layer.c ${DKNS}/route_layer.c ${DKNS}/box.c ${DKNS}/normalization_layer.c
-  ${DKNS}/avgpool_layer.c ${DKNS}/layer.c ${DKNS}/local_layer.c ${DKNS}/shortcut_layer.c ${DKNS}/activation_layer.c
-  ${DKNS}/rnn_layer.c ${DKNS}/gru_layer.c ${DKNS}/crnn_layer.c ${DKNS}/demo.c ${DKNS}/batchnorm_layer.c
-  ${DKNS}/region_layer.c ${DKNS}/reorg_layer.c ${DKNS}/tree.c ${DKNS}/lstm_layer.c ${DKNS}/yolo_layer.c
-  ${DKNS}/upsample_layer.c)
+# Get the list of sources from:
+# cd Contrib/darknet-nnpack/src
+# find . -name "*.c" |grep -v darknet.c|sed -e 's/\.\//\$\{DKNS\}\//g' | xargs
+
+target_sources(jevoisbase PRIVATE ${DKNS}/go.c ${DKNS}/swag.c ${DKNS}/maxpool_layer.c ${DKNS}/avgpool_layer.c
+  ${DKNS}/nightmare.c ${DKNS}/region_layer.c ${DKNS}/im2col.c ${DKNS}/yolo.c ${DKNS}/parser.c
+  ${DKNS}/dark_cuda.c ${DKNS}/gaussian_yolo_layer.c ${DKNS}/tag.c ${DKNS}/lstm_layer.c ${DKNS}/demo.c
+  ${DKNS}/dice.c ${DKNS}/captcha.c ${DKNS}/softmax_layer.c ${DKNS}/network.c ${DKNS}/cpu_gemm.c
+  ${DKNS}/rnn_layer.c ${DKNS}/dropout_layer.c ${DKNS}/conv_lstm_layer.c ${DKNS}/upsample_layer.c
+  ${DKNS}/option_list.c ${DKNS}/convolutional_layer.c ${DKNS}/gemm.c ${DKNS}/reorg_layer.c
+  ${DKNS}/classifier.c ${DKNS}/matrix.c ${DKNS}/cost_layer.c ${DKNS}/voxel.c ${DKNS}/crnn_layer.c
+  ${DKNS}/deconvolutional_layer.c ${DKNS}/gettimeofday.c ${DKNS}/batchnorm_layer.c ${DKNS}/activations.c
+  ${DKNS}/layer.c ${DKNS}/super.c ${DKNS}/crop_layer.c ${DKNS}/writing.c ${DKNS}/list.c
+  ${DKNS}/reorg_old_layer.c ${DKNS}/route_layer.c ${DKNS}/utils.c ${DKNS}/blas.c ${DKNS}/col2im.c
+  ${DKNS}/normalization_layer.c ${DKNS}/getopt.c ${DKNS}/local_layer.c ${DKNS}/tree.c ${DKNS}/detector.c
+  ${DKNS}/art.c ${DKNS}/rnn.c ${DKNS}/shortcut_layer.c ${DKNS}/box.c ${DKNS}/compare.c ${DKNS}/yolo_layer.c
+  ${DKNS}/image.c ${DKNS}/cifar.c ${DKNS}/activation_layer.c ${DKNS}/gru_layer.c ${DKNS}/detection_layer.c
+  ${DKNS}/data.c ${DKNS}/coco.c ${DKNS}/scale_channels_layer.c ${DKNS}/connected_layer.c ${DKNS}/sam_layer.c
+  ${DKNS}/rnn_vid.c)
 
 ########################################################################################################################
 # ZZBar barcode / QR-code source files:
@@ -358,49 +370,74 @@ include_directories(Contrib/ARToolKit5arm/include)
 ########################################################################################################################
 # tensorflow-lite support:
 
-set(TFS "${JVB}/Contrib/tensorflow/tensorflow/contrib/lite")
+set(TFS "${JVB}/Contrib/tensorflow/tensorflow/lite")
 
-# Note: see Makefile in Contrib/tensorflow/tensorflow/contrib/lite for any updates to this list of includes and list of
+# Note: see Makefile in Contrib/tensorflow/tensorflow/lite for any updates to this list of includes and list of
 # source files for tensorflow lite.
+include_directories("${JVB}/Contrib") # their include path conventions are a mess!
 include_directories("${JVB}/Contrib/tensorflow")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/flatbuffers/include")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/gemmlowp")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/neon_2_sse")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/eigen")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/farmhash/src")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/contrib/lite/downloads/absl")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/flatbuffers/include")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/gemmlowp")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/neon_2_sse")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/eigen")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/farmhash/src")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/absl")
+include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/fft2d")
 
-# in jevoisbase/Contrib/tensorflow/tensorflow/contrib/lite run:
-# find . -name "*.cc" |grep -v test|grep -v python|grep -v bench|grep -v farmhash/dev|grep -v example|grep -v smartreply|grep -v absl|grep -v toco|grep -v grpc|grep -v java|grep -v profiling|grep -v registration|sed -e 's/\.\//\$\{TFS\}\//g' | xargs
-#
-# then add: ${TFS}/context.c
+add_definitions(-DFLATBUFFERS_LOCALE_INDEPENDENT=0)
 
-target_sources(jevoisbase PRIVATE ${TFS}/util.cc ${TFS}/schema/builtin_ops_header/generator.cc
-${TFS}/schema/builtin_ops_header/generate.cc ${TFS}/simple_memory_arena.cc ${TFS}/tools/command_line_flags.cc
-${TFS}/tools/verifier.cc ${TFS}/kernels/space_to_batch_nd.cc ${TFS}/kernels/mul.cc ${TFS}/kernels/div.cc
-${TFS}/kernels/add.cc ${TFS}/kernels/unidirectional_sequence_rnn.cc ${TFS}/kernels/lstm.cc ${TFS}/kernels/register.cc
-${TFS}/kernels/squeeze.cc ${TFS}/kernels/split.cc ${TFS}/kernels/resize_bilinear.cc
-${TFS}/kernels/bidirectional_sequence_rnn.cc ${TFS}/kernels/skip_gram.cc ${TFS}/kernels/maximum_minimum.cc
-${TFS}/kernels/slice.cc ${TFS}/kernels/exp.cc ${TFS}/kernels/unidirectional_sequence_lstm.cc
-${TFS}/kernels/elementwise.cc ${TFS}/kernels/sparse_to_dense.cc ${TFS}/kernels/hashtable_lookup.cc
-${TFS}/kernels/internal/reference/portable_tensor_utils.cc ${TFS}/kernels/internal/optimized/neon_tensor_utils.cc
+# in jevoisbase/Contrib/tensorflow/tensorflow/lite run:
+# find . -name "*.cc" |grep -v test|grep -v python|grep -v bench|grep -v farmhash/dev|grep -v example|grep -v smartreply|grep -v absl|grep -v toco|grep -v grpc|grep -v java|grep -v profiling|grep -v registration|grep -v gpu|grep -v android|grep -v gemmlowp|grep -v evaluation|grep -v tools|grep -v delegates|grep -v experimental/micro|grep -v experimental/writer|grep -v generate.cc|grep -v disabled|grep -v ios|sed -e 's/\.\//\$\{TFS\}\//g' | xargs
+
+# add ${TFS}/c/c_api_internal.c
+
+target_sources(jevoisbase PRIVATE ${TFS}/mutable_op_resolver.cc ${TFS}/core/api/op_resolver.cc
+${TFS}/core/api/error_reporter.cc ${TFS}/core/api/flatbuffer_conversions.cc ${TFS}/core/subgraph.cc ${TFS}/util.cc
+${TFS}/schema/builtin_ops_header/generator.cc ${TFS}/experimental/c/c_api.cc
+${TFS}/experimental/c/c_api_experimental.cc ${TFS}/experimental/kernels/unidirectional_sequence_gru.cc
+${TFS}/experimental/kernels/ctc_beam_search_decoder.cc ${TFS}/experimental/kernels/gru_cell.cc
+${TFS}/experimental/resource_variable/resource_variable.cc ${TFS}/experimental/ruy/tune.cc
+${TFS}/experimental/ruy/trmul.cc ${TFS}/experimental/ruy/pack_arm.cc ${TFS}/experimental/ruy/kernel_arm64.cc
+${TFS}/experimental/ruy/detect_dotprod.cc ${TFS}/experimental/ruy/pmu.cc ${TFS}/experimental/ruy/allocator.cc
+${TFS}/experimental/ruy/thread_pool.cc ${TFS}/experimental/ruy/trace.cc ${TFS}/experimental/ruy/tune_tool.cc
+${TFS}/experimental/ruy/context.cc ${TFS}/experimental/ruy/pack_avx512.cc ${TFS}/experimental/ruy/block_map.cc
+${TFS}/experimental/ruy/kernel_avx512.cc ${TFS}/experimental/ruy/wait.cc ${TFS}/experimental/ruy/kernel_arm32.cc
+${TFS}/experimental/ruy/blocking_counter.cc ${TFS}/mmap_allocation.cc ${TFS}/simple_memory_arena.cc
+${TFS}/kernels/read_variable.cc ${TFS}/kernels/space_to_batch_nd.cc ${TFS}/kernels/mul.cc
+${TFS}/kernels/matrix_set_diag.cc ${TFS}/kernels/unpack.cc ${TFS}/kernels/div.cc ${TFS}/kernels/add.cc
+${TFS}/kernels/reverse.cc ${TFS}/kernels/expand_dims.cc ${TFS}/kernels/unidirectional_sequence_rnn.cc
+${TFS}/kernels/lstm.cc ${TFS}/kernels/register.cc ${TFS}/kernels/floor_mod.cc ${TFS}/kernels/squeeze.cc
+${TFS}/kernels/unique.cc ${TFS}/kernels/split.cc ${TFS}/kernels/one_hot.cc ${TFS}/kernels/resize_bilinear.cc
+${TFS}/kernels/bidirectional_sequence_rnn.cc ${TFS}/kernels/resize_nearest_neighbor.cc ${TFS}/kernels/skip_gram.cc
+${TFS}/kernels/maximum_minimum.cc ${TFS}/kernels/while.cc ${TFS}/kernels/slice.cc ${TFS}/kernels/if.cc
+${TFS}/kernels/detection_postprocess.cc ${TFS}/kernels/exp.cc ${TFS}/kernels/rfft2d.cc
+${TFS}/kernels/unidirectional_sequence_lstm.cc ${TFS}/kernels/fill.cc ${TFS}/kernels/elementwise.cc
+${TFS}/kernels/add_n.cc ${TFS}/kernels/split_v.cc ${TFS}/kernels/assign_variable.cc
+${TFS}/kernels/cpu_backend_context.cc ${TFS}/kernels/depth_to_space.cc ${TFS}/kernels/lstm_eval.cc
+${TFS}/kernels/quantize.cc ${TFS}/kernels/ceil.cc ${TFS}/kernels/sparse_to_dense.cc ${TFS}/kernels/hashtable_lookup.cc
+${TFS}/kernels/squared_difference.cc ${TFS}/kernels/internal/reference/portable_tensor_utils.cc
+${TFS}/kernels/internal/optimized/neon_tensor_utils.cc ${TFS}/kernels/internal/optimized/sse_tensor_utils.cc
 ${TFS}/kernels/internal/mfcc_mel_filterbank.cc ${TFS}/kernels/internal/mfcc_dct.cc
 ${TFS}/kernels/internal/quantization_util.cc ${TFS}/kernels/internal/kernel_utils.cc
 ${TFS}/kernels/internal/tensor_utils.cc ${TFS}/kernels/internal/spectrogram.cc ${TFS}/kernels/internal/mfcc.cc
-${TFS}/kernels/floor.cc ${TFS}/kernels/space_to_depth.cc ${TFS}/kernels/concatenation.cc ${TFS}/kernels/cast.cc
-${TFS}/kernels/pooling.cc ${TFS}/kernels/lsh_projection.cc ${TFS}/kernels/svdf.cc ${TFS}/kernels/mean.cc
+${TFS}/kernels/floor.cc ${TFS}/kernels/matrix_diag.cc ${TFS}/kernels/space_to_depth.cc ${TFS}/kernels/arg_min_max.cc
+${TFS}/kernels/concatenation.cc ${TFS}/kernels/cast.cc ${TFS}/kernels/reduce.cc ${TFS}/kernels/pooling.cc
+${TFS}/kernels/lsh_projection.cc ${TFS}/kernels/svdf.cc ${TFS}/kernels/where.cc ${TFS}/kernels/shape.cc
 ${TFS}/kernels/transpose.cc ${TFS}/kernels/depthwise_conv.cc ${TFS}/kernels/strided_slice.cc ${TFS}/kernels/pad.cc
-${TFS}/kernels/arg_max.cc ${TFS}/kernels/local_response_norm.cc ${TFS}/kernels/gather.cc
-${TFS}/kernels/bidirectional_sequence_lstm.cc ${TFS}/kernels/kernel_util.cc ${TFS}/kernels/audio_spectrogram.cc
-${TFS}/kernels/batch_to_space_nd.cc ${TFS}/kernels/embedding_lookup_sparse.cc ${TFS}/kernels/embedding_lookup.cc
-${TFS}/kernels/select.cc ${TFS}/kernels/topk_v2.cc ${TFS}/kernels/fully_connected.cc ${TFS}/kernels/gemm_support.cc
-${TFS}/kernels/sub.cc ${TFS}/kernels/neg.cc ${TFS}/kernels/comparisons.cc ${TFS}/kernels/dequantize.cc
-${TFS}/kernels/l2norm.cc ${TFS}/kernels/basic_rnn.cc ${TFS}/kernels/mfcc.cc ${TFS}/kernels/reshape.cc
-${TFS}/kernels/eigen_support.cc ${TFS}/kernels/transpose_conv.cc ${TFS}/kernels/activations.cc ${TFS}/kernels/conv.cc
-${TFS}/string_util.cc ${TFS}/downloads/gemmlowp/eight_bit_int_gemm/eight_bit_int_gemm.cc
-${TFS}/downloads/farmhash/src/farmhash.cc ${TFS}/model.cc ${TFS}/op_resolver.cc ${TFS}/graph_info.cc
-${TFS}/error_reporter.cc ${TFS}/interpreter.cc ${TFS}/optional_debug_tools.cc ${TFS}/nnapi_delegate.cc
-${TFS}/allocation.cc ${TFS}/arena_planner.cc ${TFS}/context.c)
+${TFS}/kernels/pack.cc ${TFS}/kernels/register_ref.cc ${TFS}/kernels/local_response_norm.cc ${TFS}/kernels/gather.cc
+${TFS}/kernels/pow.cc ${TFS}/kernels/floor_div.cc ${TFS}/kernels/rank.cc ${TFS}/kernels/bidirectional_sequence_lstm.cc
+${TFS}/kernels/zeros_like.cc ${TFS}/kernels/kernel_util.cc ${TFS}/kernels/audio_spectrogram.cc ${TFS}/kernels/round.cc
+${TFS}/kernels/batch_to_space_nd.cc ${TFS}/kernels/logical.cc ${TFS}/kernels/embedding_lookup_sparse.cc
+${TFS}/kernels/fake_quant.cc ${TFS}/kernels/tile.cc ${TFS}/kernels/reverse_sequence.cc
+${TFS}/kernels/embedding_lookup.cc ${TFS}/kernels/select.cc ${TFS}/kernels/cpu_backend_gemm_eigen.cc
+${TFS}/kernels/topk_v2.cc ${TFS}/kernels/fully_connected.cc ${TFS}/kernels/sub.cc ${TFS}/kernels/neg.cc
+${TFS}/kernels/comparisons.cc ${TFS}/kernels/dequantize.cc ${TFS}/kernels/l2norm.cc ${TFS}/kernels/gather_nd.cc
+${TFS}/kernels/basic_rnn.cc ${TFS}/kernels/mfcc.cc ${TFS}/kernels/range.cc ${TFS}/kernels/reshape.cc
+${TFS}/kernels/eigen_support.cc ${TFS}/kernels/transpose_conv.cc ${TFS}/kernels/mirror_pad.cc
+${TFS}/kernels/activations.cc ${TFS}/kernels/conv.cc ${TFS}/string_util.cc ${TFS}/model.cc ${TFS}/graph_info.cc
+${TFS}/minimal_logging_default.cc ${TFS}/minimal_logging.cc ${TFS}/stderr_reporter.cc
+${TFS}/external_cpu_backend_context.cc ${TFS}/interpreter.cc ${TFS}/nnapi/nnapi_implementation.cc ${TFS}/allocation.cc
+${TFS}/arena_planner.cc ${TFS}/c/c_api_internal.c)
 
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others:

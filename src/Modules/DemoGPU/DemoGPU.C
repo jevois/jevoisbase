@@ -23,7 +23,10 @@
 
 #include <jevois/Image/RawImageOps.H>
 #include <linux/videodev2.h>
- 
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 static jevois::ParameterCategory const ParamCateg("DemoGPU Parameters");
 
 // Note: we use NoEffect here as None seems to be defined a s anumeric constant somewhere, when compiling on host
@@ -37,7 +40,7 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "GPU image processing eff
 
 // icon by by Freepik in technology at flaticon
 
-//! Simple image filtering demo using OpenGL-ES 2.0 shaders on the Mali-400MP2 GPU
+//! Simple image filtering demo using OpenGL-ES shaders on the Mali-400MP2 GPU
 /*! This class first copies the given input image into an OpenGL texture, then applies OpenGL-ES vertex and fragment
     shaders to achieve some image processing, and finally gets the resulting pixels back into an image.
     
@@ -55,10 +58,10 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "GPU image processing eff
     Using this module
     -----------------
 
-    Unfortunately, Mac OSX computers refuse to detect the JeVois smart camera as soon as it exposes one or more RGB565
-    video modes. Thus, you cannot use this module with Macs, and the module is disabled by default. In addition, RGB565
-    does not seem to work in \c guvcview either, on Ubuntu prior to 17.04! Proceed as follows to enable and use this
-    module on a Linux host:
+    Unfortunately, MacOS computers refuse to detect the JeVois smart camera as soon as it exposes one or more RGB565
+    video modes. Thus, you cannot use this module with Macs in its native version (but see below), and the module is
+    disabled by default. In addition, RGB565 does not seem to work in older \c guvcview either, on Ubuntu prior to
+    17.04! Proceed as follows to enable and use this module on a Linux host:
 
     Edit <b>JEVOIS:/jevois/config/videomappings.cfg</b> and look for the line that mentions DemoGPU. It is commented
     out, so just remove the leading \b # sign. The line should then look like this:
@@ -80,11 +83,14 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "GPU image processing eff
     guvcview -f RGBP -x 320x240
     \endverbatim
 
+    This module can also work with YUYV output, which is then compatible with MacOS, JeVois Inventor, etc. But note
+    that the conversion from RGB565 to YUYV consumes some CPU on the JeVois camera.
 
     @author Laurent Itti
 
     @displayname Demo GPU
-    @videomapping RGB565 320 240 22.0 YUYV 320 240 22.0 JeVois DemoGPU
+    @videomapping RGB565 320 240 22.0 YUYV 320 240 22.0 JeVois DemoGPU # Native mode
+    @videomapping YUYV 320 240 22.0 YUYV 320 240 22.0 JeVois DemoGPU # With CPU-based conversion from RGB565 to YUYV
     @email itti\@usc.edu
     @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
     @copyright Copyright (C) 2016 by Laurent Itti, iLab and the University of Southern California
@@ -126,18 +132,35 @@ class DemoGPU : public jevois::Module,
 
       // Wait for an image from our gadget driver into which we will put our results:
       jevois::RawImage outimg = outframe.get();
-      outimg.require("output", outimg.width, outimg.height, V4L2_PIX_FMT_RGB565);
-      cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
-
-      // Process input to output, going from YUYV to RGBA internally, to RGB565 rendering:
-      itsFilter->process(inimgcv, outimgcv);
-
+      if (outimg.width != inimg.width || outimg.height != inimg.height)
+        LFATAL("Input and output image sizes must match");
+      unsigned int col; // color for our text
+      
+      if (outimg.fmt == V4L2_PIX_FMT_RGB565)
+      {
+        // Process input to output, going from YUYV to RGBA internally, to RGB565 rendering:
+        cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
+        itsFilter->process(inimgcv, outimgcv);
+        col = jevois::rgb565::White;
+      }
+      else if (outimg.fmt == V4L2_PIX_FMT_YUYV)
+      {
+        // Process input into a temporary RGB565 buffer, then convert RGB565 to RGB to YUYV on CPU.
+        // Clearly this uses a lot of CPU that would offset any gains of GPU computation. For demo purposes only.
+        cv::Mat tmpcv(inimg.height, inimg.width, CV_8UC2);
+        itsFilter->process(inimgcv, tmpcv);
+        cv::Mat tmpcvbgr; cv::cvtColor(tmpcv, tmpcvbgr, cv::COLOR_BGR5652BGR); // note: swap red/blue
+        jevois::rawimage::convertCvRGBtoRawImage(tmpcvbgr, outimg, 100); // note: swap red/blue
+        col = jevois::yuyv::White;
+      }
+      else LFATAL("output format must be RGB565 or YUYV");
+      
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
-      jevois::rawimage::writeText(outimg, fpscpu, 3, outimg.height - 13, jevois::rgb565::White);
+      jevois::rawimage::writeText(outimg, fpscpu, 3, outimg.height - 13, col);
       std::ostringstream oss; oss << "JeVois DemoGPU - Effect: " << effect::get();
-      jevois::rawimage::writeText(outimg, oss.str(), 3, 3, jevois::rgb565::White);
-  
+      jevois::rawimage::writeText(outimg, oss.str(), 3, 3, col);
+        
       // Send the output image with our processing results to the host over USB:
       outframe.send();
     }

@@ -18,6 +18,11 @@
 #include <jevoisbase/Components/ObjectDetection/Darknet.H>
 #include <jevois/Core/Module.H>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <darknet-nnpack/src/classifier.h>
+#include <darknet-nnpack/src/option_list.h>
+#include <darknet-nnpack/src/data.h>
+#include <darknet-nnpack/src/network.h>
+#include <stdlib.h> // for free()
 
 // ####################################################################################################
 Darknet::Darknet(std::string const & instance, bool show_detail_params) :
@@ -124,7 +129,7 @@ void Darknet::loadNet()
 #ifdef DARKNET_NNPACK
   if (net && net->threadpool) pthreadpool_destroy(net->threadpool);
 #endif
-  if (net) { free_network(net); net = nullptr; }
+  if (net) { free_network(*net); free(net); net = nullptr; }
   
   // Since loading big networks can take a while, do it in a thread so we can keep streaming video in the
   // meantime. itsReady will flip to true when the load is complete.
@@ -182,7 +187,9 @@ void Darknet::postUninit()
 #ifdef DARKNET_NNPACK
     if (net->threadpool) pthreadpool_destroy(net->threadpool);
 #endif
-    free_network(net);
+    free_network(*net);
+    free(net);
+    net = nullptr;
   }
 
   free_ptrs((void**)names, classes);
@@ -230,12 +237,12 @@ float Darknet::predict(image & im, std::vector<jevois::ObjReco> & results)
   // Run the predictions:
   struct timeval start, stop;
   gettimeofday(&start, 0);
-  float * predictions = network_predict(net, im.data);
+  float * predictions = network_predict(*net, im.data);
   gettimeofday(&stop, 0);
 
   float predtime = (stop.tv_sec * 1000 + stop.tv_usec / 1000) - (start.tv_sec * 1000 + start.tv_usec / 1000);
 
-  if (net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
+  if (net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1);
 
   // Get the top scoring predictions and push them into results:
   int indexes[topn];

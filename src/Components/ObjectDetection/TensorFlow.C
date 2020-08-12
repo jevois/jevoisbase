@@ -34,9 +34,9 @@ specific language governing permissions and limitations under the License. */
 #include <fstream>
 #include <cstdio>
 
-#include <tensorflow/contrib/lite/kernels/register.h>
-#include <tensorflow/contrib/lite/optional_debug_tools.h>
-#include <tensorflow/contrib/lite/string_util.h>
+#include <tensorflow/lite/kernels/register.h>
+#include <tensorflow/lite/optional_debug_tools.h>
+#include <tensorflow/lite/string_util.h>
 
 // ####################################################################################################
 int TensorFlow::JeVoisReporter::Report(char const * format, va_list args)

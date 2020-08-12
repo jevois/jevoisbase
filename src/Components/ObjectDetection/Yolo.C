@@ -17,6 +17,12 @@
 
 #include <jevoisbase/Components/ObjectDetection/Yolo.H>
 #include <jevois/Core/Module.H>
+#include <darknet-nnpack/src/classifier.h>
+#include <darknet-nnpack/src/option_list.h>
+#include <darknet-nnpack/src/data.h>
+#include <darknet-nnpack/src/network.h>
+#include <darknet-nnpack/src/utils.h>
+#include <stdlib.h> // for free()
 
 // ####################################################################################################
 Yolo::Yolo(std::string const & instance) : jevois::Component(instance), net(nullptr), names(nullptr), nboxes(0),
@@ -102,7 +108,8 @@ void Yolo::postUninit()
 #ifdef DARKNET_NNPACK
     if (net->threadpool) pthreadpool_destroy(net->threadpool);
 #endif
-    free_network(net);
+    free_network(*net);
+    free(net);
     net = nullptr;
   }
 
@@ -147,7 +154,7 @@ float Yolo::predict(image & im)
   struct timeval start, stop;
 
   gettimeofday(&start, 0);
-  network_predict(net, sized.data);
+  network_predict(*net, sized.data);
   gettimeofday(&stop, 0);
 
   float predtime = (stop.tv_sec * 1000 + stop.tv_usec / 1000) - (start.tv_sec * 1000 + start.tv_usec / 1000);
@@ -164,7 +171,7 @@ void Yolo::computeBoxes(int inw, int inh)
 
   if (dets) { free_detections(dets, nboxes); dets = nullptr; nboxes = 0; }
 
-  dets = get_network_boxes(net, 1, 1, thresh::get() * 0.01F, hierthresh::get() * 0.01F, map, 0, &nboxes);
+  dets = get_network_boxes(net, 1, 1, thresh::get() * 0.01F, hierthresh::get() * 0.01F, map, 0, &nboxes, 1);
 
   float const nmsval = nms::get() * 0.01F;
 

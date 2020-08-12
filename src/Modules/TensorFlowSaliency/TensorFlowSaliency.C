@@ -76,11 +76,10 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the foc
 
     For example:
 
-    - mobilenet_v1_0.25_128_quant (network size 128x128), runs at about 12ms/prediction (83.3 frames/s).
-    - mobilenet_v1_0.5_128_quant (network size 128x128), runs at about 26ms/prediction (38.5 frames/s).
-    - mobilenet_v1_0.25_224_quant (network size 224x224), runs at about 35ms/prediction (28.5 frames/s).
-    - mobilenet_v1_1.0_224_quant (network size 224x224), runs at about 185ms/prediction (5.4 frames/s).
-
+    - mobilenet_v1_0.25_128_quant (network size 128x128), runs at about 8ms/prediction (125 frames/s).
+    - mobilenet_v1_0.5_128_quant (network size 128x128), runs at about 18ms/prediction (55 frames/s).
+    - mobilenet_v1_0.25_224_quant (network size 224x224), runs at about 24ms/prediction (41 frames/s).
+    - mobilenet_v1_1.0_224_quant (network size 224x224), runs at about 139ms/prediction (7 frames/s).
 
     When using video mappings with USB output, irrespective of \p foa, the crop around the most salient image region
     (with size given by \p foa) will always also be rescaled so that, when placed to the right of the input image, it

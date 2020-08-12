@@ -85,7 +85,7 @@ if [ "X$REPLY" = "Xy" ]; then
     #/bin/rm cvEyeTracker-1.2.5.tar.gz
 
     # NNPACK-accelerated darknet CNNs:
-    get_github digitalbrain79 darknet-nnpack 79df27c8006734412c72587df379ab3740938971
+    get_github digitalbrain79 darknet-nnpack 614071ee5f5d066a5ef9ee29deb653fcf0903134
 
     # pthread-based thread pool for C/C++:
     get_github Maratyszcza pthreadpool 16bd2290da7673199dec90823bbc5063264e4095
@@ -105,15 +105,14 @@ if [ "X$REPLY" = "Xy" ]; then
     # Darknet original (used for training only):
     git clone https://github.com/pjreddie/darknet.git
 
-    # Tensorflow 1.9.9:
-    get_github tensorflow tensorflow 25c197e02393bd44f50079945409009dd4d434f8
-    cd tensorflow
-    # oops, tensorflow does not compile anymore if it pulls the latest flatbuffers. Patch to pulling flatbuffers 1.8.0:
-    sed -i sXflatbuffers/archive/master.zipXflatbuffers/archive/v1.8.0.zipX \
-	./tensorflow/contrib/lite/download_dependencies.sh
-    ./tensorflow/contrib/lite/download_dependencies.sh
-    cd ..
+    # Tensorflow 1.15.3:
+    get_github tensorflow tensorflow 4386a6640c9fb65503750c37714971031f3dc1fd
 
+    # Tensorflow dependencies:
+    cd tensorflow
+    ./tensorflow/lite/tools/make/download_dependencies.sh
+    cd ..
+    
     ###################################################################################################
     # Patching:
     for f in *.patch; do

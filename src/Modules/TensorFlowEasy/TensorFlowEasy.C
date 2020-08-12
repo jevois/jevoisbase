@@ -79,10 +79,10 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the fix
 
     For example:
 
-    - mobilenet_v1_0.25_128_quant (network size 128x128), runs at about 12ms/prediction (83.3 frames/s).
-    - mobilenet_v1_0.5_128_quant (network size 128x128), runs at about 26ms/prediction (38.5 frames/s).
-    - mobilenet_v1_0.25_224_quant (network size 224x224), runs at about 35ms/prediction (28.5 frames/s).
-    - mobilenet_v1_1.0_224_quant (network size 224x224), runs at about 185ms/prediction (5.4 frames/s).
+    - mobilenet_v1_0.25_128_quant (network size 128x128), runs at about 8ms/prediction (125 frames/s).
+    - mobilenet_v1_0.5_128_quant (network size 128x128), runs at about 18ms/prediction (55 frames/s).
+    - mobilenet_v1_0.25_224_quant (network size 224x224), runs at about 24ms/prediction (41 frames/s).
+    - mobilenet_v1_1.0_224_quant (network size 224x224), runs at about 139ms/prediction (7 frames/s).
 
     To easily select one of the available networks, see <B>JEVOIS:/modules/JeVois/TensorFlowEasy/params.cfg</B> on the
     microSD card of your JeVois camera.
@@ -103,6 +103,19 @@ JEVOIS_DECLARE_PARAMETER(foa, cv::Size, "Width and height (in pixels) of the fix
 
     See \ref UserSerialStyle for more on standardized serial messages, and \ref coordhelpers for more info on
     standardized coordinates.
+
+    More networks
+    -------------
+
+    Search the web for models in TFLITE format and for TensorFlow 1.x series. For example, see
+    https://tfhub.dev/s?module-type=image-classification
+
+    To add a new model to your microSD card:
+    - create a directory for it under <b>JEVOIS:/share/tensorflow</b>
+    - put your .tflite in there as \b model.tflite
+    - put a list of labels as a plain text file, one label per line, in your directory as \b labels.txt
+    - edit params.cfg for this module (best done in JeVois Inventor) to add a new entry for your network, and to
+      comment out the default entry.
 
     Using your own network
     ----------------------

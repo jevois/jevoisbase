@@ -1,36 +1,27 @@
 diff --git a/src/network.c b/src/network.c
-index aaab799..90d713d 100644
+index d56bed5..07c359e 100644
 --- a/src/network.c
 +++ b/src/network.c
-@@ -195,6 +195,9 @@ void forward_network(network *netp)
- #endif
-     network net = *netp;
+@@ -256,6 +256,9 @@ void forward_network(network net, network_state state)
+ {
+     state.workspace = net.workspace;
      int i;
 +    char tmp[256]; // JEVOIS
 +    
 +    jevois_darknet_profiler_start(); // JEVOIS
      for(i = 0; i < net.n; ++i){
-         net.index = i;
+         state.index = i;
          layer l = net.layers[i];
-@@ -206,8 +209,11 @@ void forward_network(network *netp)
-         if(l.truth) {
-             net.truth = l.output;
+@@ -264,9 +267,12 @@ void forward_network(network net, network_state state)
          }
-+	snprintf(tmp, 255, "%3d - %s", i, get_layer_string(l.type)); // JEVOIS
-+	jevois_darknet_profiler_checkpoint(tmp); // JEVOIS
+         //double time = get_time_point();
+         l.forward(l, state);
++        snprintf(tmp, 255, "%3d - %s", i, get_layer_string(l.type)); // JEVOIS
++        jevois_darknet_profiler_checkpoint(tmp); // JEVOIS
+         //printf("%d - Predicted in %lf milli-seconds.\n", i, ((double)get_time_point() - time) / 1000);
+         state.input = l.output;
      }
-     calc_network_cost(netp);
 +    jevois_darknet_profiler_stop(); // JEVOIS
  }
  
- void update_network(network *netp)
-@@ -769,6 +775,9 @@ void forward_network_gpu(network *netp)
-     }
- 
-     int i;
-+    char tmp[256]; // JEVOIS
-+    
-+    jevois_darknet_profiler_start(); // JEVOIS
-     for(i = 0; i < net.n; ++i){
-         net.index = i;
-         layer l = net.layers[i];
+ void update_network(network net)
