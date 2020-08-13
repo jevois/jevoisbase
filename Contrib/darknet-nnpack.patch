@@ -1,5 +1,5 @@
 diff --git a/src/network.c b/src/network.c
-index d56bed5..07c359e 100644
+index d56bed5..a599902 100644
 --- a/src/network.c
 +++ b/src/network.c
 @@ -256,6 +256,9 @@ void forward_network(network net, network_state state)
@@ -12,16 +12,26 @@ index d56bed5..07c359e 100644
      for(i = 0; i < net.n; ++i){
          state.index = i;
          layer l = net.layers[i];
-@@ -264,9 +267,12 @@ void forward_network(network net, network_state state)
-         }
+@@ -265,8 +268,13 @@ void forward_network(network net, network_state state)
          //double time = get_time_point();
          l.forward(l, state);
+         //printf("%d - Predicted in %lf milli-seconds.\n", i, ((double)get_time_point() - time) / 1000);
++
 +        snprintf(tmp, 255, "%3d - %s", i, get_layer_string(l.type)); // JEVOIS
 +        jevois_darknet_profiler_checkpoint(tmp); // JEVOIS
-         //printf("%d - Predicted in %lf milli-seconds.\n", i, ((double)get_time_point() - time) / 1000);
++
          state.input = l.output;
      }
 +    jevois_darknet_profiler_stop(); // JEVOIS
  }
  
  void update_network(network net)
+@@ -580,7 +588,7 @@ int resize_network(network *net, int w, int h)
+             w = l.out_w;
+             h = l.out_h;
+         }
+-        //if(l.type == AVGPOOL) break;
++        if(l.type == AVGPOOL) break;
+     }
+ #ifdef GPU
+     const int size = get_network_input_size(*net) * net->batch;
