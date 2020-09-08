@@ -43,7 +43,11 @@ include_directories("include")
 include_directories("..")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with the current version number:
-jevois_setup_library(src/Components jevoisbase 1.15.0)
+set(JEVOISBASE_SOVERSION "1.15.0")
+jevois_setup_library(src/Components jevoisbase ${JEVOISBASE_SOVERSION})
+
+# Check that we are not trying to compile a newer jevoisbase against an older jevois-sdk, which would typically fail:
+jevois_check_sdk_version(${JEVOISBASE_SOVERSION})
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
 jevois_setup_modules(src/Modules jevoisbase)
