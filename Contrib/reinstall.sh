@@ -107,18 +107,20 @@ if [ "X$REPLY" = "Xy" ]; then
 
     # Tensorflow 1.15.3:
     get_github tensorflow tensorflow 4386a6640c9fb65503750c37714971031f3dc1fd
-
-    # Tensorflow dependencies:
-    cd tensorflow
-    ./tensorflow/lite/tools/make/download_dependencies.sh
-    cd ..
+    # Note: we download tensorflow dependencies below after patching
     
     ###################################################################################################
     # Patching:
     for f in *.patch; do
 	patchit ${f/.patch/}
     done
-    
+
+    ###################################################################################################
+    # Tensorflow dependencies:
+    cd tensorflow
+    ./tensorflow/lite/tools/make/download_dependencies.sh
+    cd ..
+
     ###################################################################################################
     # Keep track of the last installed release:
     echo $release > .installed
