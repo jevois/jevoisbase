@@ -147,7 +147,7 @@ class SurpriseRecorder : public jevois::Module,
       itsRunning.store(true);
       
       // Get our run() thread going, it is in charge of compressing and saving frames:
-      itsRunFut = std::async(std::launch::async, &SurpriseRecorder::run, this);
+      itsRunFut = jevois::async(std::bind(&SurpriseRecorder::run, this));
     }
 
     // ####################################################################################################
@@ -184,7 +184,7 @@ class SurpriseRecorder : public jevois::Module,
       
       // Compute surprise in a thread:
       std::future<double> itsSurpFut =
-        std::async(std::launch::async, [&]() { return itsSurprise->process(inimg); } );
+        jevois::async([&]() { return itsSurprise->process(inimg); } );
 
       prof.checkpoint("surprise launched");
  

@@ -121,6 +121,154 @@ class PassThrough : public jevois::Module
       // Send the output image with our processing results to the host over USB:
       outframe.send(); // NOTE: optional here, outframe destructor would call it anyway
     }
+
+#ifdef JEVOIS_PRO
+    //! Processing function with zero-copy and GUI on JeVois-Pro
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      // Start the frame: Internally, this initializes or resizes the display as needed, polls and handles events
+      // (inputs, window resize, etc), and clears the frame. Variables winw and winh are set by startFrame() to the
+      // current window size, and true is returned if no keyboard/mouse action in a while (can be used to hide any GUI
+      // elements when user is not interacting with JeVois):
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Test mode: replace frame by checkerboard:
+      static bool testmode = false;
+      static bool halt = true;
+      static bool valt = false;
+      static bool noalias = true;
+      static bool showscaled = true;
+      static bool usedma = false;
+      static int scaledx = 0;
+      static int scaledy = 0;
+
+      if (testmode)
+      {
+        jevois::RawImage const & img = inframe.get();
+        unsigned char * pix = (unsigned char *)img.pixels<unsigned char>();
+        int w = img.width, h = img.height;
+        bool oddv = false, oddh = false;
+
+        switch (img.fmt)
+        {
+        case V4L2_PIX_FMT_RGB24:
+        {
+          for (int j = 0; j < h; ++j)
+          {
+            bool hh = valt ? oddv : halt;
+            oddh = hh ? false : oddv;
+            for (int i = 0; i < w; ++i)
+            {
+              if (oddh) { *pix++ = 0; *pix++ = 0; *pix++ = 0; }
+              else { *pix++ = 255; *pix++ = 255; *pix++ = 255; }
+              if (hh) oddh = !oddh;
+            }
+            oddv = !oddv;
+          }
+        }
+        break;
+        case V4L2_PIX_FMT_YUYV:
+        {
+          for (int j = 0; j < h; ++j)
+          {
+            bool hh = valt ? oddv : halt;
+            oddh = hh ? false : oddv;
+            for (int i = 0; i < w; ++i)
+            {
+              if (oddh) { *pix++ = 0; *pix++ = 0x80; }
+              else { *pix++ = 0xff; *pix++ = 0x80; }
+              if (hh) oddh = !oddh;
+            }
+            oddv = !oddv;
+          }
+        }
+        break;
+        case V4L2_PIX_FMT_RGB32:
+        {
+          for (int j = 0; j < h; ++j)
+          {
+            bool hh = valt ? oddv : halt;
+            oddh = hh ? false : oddv;
+            for (int i = 0; i < w; ++i)
+            {
+              if (oddh) { *pix++ = 0; *pix++ = 0; *pix++ = 0; *pix++ = 255; }
+              else { *pix++ = 255; *pix++ = 255; *pix++ = 255; *pix++ = 255; }
+              if (hh) oddh = !oddh;
+            }
+            oddv = !oddv;
+          }
+        }
+        break;
+        }
+      }
+
+      jevois::RawImage const & imgdebug = inframe.get(); // to get dims only
+      
+      // In the PassThrough module, just draw the camera input frame, as large as we can, which is achieved by passing
+      // zero dims. The helper with compute the image position and size to make it as large as possible without changing
+      // aspect ratio, and size and position variables will be updated so we know what they are:
+      int x = 0, y = 0; unsigned short w = 0, h = 0;
+      if (usedma) helper.drawInputFrame("dc", inframe, x, y, w, h, noalias);
+      else
+      {
+        jevois::RawImage const & img = inframe.get();
+        helper.drawImage("c", img, x, y, w, h, noalias);
+      }
+      inframe.done();
+
+      // If we have a second image from the ISP, display it:
+      if (inframe.hasScaledImage() && showscaled)
+      {
+        jevois::RawImage const & img2 = inframe.get2();
+        unsigned short w2 = img2.width, h2 = img2.height;
+        if (usedma) helper.drawInputFrame2("ds", inframe, scaledx , scaledy, w2, h2, noalias);
+        else helper.drawImage("s", img2, scaledx, scaledy, w2, h2, noalias);
+
+        inframe.done2();
+      }
+
+      if (idle == false)
+      {
+        // To draw things on top of input video but behind ImGui windows, use ImGui global background draw list:
+        auto dlb = ImGui::GetBackgroundDrawList(); // or use GetForegroundDrawList to draw in front of ImGui
+        ImVec2 const p = ImGui::GetMousePos();
+        dlb->AddRect(ImVec2(p.x-30, p.y-30), ImVec2(p.x+30, p.y+30), ImColor(255, 0, 0, 255) /* red */);
+      
+        // Just draw a simple ImGui window that shows fps if we are not idle:
+        ImGuiIO & io = ImGui::GetIO();
+        ImGui::Begin("JeVois-Pro PassThrough Module");
+        ImGui::Text("Framerate: %3.2f fps", io.Framerate);
+        ImGui::Text("Video: raw %dx%d aspect=%f, render %dx%d @ %d,%d", imgdebug.width, imgdebug.height,
+                    float(imgdebug.width) / float(imgdebug.height), w, h, x, y);
+        if (inframe.hasScaledImage())
+        {
+          ImGui::Checkbox("Show ISP scaled image", &showscaled);
+          ImGui::SliderInt("Scaled image x", &scaledx, 0, winw);
+          ImGui::SliderInt("Scaled image y", &scaledy, 0, winh);
+        }
+        
+        ImGui::Checkbox("Use DMABUF", &usedma);
+        ImGui::Checkbox("Test mode", &testmode);
+        if (testmode)
+        {
+          ImGui::Checkbox("Pattern 1", &halt);
+          ImGui::Checkbox("Pattern 2", &valt);
+          ImGui::Checkbox("No aliasing", &noalias);
+        }
+
+        ImGui::End();
+
+
+        // To draw things on top of input video and on top of ImGui windows, use ImGui global foregound draw list:
+        auto dlf = ImGui::GetForegroundDrawList();
+        dlf->AddCircle(ImVec2(p.x, p.y), 20, ImColor(0, 255, 0, 128) /* semi transparent green */);
+      }
+
+      // Render the image and GUI:
+      helper.endFrame();
+    }
+#endif // JEVOIS_PRO
 };
 
 // Allow the module to be loaded as a shared object (.so) file:

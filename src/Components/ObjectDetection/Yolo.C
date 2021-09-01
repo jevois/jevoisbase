@@ -45,7 +45,7 @@ Yolo::~Yolo()
 // ####################################################################################################
 void Yolo::postInit()
 {
-  itsReadyFut = std::async(std::launch::async, [&]() {
+  itsReadyFut = jevois::async([&]() {
       std::string root = dataroot::get(); if (root.empty() == false) root += '/';
   
       // Note: darknet expects read/write pointers to the file names...

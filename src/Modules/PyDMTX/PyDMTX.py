@@ -1,4 +1,6 @@
-import libjevois as jevois
+import pyjevois
+if pyjevois.pro: import libjevoispro as jevois
+else: import libjevois as jevois
 import cv2
 import numpy as np
 from pylibdmtx.pylibdmtx import decode

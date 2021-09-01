@@ -28,8 +28,6 @@
 
 // icon by icons8
 
-static jevois::ParameterCategory const ParamCateg("DemoDMP Options");
-
 //! Plot results of processing IMU data with the on-chip Digital Motion Processor (DMP)
 /*! As an optional hardware upgrade, one can install a global shutter sensor into JeVois (an OnSemi AR0135 1.2MP), which
     also includes on its custom circuit board for JeVois an inertial measurement unit (IMU). The IMU is a
@@ -149,9 +147,7 @@ class DemoDMP : public jevois::Module
   public:
     //! Constructor
     DemoDMP(std::string const & instance) : jevois::Module(instance)
-    {
-      itsIMU = addSubComponent<jevois::ICM20948>("imu");
-    }
+    { itsIMU = addSubComponent<jevois::ICM20948>("imu"); }
 
     //! Virtual destructor for safe inheritance
     virtual ~DemoDMP() { }
@@ -209,8 +205,8 @@ class DemoDMP : public jevois::Module
       float fsync = -1.0F;
       
       // Get as many IMU readings as we can so we keep the FIFO empty:
-      jevois::DMPdata d; int npkt= 0;
-      while (npkt == 0 || itsIMU->dataReady())
+      jevois::DMPdata d; int npkt = 0;
+      while (itsIMU->dataReady())
       {
         d = itsIMU->getDMP(); ++npkt;
         

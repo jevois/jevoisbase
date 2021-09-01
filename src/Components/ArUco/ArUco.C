@@ -148,7 +148,12 @@ void ArUco::detectMarkers(cv::InputArray image, cv::OutputArray ids, cv::OutputA
       fs["distortion_coefficients"] >> itsDistCoeffs;
       LINFO("Loaded camera calibration from " << cpf);
     }
-    else LERROR("Failed to read camera parameters from file [" << cpf << "] -- IGNORED");
+    else
+    {
+      LERROR("Failed to read camera parameters from file [" << cpf << "] -- IGNORED");
+      itsCamMatrix = cv::Mat::eye(3, 3, CV_64F);
+      itsDistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
+    }
   }
 
   cv::aruco::detectMarkers(image, itsDictionary, corners, ids, itsDetectorParams);
@@ -159,7 +164,6 @@ void ArUco::estimatePoseSingleMarkers(cv::InputArrayOfArrays corners, cv::Output
 {
   cv::aruco::estimatePoseSingleMarkers(corners, markerlen::get(), itsCamMatrix, itsDistCoeffs, rvecs, tvecs);
 }
-
 
 // ##############################################################################################################
 void ArUco::sendSerial(jevois::StdModule * mod, std::vector<int> ids, std::vector<std::vector<cv::Point2f> > corners,
@@ -298,8 +302,99 @@ void ArUco::drawDetections(jevois::RawImage & outimg, int txtx, int txty, std::v
       
     }
   }
-  
-  jevois::rawimage::writeText(outimg, "Detected " + std::to_string(ids.size()) + " ArUco markers.",
-                              txtx, txty, jevois::yuyv::White);
+
+  if (txtx >=0 && txty >= 0)
+    jevois::rawimage::writeText(outimg, "Detected " + std::to_string(ids.size()) + " ArUco markers.",
+                                txtx, txty, jevois::yuyv::White);
 }
 
+#ifdef JEVOIS_PRO
+// ##############################################################################################################
+void ArUco::drawDetections(jevois::GUIhelper & helper, std::vector<int> ids,
+                           std::vector<std::vector<cv::Point2f> > corners, std::vector<cv::Vec3d> const & rvecs,
+                           std::vector<cv::Vec3d> const & tvecs)
+{
+  ImU32 const col = ImColor(128, 255, 128, 255); // light green for lines
+
+  // This code is like drawDetectedMarkers() in cv::aruco, but for ImGui:
+  int nMarkers = int(corners.size());
+  for (int i = 0; i < nMarkers; ++i)
+  {
+    std::vector<cv::Point2f> const & currentMarker = corners[i];
+        
+    // draw marker sides and prepare serial out string:
+    helper.drawPoly(currentMarker, col, true);
+        
+    // draw first corner mark
+    helper.drawCircle(currentMarker[0].x, currentMarker[0].y, 3.0F, col, true);
+
+    // draw ID
+    if (ids.empty() == false)
+    {
+      cv::Point2f cent(0.0F, 0.0F); for (int p = 0; p < 4; ++p) cent += currentMarker[p] * 0.25F;
+      helper.drawText(cent.x, cent.y - 10, ("id=" + std::to_string(ids[i])).c_str(), col);
+    }
+  }
+
+  // This code is like drawAxis() in cv::aruco, but for ImGui:
+  if (dopose::get() && ids.empty() == false)
+  {
+    float const length = markerlen::get() * 0.4F;
+        
+    for (size_t i = 0; i < ids.size(); ++i)
+    {
+      // Project axis points:
+      std::vector<cv::Point3f> axisPoints;
+      axisPoints.push_back(cv::Point3f(0.0F, 0.0F, 0.0F));
+      axisPoints.push_back(cv::Point3f(length, 0.0F, 0.0F));
+      axisPoints.push_back(cv::Point3f(0.0F, length, 0.0F));
+      axisPoints.push_back(cv::Point3f(0.0F, 0.0F, length));
+      
+      std::vector<cv::Point2f> imagePoints;
+      cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, imagePoints);
+      
+      // Draw axis lines
+      helper.drawLine(imagePoints[0].x, imagePoints[0].y, imagePoints[1].x, imagePoints[1].y, 0xff0000ff);
+      helper.drawLine(imagePoints[0].x, imagePoints[0].y, imagePoints[2].x, imagePoints[2].y, 0xff00ff00);
+      helper.drawLine(imagePoints[0].x, imagePoints[0].y, imagePoints[3].x, imagePoints[3].y, 0xffff0000);
+      
+      // Also draw a cube if requested:
+      if (showcube::get())
+      {
+        float const len = markerlen::get() * 0.5F;
+        
+        std::vector<cv::Point3f> cubePoints;
+        cubePoints.push_back(cv::Point3f(-len, -len, 0.0F));
+        cubePoints.push_back(cv::Point3f(len, -len, 0.0F));
+        cubePoints.push_back(cv::Point3f(len, len, 0.0F));
+        cubePoints.push_back(cv::Point3f(-len, len, 0.0F));
+        cubePoints.push_back(cv::Point3f(-len, -len, len * 2.0F));
+        cubePoints.push_back(cv::Point3f(len, -len, len * 2.0F));
+        cubePoints.push_back(cv::Point3f(len, len, len * 2.0F));
+        cubePoints.push_back(cv::Point3f(-len, len, len * 2.0F));
+        
+        std::vector<cv::Point2f> cuf;
+        cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, cuf);
+
+        auto drawface =
+          [&](int a, int b, int c, int d)
+          {
+            std::vector<cv::Point2f> p { cuf[a], cuf[b], cuf[c], cuf[d] };
+            helper.drawPoly(p, col, true);
+          };
+        
+        // Draw cube lines and faces. For faces, vertices must be in clockwise order:
+        drawface(0, 1, 2, 3);
+        drawface(0, 1, 5, 4);
+        drawface(1, 2, 6, 5);
+        drawface(2, 3, 7, 6);
+        drawface(3, 0, 4, 7);
+        drawface(4, 5, 6, 7);
+      }
+    }
+  }
+
+  helper.itext("Detected " + std::to_string(ids.size()) + " ArUco markers.");
+}
+
+#endif

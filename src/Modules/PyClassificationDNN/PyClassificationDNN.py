@@ -1,4 +1,6 @@
-import libjevois as jevois
+import pyjevois
+if pyjevois.pro: import libjevoispro as jevois
+else: import libjevois as jevois
 import cv2 as cv
 import numpy as np
 import sys
@@ -59,14 +61,14 @@ class PyClassificationDNN:
         model = 'SqueezeNet'            # SqueezeNet v1.1, Caffe model
 
         # You should not have to edit anything beyond this point.
-        backend = cv.dnn.DNN_BACKEND_DEFAULT
+        backend = cv.dnn.DNN_BACKEND_OPENCV
         target = cv.dnn.DNN_TARGET_CPU
         self.classes = None
         classnames = None
         if (model == 'SqueezeNet'):
-            classnames = '/jevois/share/opencv-dnn/classification/synset_words.txt'
-            modelname = '/jevois/share/opencv-dnn/classification/squeezenet_v1.1.caffemodel'
-            configname = '/jevois/share/opencv-dnn/classification/squeezenet_v1.1.prototxt'
+            classnames = pyjevois.share + '/opencv-dnn/classification/synset_words.txt'
+            modelname = pyjevois.share + '/opencv-dnn/classification/squeezenet_v1.1.caffemodel'
+            configname = pyjevois.share + '/opencv-dnn/classification/squeezenet_v1.1.prototxt'
 
         # Load names of classes
         if classnames:

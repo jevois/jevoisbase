@@ -106,7 +106,7 @@ class DenseSift : public jevois::Module,
       {
         // While we convert it, start a thread to wait for out frame and paste the input into it:
         jevois::RawImage outimg;
-        auto paste_fut = std::async(std::launch::async, [&]() {
+        auto paste_fut = jevois::async([&]() {
             // Get next output video frame:
             outimg = outframe.get();
 

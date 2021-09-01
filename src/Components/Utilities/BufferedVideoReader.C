@@ -31,7 +31,16 @@ BufferedVideoReader::~BufferedVideoReader()
 void BufferedVideoReader::postInit()
 {
   // Start our reader thread:
-  itsRunFut = std::async(std::launch::async, &BufferedVideoReader::run, this);
+  itsRunFut = jevois::async(std::bind(&BufferedVideoReader::run, this));
+
+  // Wait until we have some data:
+  size_t count = 0;
+  while (itsBuf.filled_size() == 0)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    if (count++ == 100)
+    { LINFO("Waiting for " << absolutePath(filename::get()) << " to start loading..."); count = 0; }
+  }
 }
 
 // ####################################################################################################
@@ -39,9 +48,9 @@ void BufferedVideoReader::postUninit()
 {
   // Tell run() thread to finish up:
   itsRunning.store(false);
-  if (itsBuf.filled_size()) itsBuf.pop(); // in case run() is blocked trying to push
-  
-  try { itsRunFut.get(); } catch (...) { jevois::warnAndIgnoreException(); }
+  while (itsBuf.filled_size()) itsBuf.pop(); // in case run() is blocked trying to push
+
+  JEVOIS_WAIT_GET_FUTURE(itsRunFut);
 }
 
 // ####################################################################################################
@@ -54,7 +63,7 @@ void BufferedVideoReader::run()
   // Open the video file:
   std::string const path = absolutePath(filename::get());
   cv::VideoCapture vcap(path);
-  if (vcap.isOpened() == false) { itsBuf.push(cv::Mat()); LERROR("Could not open video file " << path); }
+  if (vcap.isOpened() == false) { itsBuf.push(cv::Mat()); LERROR("Could not open video file " << path); return; }
 
   cv::Mat frame;
   while (itsRunning.load())

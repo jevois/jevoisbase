@@ -111,7 +111,7 @@ class DemoSalGistFaceObj : public jevois::StdModule
       int const roihw = 32; // face & object roi half width and height
       
       // Compute saliency, in a thread:
-      auto sal_fut = std::async(std::launch::async, [&](){ itsSaliency->process(inimg, true); });
+      auto sal_fut = jevois::async([&](){ itsSaliency->process(inimg, true); });
       
       // While computing, wait for an image from our gadget driver into which we will put our results:
       jevois::RawImage outimg = outframe.get();
@@ -141,7 +141,7 @@ class DemoSalGistFaceObj : public jevois::StdModule
       
       // Asynchronously launch a bunch of saliency drawings and filter the attended locations
       auto draw_fut =
-        std::async(std::launch::async, [&]() {
+        jevois::async([&]() {
             // Paste the various saliency results:
             drawMap(outimg, &itsSaliency->salmap, 320, 0, 16, 20);
             jevois::rawimage::writeText(outimg, "Saliency Map", 640 - 12*6-4, 3, txtcol);

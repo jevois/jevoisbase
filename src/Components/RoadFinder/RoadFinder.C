@@ -296,7 +296,7 @@ void RoadFinder::process(cv::Mat const & img, jevois::RawImage & visual)
   if (itsCurrentLines.empty() == false)
   {
     ///// FIXME parallelizing this is problematic with no USB out
-    ////    track_fut = std::async(std::launch::async, [&]() {
+    ////    track_fut = jevois::async([&]() {
         // Track the vanishing lines:
         trackVanishingLines(cvEdgeMap, itsCurrentLines, visual);
         
@@ -333,7 +333,7 @@ void RoadFinder::process(cv::Mat const & img, jevois::RawImage & visual)
   profiler.checkpoint("Vanishing lines done");
   
   // wait until the tracking thread is done, get the trackers and 'disable' it during project forward
-  if (track_fut.valid()) track_fut.get();
+  JEVOIS_WAIT_GET_FUTURE(track_fut);
 
   profiler.checkpoint("Tracker done");
 

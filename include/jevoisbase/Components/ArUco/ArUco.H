@@ -19,7 +19,10 @@
 
 #include <jevois/Component/Component.H>
 #include <jevois/Types/Enum.H>
+#include <jevois/GPU/GUIhelper.H>
+
 #include <opencv2/aruco.hpp>
+
 namespace jevois { class StdModule; }
 
 namespace aruco
@@ -159,6 +162,13 @@ class ArUco : public jevois::Component,
     void drawDetections(jevois::RawImage & outimg, int txtx, int txty, std::vector<int> ids,
                         std::vector<std::vector<cv::Point2f> > corners, std::vector<cv::Vec3d> const & rvecs,
                         std::vector<cv::Vec3d> const & tvecs);
+
+#ifdef JEVOIS_PRO
+    //! Draw any markers previously detected by detectMarkers()
+    void drawDetections(jevois::GUIhelper & helper, std::vector<int> ids,
+                        std::vector<std::vector<cv::Point2f> > corners, std::vector<cv::Vec3d> const & rvecs,
+                        std::vector<cv::Vec3d> const & tvecs);
+#endif
     
     //! Send serial messages about detections
     /*! The module given should be the owner of this component, we will use it to actually send each serial message

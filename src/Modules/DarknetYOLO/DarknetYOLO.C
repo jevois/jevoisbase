@@ -207,7 +207,7 @@ class DarknetYOLO : public jevois::StdModule,
 
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w * 2, h, inimg.fmt);
 
@@ -304,7 +304,7 @@ class DarknetYOLO : public jevois::StdModule,
 	  cvimg.release();
 	
 	  // Launch the predictions:
-	  itsPredictFut = std::async(std::launch::async, [&](int ww, int hh)
+	  itsPredictFut = jevois::async([&](int ww, int hh)
 				     {
 				       float pt = itsYolo->predict(itsNetInput);
 				       itsYolo->computeBoxes(ww, hh);

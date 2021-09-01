@@ -1,0 +1,59 @@
+diff --git a/tiny_dnn/xtensor/xstorage.hpp b/tiny_dnn/xtensor/xstorage.hpp
+index d49ca75..4700365 100644
+--- a/tiny_dnn/xtensor/xstorage.hpp
++++ b/tiny_dnn/xtensor/xstorage.hpp
+@@ -36,10 +36,10 @@ namespace xt
+         using allocator_type = Allocator;
+ 
+         using value_type = typename allocator_type::value_type;
+-        using reference = typename allocator_type::reference;
+-        using const_reference = typename allocator_type::const_reference;
+-        using pointer = typename allocator_type::pointer;
+-        using const_pointer = typename allocator_type::const_pointer;
++        using reference = typename allocator_type::value_type &; //typename allocator_type::reference;
++        using const_reference = typename allocator_type::value_type const &; //typename allocator_type::const_reference;
++        using pointer = typename allocator_type::value_type *; //typename allocator_type::pointer;
++        using const_pointer = typename allocator_type::value_type const *; //typename allocator_type::const_pointer;
+ 
+         using size_type = typename allocator_type::size_type;
+         using difference_type = typename allocator_type::difference_type;
+@@ -150,25 +150,25 @@ namespace xt
+     namespace detail
+     {
+         template <class A>
+-        inline typename A::pointer safe_init_allocate(A& alloc, typename A::size_type size)
++        inline typename A::value_type * /*typename A::pointer*/ safe_init_allocate(A& alloc, typename A::size_type size)
+         {
+-            using pointer = typename A::pointer;
++            using pointer = typename A::value_type *;//typename A::pointer;
+             using value_type = typename A::value_type;
+             pointer res = alloc.allocate(size);
+             if (!xtrivially_default_constructible<value_type>::value)
+             {
+                 for (pointer p = res; p != res + size; ++p)
+                 {
+-                    alloc.construct(p, value_type());
++                    std::allocator_traits<A>::construct(alloc, p, value_type()); //alloc.construct(p, value_type());
+                 }
+             }
+             return res;
+         }
+ 
+         template <class A>
+-        inline void safe_destroy_deallocate(A& alloc, typename A::pointer ptr, typename A::size_type size)
++        inline void safe_destroy_deallocate(A& alloc, typename A::value_type * /*typename A::pointer*/ ptr, typename A::size_type size)
+         {
+-            using pointer = typename A::pointer;
++            using pointer = typename A::value_type *; //typename A::pointer;
+             using value_type = typename A::value_type;
+             if (ptr != nullptr)
+             {
+@@ -176,7 +176,7 @@ namespace xt
+                 {
+                     for (pointer p = ptr; p != ptr + size; ++p)
+                     {
+-                        alloc.destroy(p);
++                        std::allocator_traits<A>::destroy(alloc, p); //alloc.destroy(p);
+                     }
+                 }
+                 alloc.deallocate(ptr, size);

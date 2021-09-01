@@ -144,12 +144,12 @@ class Darknet : public jevois::Component,
     int classes;
     
   protected:
-    void onParamChange(dknet::netw const & param, dknet::Net const & newval);
-    void onParamChange(dknet::dataroot const & param, std::string const & newval);
-    void onParamChange(dknet::datacfg const & param, std::string const & newval);
-    void onParamChange(dknet::cfgfile const & param, std::string const & newval);
-    void onParamChange(dknet::weightfile const & param, std::string const & newval);
-    void onParamChange(dknet::namefile const & param, std::string const & newval);
+    void onParamChange(dknet::netw const & param, dknet::Net const & newval) override;
+    void onParamChange(dknet::dataroot const & param, std::string const & newval) override;
+    void onParamChange(dknet::datacfg const & param, std::string const & newval) override;
+    void onParamChange(dknet::cfgfile const & param, std::string const & newval) override;
+    void onParamChange(dknet::weightfile const & param, std::string const & newval) override;
+    void onParamChange(dknet::namefile const & param, std::string const & newval) override;
     void loadNet();
     
     std::future<void> itsReadyFut;

@@ -184,7 +184,7 @@ class ObjectDetect : public jevois::StdModule,
     // ####################################################################################################
     //! Parameter callback
     // ####################################################################################################
-    void onParamChange(win const & JEVOIS_UNUSED_PARAM(param), floatpair const & newval)
+    void onParamChange(win const & JEVOIS_UNUSED_PARAM(param), floatpair const & newval) override
     {
       // Just check that the values are valid here. They will get stored in our param and used later:
       if (newval.first < 10.0F || newval.first > 100.0F || newval.second < 10.0F || newval.second > 100.0F)
@@ -229,7 +229,7 @@ class ObjectDetect : public jevois::StdModule,
 
       // While we process it, start a thread to wait for output frame and paste the input image into it:
       jevois::RawImage outimg; // main thread should not use outimg until paste thread is complete
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w, h + 12, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);
@@ -262,7 +262,7 @@ class ObjectDetect : public jevois::StdModule,
         itsGrayImg = jevois::rawimage::convertToCvGray(inimg);
 
         // Start a thread that will compute keypoints and descriptors:
-        itsKPfut = std::async(std::launch::async, [&]() {
+        itsKPfut = jevois::async([&]() {
             itsMatcher->detect(itsGrayImg, itsKeypoints);
             itsMatcher->compute(itsGrayImg, itsKeypoints, itsDescriptors);
           });

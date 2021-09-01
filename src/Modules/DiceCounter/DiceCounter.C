@@ -94,9 +94,9 @@ class DiceCounter : public jevois::Module
       // We only support YUYV pixels in this example, any resolution:
       inimg.require("input", inimg.width, inimg.height, V4L2_PIX_FMT_YUYV);
 
-      // Start a thread to wait for output image anc opy input into output:
+      // Start a thread to wait for output image and copy input into output:
       jevois::RawImage outimg;
-      std::future<void> fut = std::async(std::launch::async, [&]() {
+      std::future<void> fut = jevois::async([&]() {
           // Wait for an image from our gadget driver into which we will put our results:
           outimg = outframe.get();
 

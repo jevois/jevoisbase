@@ -106,8 +106,8 @@ class TensorFlow : public jevois::Component,
     std::unique_ptr<tflite::Interpreter> interpreter;
 
   protected:
-    void onParamChange(tflow::netdir const & param, std::string const & newval);
-    void onParamChange(tflow::dataroot const & param, std::string const & newval);
+    void onParamChange(tflow::netdir const & param, std::string const & newval) override;
+    void onParamChange(tflow::dataroot const & param, std::string const & newval) override;
     void loadNet();
     void readLabelsFile(std::string const & fname);
 

@@ -111,10 +111,10 @@ class Kalman2D : public jevois::Component,
    
   protected:
     void postInit() override;
-    void onParamChange(kalman2d::usevel const & param, bool const & newval);
-    void onParamChange(kalman2d::procnoise const & param, float const & newval);
-    void onParamChange(kalman2d::measnoise const & param, float const & newval);
-    void onParamChange(kalman2d::postnoise const & param, float const & newval);
+    void onParamChange(kalman2d::usevel const & param, bool const & newval) override;
+    void onParamChange(kalman2d::procnoise const & param, float const & newval) override;
+    void onParamChange(kalman2d::measnoise const & param, float const & newval) override;
+    void onParamChange(kalman2d::postnoise const & param, float const & newval) override;
     
     cv::KalmanFilter itsKF;
     cv::Mat itsState; //!< (x, y, xdot, ydot)

@@ -167,7 +167,7 @@ class DemoGPU : public jevois::Module,
 
 
     // ####################################################################################################
-    void onParamChange(effect const & JEVOIS_UNUSED_PARAM(param), Effect const & newval)
+    void onParamChange(effect const & JEVOIS_UNUSED_PARAM(param), Effect const & newval) override
     {
       switch (newval)
       {

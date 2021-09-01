@@ -76,10 +76,10 @@ class FastOpticalFlow : public jevois::Component,
     void process(cv::Mat const & src, cv::Mat & dst);
 
   protected:
-    void onParamChange(fastopticalflow::opoint const & param, int const & val);
-    void onParamChange(fastopticalflow::thetasf const & param, int const & val);
-    void onParamChange(fastopticalflow::thetaps const & param, int const & val);
-    void onParamChange(fastopticalflow::thetaov const & param, float const & val);
+    void onParamChange(fastopticalflow::opoint const & param, int const & val) override;
+    void onParamChange(fastopticalflow::thetasf const & param, int const & val) override;
+    void onParamChange(fastopticalflow::thetaps const & param, int const & val) override;
+    void onParamChange(fastopticalflow::thetaov const & param, float const & val) override;
     
     jevois::Profiler itsProfiler;
     std::mutex itsMtx;

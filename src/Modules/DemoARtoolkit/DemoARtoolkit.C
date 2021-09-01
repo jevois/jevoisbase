@@ -142,7 +142,7 @@ class DemoARtoolkit :public jevois::StdModule
       
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w, h + 18, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);
@@ -170,6 +170,46 @@ class DemoARtoolkit :public jevois::StdModule
       // Send the output image with our processing results to the host over USB:
       outframe.send();
     }
+
+#ifdef JEVOIS_PRO
+    // ####################################################################################################
+    //! Processing function with zero-copy and GUI on JeVois-Pro
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+
+      // Start the GUI frame:
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Draw the camera frame:
+      int x = 0, y = 0; unsigned short w = 0, h = 0;
+      helper.drawInputFrame("camera", inframe, x, y, w, h);
+
+      // Get the camera image so we can process it:
+      jevois::RawImage const inimg = inframe.get();
+      helper.itext("JeVois-Pro ARtoolkit Marker Detection");
+
+      // ARtoolkit component can process YUYV images directly with no conversion required:
+      timer.start();
+      itsARtoolkit->detectMarkers(inimg);
+      
+      // We are done with the input frame:
+      inframe.done();
+
+      // Draw the detections & send serial messages:
+      itsARtoolkit->drawDetections(helper);
+      itsARtoolkit->sendSerial(this);
+      
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      helper.iinfo(inframe, fpscpu, winw, winh);
+
+      // Render the image and GUI:
+      helper.endFrame();
+    }
+
+#endif // JEVOIS_PRO
 
     // ####################################################################################################
   protected:

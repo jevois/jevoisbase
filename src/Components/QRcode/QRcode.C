@@ -206,3 +206,53 @@ void QRcode::drawDetections(jevois::RawImage & outimg, int txtx, int txty, zbar:
   }
 }
 
+#ifdef JEVOIS_PRO
+// ####################################################################################################
+void QRcode::drawDetections(jevois::GUIhelper & helper, zbar::Image & zgray, int w, int h)
+{
+  ImU32 const col = ImColor(255, 192, 64, 255); // for lines
+
+  // Show all the results:
+  std::vector<std::string> qdata;
+  for (zbar::Image::SymbolIterator symbol = zgray.symbol_begin(); symbol != zgray.symbol_end(); ++symbol)
+  {
+    // Build up some strings to be displayed as video overlay:
+    qdata.push_back("  - " + std::string(symbol->get_type_name()) + ": " + symbol->get_data());
+    
+    // Draw a polygon around the detected symbol: for QR codes, we get 4 points at the corners, but for others we
+    // get a bunch of points all over the barcode:
+    if (symbol->get_type() == zbar::ZBAR_QRCODE)
+    {
+      std::vector<cv::Point2f> points;
+      for (zbar::Symbol::PointIterator pitr = symbol->point_begin(); pitr != symbol->point_end(); ++pitr)
+      {
+        zbar::Symbol::Point p(*pitr);
+        points.emplace_back(cv::Point2f(p.x, p.y));
+      }
+      helper.drawPoly(points, col, true);
+    }
+    else
+    {
+      int tlx = w, tly = h, brx = -1, bry = -1;
+      for (zbar::Symbol::PointIterator pitr = symbol->point_begin(); pitr != symbol->point_end(); ++pitr)
+      {
+        zbar::Symbol::Point p(*pitr);
+        if (p.x < tlx) tlx = p.x;
+        if (p.x > brx) brx = p.x;
+        if (p.y < tly) tly = p.y;
+        if (p.y > bry) bry = p.y;
+      }
+      tlx = std::min(int(w)-1, std::max(0, tlx));
+      brx = std::min(int(w)-1, std::max(0, brx));
+      tly = std::min(int(h)-1, std::max(0, tly));
+      bry = std::min(int(h)-1, std::max(0, bry));
+      helper.drawRect(tlx, tly, brx, bry, col, true);
+    }
+  }
+  
+  // Write some strings in the output video with what we found and decoded:
+  helper.itext("Detected " + std::to_string(qdata.size()) + " QRcode/Barcode symbols.");
+  for (size_t i = 0; i < qdata.size(); ++i) helper.itext(qdata[i]);
+}
+
+#endif

@@ -23,7 +23,11 @@ cmake_minimum_required(VERSION 3.1)
 
 # Set vendor name, our modules will be placed in a directory by that name under /jevois/modules:
 set(JEVOIS_VENDOR "JeVois")
-set(JEVOIS_CONFIG "/jevois/config" CACHE STRING "Path to JeVois config to use")
+if (JEVOIS_HARDWARE STREQUAL "PRO")
+  set(JEVOIS_CONFIG "/jevoispro/config" CACHE STRING "Path to JeVois config to use")
+else()
+  set(JEVOIS_CONFIG "/jevois/config" CACHE STRING "Path to JeVois config to use")
+endif()
 
 # Include our helper functions, config, etc from the JeVois install:
 set(CMAKE_MODULE_PATH ${JEVOIS_CONFIG})
@@ -31,7 +35,7 @@ include(jevois_config)
 include(JeVois)
 
 # Set project name, detects compiler (which has been set by our helper module). Then set some complation flags:
-project(jevoisbase CXX C ASM) # NNPACK has a few assembly sources, darknet and others are C
+project(${JEVOIS}base CXX C ASM) # NNPACK has a few assembly sources, darknet and others are C
 jevois_project_set_flags()
 
 set(JVB "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -43,14 +47,14 @@ include_directories("include")
 include_directories("..")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with the current version number:
-set(JEVOISBASE_SOVERSION "1.15.0")
-jevois_setup_library(src/Components jevoisbase ${JEVOISBASE_SOVERSION})
+set(JEVOISBASE_SOVERSION "1.16.0")
+jevois_setup_library(src/Components ${JEVOIS}base ${JEVOISBASE_SOVERSION})
 
 # Check that we are not trying to compile a newer jevoisbase against an older jevois-sdk, which would typically fail:
 jevois_check_sdk_version(${JEVOISBASE_SOVERSION})
 
 # Setup our modules that are in src/Modules, make them depend on jevoisbase:
-jevois_setup_modules(src/Modules jevoisbase)
+jevois_setup_modules(src/Modules ${JEVOIS}base)
 
 # Add includes to our install / distribution package:
 add_subdirectory(include)
@@ -59,12 +63,31 @@ add_subdirectory(include)
 # modules, typically those are in the Contrib/ drectory:
 
 ########################################################################################################################
+# Enable address sanitizer (to debug illegal memory accesses and such; should normally be commented out):
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+
+
+########################################################################################################################
+# Find any include files installed by JeVois into /${JEVOIS}/include:
+include_directories(${JEVOIS_MODULES_ROOT}/include)
+
+########################################################################################################################
+# OpenVX and ovxlib support
+if (JEVOIS_PLATFORM)
+  include_directories(${JEVOIS_BUILD_BASE}/usr/include/ovxlib)
+  include_directories(${JEVOIS_BUILD_BASE}/usr/include/VX)
+else ()
+  include_directories(/usr/include/ovxlib)
+  include_directories(/usr/include/VX)
+endif ()
+
+########################################################################################################################
 # OpenGL-ES libraries on platform (and they also exist on host):
-target_link_libraries(jevoisbase GLESv2 EGL)
+target_link_libraries(${JEVOIS}base GLESv2 EGL)
 
 ########################################################################################################################
 # Add any needed boost libraries that are not already pulled in by libjevois:
-target_link_libraries(jevoisbase boost_regex)
+target_link_libraries(${JEVOIS}base boost_regex)
 
 ########################################################################################################################
 # tiny-dnn support:
@@ -73,8 +96,13 @@ include_directories(Contrib/tiny-dnn)
 
 include_directories(Contrib/pthreadpool/include)
 
-target_sources(jevoisbase PRIVATE Contrib/pthreadpool/src/threadpool-pthreads.c)
+target_sources(${JEVOIS}base PRIVATE Contrib/pthreadpool/src/threadpool-pthreads.c)
 add_definitions(-DTBB_SUPPRESS_DEPRECATED_MESSAGES) # avoid message about deprecated code in tbb.h
+if (JEVOIS_PRO)
+  if (JEVOIS_PLATFORM)
+    add_definitions(-D__ARM_NEON__) # Allow tiny-dnn to detect that we support neon instructions
+  endif ()
+endif ()
 
 ########################################################################################################################
 # darknet with NNPACK support: (on top of things already pulled in by tiny-dnn)
@@ -92,70 +120,79 @@ include_directories(Contrib/cpuinfo/src)
 
 set(CPUI "${JVB}/Contrib/cpuinfo/src")
 
-target_sources(jevoisbase PRIVATE ${JVB}/Contrib/cpuinfo/deps/clog/src/clog.c ${CPUI}/init.c ${CPUI}/api.c
+target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/cpuinfo/deps/clog/src/clog.c ${CPUI}/init.c ${CPUI}/api.c
   ${CPUI}/linux/gpu.c ${CPUI}/linux/smallfile.c ${CPUI}/linux/processors.c ${CPUI}/linux/current.c
   ${CPUI}/linux/multiline.c ${CPUI}/linux/api.h ${CPUI}/linux/cpulist.c)
   
 if (JEVOIS_PLATFORM)
-  target_sources(jevoisbase PRIVATE ${CPUI}/arm/uarch.c ${CPUI}/arm/cache.c ${CPUI}/arm/linux/init.c
-    ${CPUI}/arm/linux/cpuinfo.c ${CPUI}/arm/linux/clusters.c ${CPUI}/arm/linux/chipset.c ${CPUI}/arm/linux/midr.c
-    ${CPUI}/arm/linux/hwcap.c ${CPUI}/arm/linux/aarch32-isa.c)
+  if (JEVOIS_PRO)
+    target_sources(${JEVOIS}base PRIVATE ${CPUI}/arm/uarch.c ${CPUI}/arm/cache.c ${CPUI}/arm/linux/init.c
+      ${CPUI}/arm/linux/cpuinfo.c ${CPUI}/arm/linux/clusters.c ${CPUI}/arm/linux/chipset.c ${CPUI}/arm/linux/midr.c
+      ${CPUI}/arm/linux/hwcap.c ${CPUI}/arm/linux/aarch64-isa.c)
+  else ()
+    target_sources(${JEVOIS}base PRIVATE ${CPUI}/arm/uarch.c ${CPUI}/arm/cache.c ${CPUI}/arm/linux/init.c
+      ${CPUI}/arm/linux/cpuinfo.c ${CPUI}/arm/linux/clusters.c ${CPUI}/arm/linux/chipset.c ${CPUI}/arm/linux/midr.c
+      ${CPUI}/arm/linux/hwcap.c ${CPUI}/arm/linux/aarch32-isa.c)
+  endif ()
 else (JEVOIS_PLATFORM)
-  target_sources(jevoisbase PRIVATE ${CPUI}/x86/init.c ${CPUI}/x86/info.c ${CPUI}/x86/vendor.c ${CPUI}/x86/uarch.c
+  target_sources(${JEVOIS}base PRIVATE ${CPUI}/x86/init.c ${CPUI}/x86/info.c ${CPUI}/x86/vendor.c ${CPUI}/x86/uarch.c
     ${CPUI}/x86/name.c ${CPUI}/x86/topology.c ${CPUI}/x86/isa.c ${CPUI}/x86/cache/init.c ${CPUI}/x86/cache/descriptor.c
     ${CPUI}/x86/cache/deterministic.c ${CPUI}/x86/linux/init.c ${CPUI}/x86/linux/cpuinfo.c)
 endif(JEVOIS_PLATFORM)
 
 # NNPACK: Core
 set(NNPS "${JVB}/Contrib/NNPACK/src")
-target_sources(jevoisbase PRIVATE ${NNPS}/init.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/convolution-output.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/convolution-input-gradient.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/convolution-kernel-gradient.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/convolution-inference.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/fully-connected-output.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/fully-connected-inference.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/pooling-output.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/softmax-output.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/relu-output.c)
-target_sources(jevoisbase PRIVATE ${NNPS}/relu-input-gradient.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/init.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/convolution-output.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/convolution-input-gradient.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/convolution-kernel-gradient.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/convolution-inference.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/fully-connected-output.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/fully-connected-inference.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/pooling-output.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/softmax-output.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/relu-output.c)
+target_sources(${JEVOIS}base PRIVATE ${NNPS}/relu-input-gradient.c)
 
 if (JEVOIS_PLATFORM)
   # Transformations
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-8x8.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/2d-fourier-16x16.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3-fp16.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/2d-fourier-8x8.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/2d-fourier-16x16.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/2d-winograd-8x8-3x3-fp16.c)
   # ReLU and Softmax
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/relu.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/softmax.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/relu.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/softmax.c)
   # FFT block accumulation
-  #target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-block-mac.c)
+  #target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/fft-block-mac.c)
   # Tuple GEMM
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/h4gemm.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4gemm.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/c4gemm.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4c2gemm.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/c4gemm-conjb.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4c2gemm-conjb.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/c4gemm-conjb-transc.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4c2gemm-conjb-transc.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/h4gemm.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/s4gemm.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/c4gemm.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/s4c2gemm.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/c4gemm-conjb.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/s4c2gemm-conjb.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/c4gemm-conjb-transc.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/s4c2gemm-conjb-transc.c)
   # Direct convolution
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/conv1x1.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/conv1x1.c)
   # BLAS microkernels
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/sgemm.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/sdotxf.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/blas/shdotxf.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/h4gemm-aarch32.S)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/s4gemm-aarch32.S)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/blas/sgemm-aarch32.S)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/sgemm.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/sdotxf.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/blas/shdotxf.c)
+  if (JEVOIS_A33)
+    target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/h4gemm-aarch32.S)
+    target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/s4gemm-aarch32.S)
+    target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/blas/sgemm-aarch32.S)
+  endif ()
+  
    # FFT and Winograd
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-aos.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-soa.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-real.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/fft-dualreal.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/neon/winograd-f6k3.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/psimd/exp.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/fft-aos.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/fft-soa.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/fft-real.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/fft-dualreal.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/neon/winograd-f6k3.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/psimd/exp.c)
 
   add_definitions(-DARM_NEON)
 
@@ -163,30 +200,30 @@ else (JEVOIS_PLATFORM)
 
   # NOTE: on host we just use scalar as opposed to x86 SIMD extensions
   # Transformations
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/2d-fourier-8x8.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/2d-fourier-16x16.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/2d-winograd-8x8-3x3.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/2d-fourier-8x8.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/2d-fourier-16x16.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/2d-winograd-8x8-3x3.c)
   # ReLU and Softmax
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/relu.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/softmax.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/relu.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/softmax.c)
   # Tuple GEMM
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/s2gemm.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/s2gemm-transc.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/cgemm.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/cgemm-conjb.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/cgemm-conjb-transc.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/blas/s2gemm.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/blas/s2gemm-transc.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/blas/cgemm.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/blas/cgemm-conjb.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/blas/cgemm-conjb-transc.c)
   # Direct convolution
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/conv1x1.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/blas/conv1x1.c)
   # BLAS microkernels
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/sgemm.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/sdotxf.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/blas/shdotxf.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/blas/sgemm.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/blas/sdotxf.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/blas/shdotxf.c)
   # FFT and Winograd
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-aos.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-soa.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-real.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/fft-dualreal.c)
-  target_sources(jevoisbase PRIVATE ${NNPS}/scalar/winograd-f6k3.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/fft-aos.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/fft-soa.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/fft-real.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/fft-dualreal.c)
+  target_sources(${JEVOIS}base PRIVATE ${NNPS}/scalar/winograd-f6k3.c)
 
   add_definitions(-DNNP_BACKEND_SCALAR=1)
 
@@ -208,7 +245,7 @@ add_definitions(-DDARKNET_NNPACK)
 # cd Contrib/darknet-nnpack/src
 # find . -name "*.c" |grep -v darknet.c|sed -e 's/\.\//\$\{DKNS\}\//g' | xargs
 
-target_sources(jevoisbase PRIVATE ${DKNS}/go.c ${DKNS}/swag.c ${DKNS}/maxpool_layer.c ${DKNS}/avgpool_layer.c
+target_sources(${JEVOIS}base PRIVATE ${DKNS}/go.c ${DKNS}/swag.c ${DKNS}/maxpool_layer.c ${DKNS}/avgpool_layer.c
   ${DKNS}/nightmare.c ${DKNS}/region_layer.c ${DKNS}/im2col.c ${DKNS}/yolo.c ${DKNS}/parser.c
   ${DKNS}/dark_cuda.c ${DKNS}/gaussian_yolo_layer.c ${DKNS}/tag.c ${DKNS}/lstm_layer.c ${DKNS}/demo.c
   ${DKNS}/dice.c ${DKNS}/captcha.c ${DKNS}/softmax_layer.c ${DKNS}/network.c ${DKNS}/cpu_gemm.c
@@ -229,7 +266,7 @@ target_sources(jevoisbase PRIVATE ${DKNS}/go.c ${DKNS}/swag.c ${DKNS}/maxpool_la
 
 include_directories(Contrib/ZBar/include Contrib/ZBar/zbar)
 set(ZBS "${JVB}/Contrib/ZBar/zbar")
-target_sources(jevoisbase PRIVATE ${ZBS}/processor.c ${ZBS}/scanner.c ${ZBS}/symbol.c ${ZBS}/img_scanner.c
+target_sources(${JEVOIS}base PRIVATE ${ZBS}/processor.c ${ZBS}/scanner.c ${ZBS}/symbol.c ${ZBS}/img_scanner.c
   ${ZBS}/qrcode/rs.c ${ZBS}/qrcode/isaac.c ${ZBS}/qrcode/util.c ${ZBS}/qrcode/qrdectxt.c ${ZBS}/qrcode/bch15_5.c
   ${ZBS}/qrcode/binarize.c ${ZBS}/qrcode/qrdec.c ${ZBS}/config.c ${ZBS}/error.c ${ZBS}/processor/posix.c
   ${ZBS}/processor/lock.c ${ZBS}/processor/null.c ${ZBS}/convert.c ${ZBS}/decoder/i25.c ${ZBS}/decoder/qr_finder.c
@@ -245,7 +282,7 @@ add_definitions(-Wparentheses -w)
 
 # This uses legacy opencv API which is not supported anymore in opencv 4.x.
 
-#target_sources(jevoisbase PRIVATE ${JVB}/Contrib/cvEyeTracker-1.2.5/ransac_ellipse.cpp
+#target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/cvEyeTracker-1.2.5/ransac_ellipse.cpp
 #  ${JVB}/Contrib/cvEyeTracker-1.2.5/remove_corneal_reflection.cpp ${JVB}/Contrib/cvEyeTracker-1.2.5/svd.c)
 
 ########################################################################################################################
@@ -253,9 +290,9 @@ add_definitions(-Wparentheses -w)
 # may want to use that in new code:
 include_directories(Contrib/Ne10/inc)
 
-target_sources(jevoisbase PRIVATE ${JVB}/Contrib/Ne10/modules/imgproc/NE10_boxfilter.c)
+target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/Ne10/modules/imgproc/NE10_boxfilter.c)
 if (JEVOIS_PLATFORM)
-  target_sources(jevoisbase PRIVATE ${JVB}/Contrib/Ne10/modules/imgproc/NE10_boxfilter.neon.c)
+  target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/Ne10/modules/imgproc/NE10_boxfilter.neon.c)
 endif (JEVOIS_PLATFORM)
 
 ########################################################################################################################
@@ -263,7 +300,7 @@ endif (JEVOIS_PLATFORM)
 include_directories(Contrib/vlfeat/vl)
 
 # Add VLfeat sources shared among various algorithms:
-target_sources(jevoisbase PRIVATE ${JVB}/Contrib/vlfeat/vl/host.c ${JVB}/Contrib/vlfeat/vl/generic.c
+target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/vlfeat/vl/host.c ${JVB}/Contrib/vlfeat/vl/generic.c
   ${JVB}/Contrib/vlfeat/vl/imopv.c)
 
 # The source code for SSE2 convolution seems to be missing...
@@ -273,12 +310,12 @@ add_definitions(-DVL_DISABLE_SSE2)
 add_definitions(-DVL_COMPILER_GNUC -DVL_ARCH_LITTLE_ENDIAN)
 
 # Add VLfeat sources used by DenseSift module:
-target_sources(jevoisbase PRIVATE ${JVB}/Contrib/vlfeat/vl/dsift.c ${JVB}/Contrib/vlfeat/vl/sift.c)
+target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/vlfeat/vl/dsift.c ${JVB}/Contrib/vlfeat/vl/sift.c)
 
 ########################################################################################################################
 # Fast optical flow
 include_directories(Contrib/OF_DIS)
-target_sources(jevoisbase PRIVATE ${JVB}/Contrib/OF_DIS/oflow.cpp ${JVB}/Contrib/OF_DIS/refine_variational.cpp
+target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/OF_DIS/oflow.cpp ${JVB}/Contrib/OF_DIS/refine_variational.cpp
   ${JVB}/Contrib/OF_DIS/patchgrid.cpp ${JVB}/Contrib/OF_DIS/patch.cpp ${JVB}/Contrib/OF_DIS/FDF1.0.1/image.c
   ${JVB}/Contrib/OF_DIS/FDF1.0.1/opticalflow_aux.c ${JVB}/Contrib/OF_DIS/FDF1.0.1/solver.c)
 
@@ -287,11 +324,15 @@ add_definitions(-DSELECTMODE=1 -DSELECTCHANNEL=1)
 
 # Fix path assumptions in the optical flow code for Eigen:
 if (JEVOIS_PLATFORM)
-  add_definitions(-I${JEVOIS_BUILDROOT_BASE}/host/usr/arm-buildroot-linux-gnueabihf/sysroot/usr/include/eigen3)
+  if (JEVOIS_PRO)
+    include_directories(${JEVOIS_BUILD_BASE}/usr/include/eigen3)
+  else (JEVOIS_PRO)
+    include_directories(${JEVOIS_BUILD_BASE}/host/usr/arm-buildroot-linux-gnueabihf/sysroot/usr/include/eigen3)
+  endif(JEVOIS_PRO)
 else (JEVOIS_PLATFORM)
-  add_definitions(-I/usr/include/eigen3)
+  include_directories(/usr/include/eigen3)
 endif (JEVOIS_PLATFORM)
-  
+
 # Enable OpenMP, which can accelerate the fast optical flow code. NOTE: With small images and when running on a fast
 # Intel-based host, this actually slows down the code by 10x or so, probably the parallelism overhead is not worth it
 # for small images. Yet, we enable it here as it seems to help on the platform:
@@ -309,7 +350,7 @@ set(ARTK "${JVB}/Contrib/ARToolKit5arm/lib/SRC")
 # In jevoisbase, we compile these files:
 # cd Contrib/ARToolKit5arm/lib/SRC
 # find . -name *.c | grep -v VideoLinuxV4L|grep -v 1394|grep -v Eden|grep -v Gl|grep -v examples|grep -v GStrea|grep -v calib|grep -v util|sed -e 's/\.\//\$\{ARTK\}\//g' | xargs
-target_sources(jevoisbase PRIVATE ${ARTK}/ARMulti/arMultiGetTransMatStereo.c ${ARTK}/ARMulti/arMultiFreeConfig.c
+target_sources(${JEVOIS}base PRIVATE ${ARTK}/ARMulti/arMultiGetTransMatStereo.c ${ARTK}/ARMulti/arMultiFreeConfig.c
   ${ARTK}/ARMulti/arMultiGetTransMat.c ${ARTK}/ARMulti/arMultiReadConfigFile.c ${ARTK}/VideoDummy/videoDummy.c
   ${ARTK}/AR2/coord.c ${ARTK}/AR2/marker.c ${ARTK}/AR2/matching.c ${ARTK}/AR2/tracking.c ${ARTK}/AR2/featureSet.c
   ${ARTK}/AR2/jpeg.c ${ARTK}/AR2/tracking2d.c ${ARTK}/AR2/selectTemplate.c ${ARTK}/AR2/featureMap.c ${ARTK}/AR2/handle.c
@@ -372,96 +413,50 @@ target_sources(jevoisbase PRIVATE ${ARTK}/ARMulti/arMultiGetTransMatStereo.c ${A
 include_directories(Contrib/ARToolKit5arm/include)
 
 ########################################################################################################################
-# tensorflow-lite support:
+# Tensorflow-lite - it is now in jevois/Contrib. libtensorflowlite.so gets installed to the system, but we need to point
+# to the includes, which do not get installed:
 
-set(TFS "${JVB}/Contrib/tensorflow/tensorflow/lite")
+include_directories(../jevois/Contrib/tensorflow)
+include_directories(../jevois/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/flatbuffers/include)
 
-# Note: see Makefile in Contrib/tensorflow/tensorflow/lite for any updates to this list of includes and list of
-# source files for tensorflow lite.
-include_directories("${JVB}/Contrib") # their include path conventions are a mess!
-include_directories("${JVB}/Contrib/tensorflow")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/flatbuffers/include")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/gemmlowp")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/neon_2_sse")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/eigen")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/farmhash/src")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/absl")
-include_directories("${JVB}/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/fft2d")
+target_link_libraries(${JEVOIS}base tensorflowlite)
+if (JEVOIS_PRO)
 
-add_definitions(-DFLATBUFFERS_LOCALE_INDEPENDENT=0)
+else()
+  if (JEVOIS_PLATFORM)
+    # Need to specify path for libtensorflowlite.so; not sure why it is not found in the target buildroot tree:
+    target_link_libraries(${JEVOIS}base -L${JEVOIS_PLATFORM_MODULES_ROOT}/lib)
+  endif()
+endif()
 
-# in jevoisbase/Contrib/tensorflow/tensorflow/lite run:
-# find . -name "*.cc" |grep -v test|grep -v python|grep -v bench|grep -v farmhash/dev|grep -v example|grep -v smartreply|grep -v absl|grep -v toco|grep -v grpc|grep -v java|grep -v profiling|grep -v registration|grep -v gpu|grep -v android|grep -v gemmlowp|grep -v evaluation|grep -v tools|grep -v delegates|grep -v experimental/micro|grep -v experimental/writer|grep -v generate.cc|grep -v disabled|grep -v ios|sed -e 's/\.\//\$\{TFS\}\//g' | xargs
-
-# add ${TFS}/c/c_api_internal.c
-
-target_sources(jevoisbase PRIVATE ${TFS}/mutable_op_resolver.cc ${TFS}/core/api/op_resolver.cc
-${TFS}/core/api/error_reporter.cc ${TFS}/core/api/flatbuffer_conversions.cc ${TFS}/core/subgraph.cc ${TFS}/util.cc
-${TFS}/schema/builtin_ops_header/generator.cc ${TFS}/experimental/c/c_api.cc
-${TFS}/experimental/c/c_api_experimental.cc ${TFS}/experimental/kernels/unidirectional_sequence_gru.cc
-${TFS}/experimental/kernels/ctc_beam_search_decoder.cc ${TFS}/experimental/kernels/gru_cell.cc
-${TFS}/experimental/resource_variable/resource_variable.cc ${TFS}/experimental/ruy/tune.cc
-${TFS}/experimental/ruy/trmul.cc ${TFS}/experimental/ruy/pack_arm.cc ${TFS}/experimental/ruy/kernel_arm64.cc
-${TFS}/experimental/ruy/detect_dotprod.cc ${TFS}/experimental/ruy/pmu.cc ${TFS}/experimental/ruy/allocator.cc
-${TFS}/experimental/ruy/thread_pool.cc ${TFS}/experimental/ruy/trace.cc ${TFS}/experimental/ruy/tune_tool.cc
-${TFS}/experimental/ruy/context.cc ${TFS}/experimental/ruy/pack_avx512.cc ${TFS}/experimental/ruy/block_map.cc
-${TFS}/experimental/ruy/kernel_avx512.cc ${TFS}/experimental/ruy/wait.cc ${TFS}/experimental/ruy/kernel_arm32.cc
-${TFS}/experimental/ruy/blocking_counter.cc ${TFS}/mmap_allocation.cc ${TFS}/simple_memory_arena.cc
-${TFS}/kernels/read_variable.cc ${TFS}/kernels/space_to_batch_nd.cc ${TFS}/kernels/mul.cc
-${TFS}/kernels/matrix_set_diag.cc ${TFS}/kernels/unpack.cc ${TFS}/kernels/div.cc ${TFS}/kernels/add.cc
-${TFS}/kernels/reverse.cc ${TFS}/kernels/expand_dims.cc ${TFS}/kernels/unidirectional_sequence_rnn.cc
-${TFS}/kernels/lstm.cc ${TFS}/kernels/register.cc ${TFS}/kernels/floor_mod.cc ${TFS}/kernels/squeeze.cc
-${TFS}/kernels/unique.cc ${TFS}/kernels/split.cc ${TFS}/kernels/one_hot.cc ${TFS}/kernels/resize_bilinear.cc
-${TFS}/kernels/bidirectional_sequence_rnn.cc ${TFS}/kernels/resize_nearest_neighbor.cc ${TFS}/kernels/skip_gram.cc
-${TFS}/kernels/maximum_minimum.cc ${TFS}/kernels/while.cc ${TFS}/kernels/slice.cc ${TFS}/kernels/if.cc
-${TFS}/kernels/detection_postprocess.cc ${TFS}/kernels/exp.cc ${TFS}/kernels/rfft2d.cc
-${TFS}/kernels/unidirectional_sequence_lstm.cc ${TFS}/kernels/fill.cc ${TFS}/kernels/elementwise.cc
-${TFS}/kernels/add_n.cc ${TFS}/kernels/split_v.cc ${TFS}/kernels/assign_variable.cc
-${TFS}/kernels/cpu_backend_context.cc ${TFS}/kernels/depth_to_space.cc ${TFS}/kernels/lstm_eval.cc
-${TFS}/kernels/quantize.cc ${TFS}/kernels/ceil.cc ${TFS}/kernels/sparse_to_dense.cc ${TFS}/kernels/hashtable_lookup.cc
-${TFS}/kernels/squared_difference.cc ${TFS}/kernels/internal/reference/portable_tensor_utils.cc
-${TFS}/kernels/internal/optimized/neon_tensor_utils.cc ${TFS}/kernels/internal/optimized/sse_tensor_utils.cc
-${TFS}/kernels/internal/mfcc_mel_filterbank.cc ${TFS}/kernels/internal/mfcc_dct.cc
-${TFS}/kernels/internal/quantization_util.cc ${TFS}/kernels/internal/kernel_utils.cc
-${TFS}/kernels/internal/tensor_utils.cc ${TFS}/kernels/internal/spectrogram.cc ${TFS}/kernels/internal/mfcc.cc
-${TFS}/kernels/floor.cc ${TFS}/kernels/matrix_diag.cc ${TFS}/kernels/space_to_depth.cc ${TFS}/kernels/arg_min_max.cc
-${TFS}/kernels/concatenation.cc ${TFS}/kernels/cast.cc ${TFS}/kernels/reduce.cc ${TFS}/kernels/pooling.cc
-${TFS}/kernels/lsh_projection.cc ${TFS}/kernels/svdf.cc ${TFS}/kernels/where.cc ${TFS}/kernels/shape.cc
-${TFS}/kernels/transpose.cc ${TFS}/kernels/depthwise_conv.cc ${TFS}/kernels/strided_slice.cc ${TFS}/kernels/pad.cc
-${TFS}/kernels/pack.cc ${TFS}/kernels/register_ref.cc ${TFS}/kernels/local_response_norm.cc ${TFS}/kernels/gather.cc
-${TFS}/kernels/pow.cc ${TFS}/kernels/floor_div.cc ${TFS}/kernels/rank.cc ${TFS}/kernels/bidirectional_sequence_lstm.cc
-${TFS}/kernels/zeros_like.cc ${TFS}/kernels/kernel_util.cc ${TFS}/kernels/audio_spectrogram.cc ${TFS}/kernels/round.cc
-${TFS}/kernels/batch_to_space_nd.cc ${TFS}/kernels/logical.cc ${TFS}/kernels/embedding_lookup_sparse.cc
-${TFS}/kernels/fake_quant.cc ${TFS}/kernels/tile.cc ${TFS}/kernels/reverse_sequence.cc
-${TFS}/kernels/embedding_lookup.cc ${TFS}/kernels/select.cc ${TFS}/kernels/cpu_backend_gemm_eigen.cc
-${TFS}/kernels/topk_v2.cc ${TFS}/kernels/fully_connected.cc ${TFS}/kernels/sub.cc ${TFS}/kernels/neg.cc
-${TFS}/kernels/comparisons.cc ${TFS}/kernels/dequantize.cc ${TFS}/kernels/l2norm.cc ${TFS}/kernels/gather_nd.cc
-${TFS}/kernels/basic_rnn.cc ${TFS}/kernels/mfcc.cc ${TFS}/kernels/range.cc ${TFS}/kernels/reshape.cc
-${TFS}/kernels/eigen_support.cc ${TFS}/kernels/transpose_conv.cc ${TFS}/kernels/mirror_pad.cc
-${TFS}/kernels/activations.cc ${TFS}/kernels/conv.cc ${TFS}/string_util.cc ${TFS}/model.cc ${TFS}/graph_info.cc
-${TFS}/minimal_logging_default.cc ${TFS}/minimal_logging.cc ${TFS}/stderr_reporter.cc
-${TFS}/external_cpu_backend_context.cc ${TFS}/interpreter.cc ${TFS}/nnapi/nnapi_implementation.cc ${TFS}/allocation.cc
-${TFS}/arena_planner.cc ${TFS}/c/c_api_internal.c)
+########################################################################################################################
+# ovxlib: locate it on jevois-platform (on others, it is in /usr/lib):
+if (JEVOIS_PRO)
+else()
+  if (JEVOIS_PLATFORM)
+    include_directories(${JEVOIS_PLATFORM_INSTALL_PREFIX}/include/ovxlib)
+  endif()
+endif()
 
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others:
 # From this: ls /usr/share/jevois-opencv-4.*/lib/|grep ".so$"|sed -e s/.so//|sed -e s/^lib//|xargs
-
-target_link_libraries(jevoisbase ${JEVOIS_OPENCV_LIBS} opencv_aruco opencv_bgsegm opencv_bioinspired opencv_calib3d
-  opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dpm opencv_face opencv_features2d
-  opencv_flann opencv_fuzzy opencv_gapi opencv_hfs opencv_imgcodecs opencv_img_hash opencv_imgproc
-  opencv_line_descriptor opencv_ml opencv_objdetect opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot
-  opencv_quality opencv_reg opencv_saliency opencv_shape opencv_stereo opencv_stitching opencv_structured_light
-  opencv_superres opencv_surface_matching opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab
-  opencv_xfeatures2d opencv_ximgproc opencv_xobjdetect opencv_xphoto)
+message(STATUS "opencv libs: ${JEVOIS_OPENCV_LIBS}")
+target_link_libraries(${JEVOIS}base ${JEVOIS_OPENCV_LIBS} opencv_alphamat opencv_aruco opencv_bgsegm opencv_bioinspired
+  opencv_calib3d opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dnn_superres
+  opencv_dpm opencv_face opencv_features2d opencv_flann opencv_fuzzy opencv_gapi opencv_hfs opencv_imgcodecs
+  opencv_img_hash opencv_imgproc opencv_intensity_transform opencv_line_descriptor opencv_mcc opencv_ml opencv_objdetect
+  opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot opencv_quality opencv_rapid opencv_reg opencv_saliency
+  opencv_shape opencv_stereo opencv_stitching opencv_structured_light opencv_superres opencv_surface_matching
+  opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_xfeatures2d opencv_ximgproc
+  opencv_xobjdetect opencv_xphoto)
 # removed: opencv_freetype (not available on platform), opencv_highgui (not needed), opencv_rgbd (not needed)
-
 
 ########################################################################################################################
 # Install shared resources (cascade classifiers, neural network weights, etc):
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/share"
-  DESTINATION "${JEVOIS_INSTALL_ROOT}" COMPONENT bin)
+  DESTINATION "${JEVOIS_MODULES_ROOT}" COMPONENT bin)
 
 ########################################################################################################################
 # Documentation:
@@ -480,9 +475,9 @@ endif ($ENV{JEVOIS_ILAB})
 # Documentation files for our install / distribution package
 set(DOC_FILES README INSTALL COPYING)
 if (JEVOIS_PLATFORM)
-  set(DOC_PATH "share/doc/jevoisbase-platform")
+  set(DOC_PATH "share/doc/${JEVOIS}base-platform")
 else (JEVOIS_PLATFORM)
-  set(DOC_PATH "share/doc/jevoisbase-host")
+  set(DOC_PATH "share/doc/${JEVOIS}base-host")
 endif (JEVOIS_PLATFORM)
 install(FILES ${DOC_FILES} DESTINATION ${DOC_PATH} COMPONENT bin)
 
@@ -491,8 +486,8 @@ install(FILES ${DOC_FILES} DESTINATION ${DOC_PATH} COMPONENT bin)
 
 # Create packages (Debian, RPM): in hbuild/ or pbuild/, just type 'sudo cpack' to create the package.
 # To list the files created in a package, run: dpkg --contents <package.deb>
-set(CPACK_PACKAGE_DESCRIPTION "JeVois Smart Machine Vision Base Modules")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "JeVois Smart Embedded Machine Vision Toolkit, Base Modules")
+set(CPACK_PACKAGE_DESCRIPTION "JeVois Smart Machine Vision Base Modules (${JEVOIS})")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "JeVois Smart Embedded Machine Vision Toolkit, Base Modules (${JEVOIS})")
 set(CPACK_PACKAGE_CONTACT "Laurent Itti <jevois.org@gmail.com>")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER ${CPACK_PACKAGE_CONTACT})
 set(CPACK_DEBIAN_PACKAGE_SECTION "universe")
@@ -503,15 +498,15 @@ set(CPACK_PACKAGE_VERSION_PATCH "${JEVOIS_VERSION_PATCH}")
 set(JEVOIS_PACKAGE_RELEASE "1") # packager revision number
 
 if (JEVOIS_PLATFORM)
-  set(JEVOIS_DEPEND "jevois-platform (>=${JEVOIS_VERSION_MAJOR}.${JEVOIS_VERSION_MINOR}.${JEVOIS_VERSION_PATCH})")
+  set(JEVOIS_DEPEND "${JEVOIS}-platform (>=${JEVOIS_VERSION_MAJOR}.${JEVOIS_VERSION_MINOR}.${JEVOIS_VERSION_PATCH})")
 else (JEVOIS_PLATFORM)
-  set(JEVOIS_DEPEND "jevois-host (>=${JEVOIS_VERSION_MAJOR}.${JEVOIS_VERSION_MINOR}.${JEVOIS_VERSION_PATCH})")
+  set(JEVOIS_DEPEND "${JEVOIS}-host (>=${JEVOIS_VERSION_MAJOR}.${JEVOIS_VERSION_MINOR}.${JEVOIS_VERSION_PATCH})")
 endif (JEVOIS_PLATFORM)
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${JEVOIS_DEPEND}, libgles2-mesa, libgles2-mesa-dev, curl, libdmtx-dev, python3-scipy")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${JEVOIS_DEPEND}, libgles2-mesa, libgles2-mesa-dev, curl, libdmtx-dev, python3-scipy, libusb-dev")
 
 # Use helper from JeVois.cmake for all other settings:
-jevois_setup_cpack("jevoisbase")
+jevois_setup_cpack(${JEVOIS}base)
 
 
 ########################################################################################################################

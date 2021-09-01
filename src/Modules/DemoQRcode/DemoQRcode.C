@@ -138,7 +138,7 @@ class DemoQRcode : public jevois::StdModule
 
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w, h + nshow * 10 + 6, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);
@@ -174,6 +174,55 @@ class DemoQRcode : public jevois::StdModule
       outframe.send();
     }
 
+#ifdef JEVOIS_PRO
+    // ####################################################################################################
+    //! Processing function with JeVois-Pro GUI
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      static jevois::Timer timer("processing", 60, LOG_DEBUG);
+      
+      // Start the GUI frame:
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Draw the camera frame:
+      int x = 0, y = 0; unsigned short iw = 0, ih = 0;
+      helper.drawInputFrame("camera", inframe, x, y, iw, ih);
+
+      // Wait for next available camera image:
+      jevois::RawImage const inimg = inframe.getp();
+      unsigned int const w = inimg.width, h = inimg.height;
+      helper.itext("JeVois-Pro QRcode/Barcode Detection");
+
+      timer.start();
+      
+      // Convert the image to grayscale and process it through zbar:
+      cv::Mat grayimg = jevois::rawimage::convertToCvGray(inimg);
+      zbar::Image zgray(grayimg.cols, grayimg.rows, "Y800", grayimg.data, grayimg.total());
+      itsQRcode->process(zgray);
+
+      // Draw all detections:
+      itsQRcode->drawDetections(helper, zgray, w, h);
+      
+      // Send all serial messages:
+      itsQRcode->sendSerial(this, zgray, w, h);
+      
+      // Cleanup zbar image data:
+      zgray.set_data(nullptr, 0);
+
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      helper.iinfo(inframe, fpscpu, winw, winh);
+
+      // Render the image and GUI:
+      helper.endFrame();
+    }
+#endif
+    
     // ####################################################################################################
   protected:
     std::shared_ptr<QRcode> itsQRcode;

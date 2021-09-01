@@ -81,7 +81,7 @@ class DemoBackgroundSubtract : public jevois::Module
   public:
     //! Constructor
     DemoBackgroundSubtract(std::string const & instance) :
-        jevois::Module(instance), itsProcessingTimer("Processing"), pMOG2(cv::createBackgroundSubtractorMOG2())
+        jevois::Module(instance), itsProcessingTimer("Processing"), bgs(cv::createBackgroundSubtractorMOG2())
     { }
     
     //! Virtual destructor for safe inheritance
@@ -99,26 +99,28 @@ class DemoBackgroundSubtract : public jevois::Module
       // Convert it to BGR:
       cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
 
+      // Paste the original image to the top-left corner of the display in a thread:
+      jevois::RawImage outimg;
+      auto paste_fut =
+        jevois::async([&]()
+                      {
+                        outimg = outframe.get();
+                        outimg.require("output", w * 2, h, V4L2_PIX_FMT_YUYV);
+                        jevois::rawimage::paste(inimg, outimg, 0, 0);
+                        jevois::rawimage::writeText(outimg, "JeVois Background Subtraction", 3, 3,
+                                                    jevois::yuyv::White);
+                      });
+      
       // Compute the foreground mask in a thread:
       cv::Mat fgmask;
-      auto fg_fut = std::async(std::launch::async, [&]() { pMOG2->apply(imgbgr, fgmask); });
+      bgs->apply(imgbgr, fgmask);
       
-      // While computing, wait for an image from our gadget driver into which we will put our results:
-      jevois::RawImage outimg = outframe.get();
-
-      // Enforce the correct output image size and format:
-      outimg.require("output", w * 2, h, V4L2_PIX_FMT_YUYV);
-      
-      // Paste the original image to the top-left corner of the display:
-      jevois::rawimage::paste(inimg, outimg, 0, 0);
-      jevois::rawimage::writeText(outimg, "JeVois Background Subtraction Demo", 3, 3, jevois::yuyv::White);
+      // Wait for paste to be done:
+      paste_fut.get();
       
       // Let camera know we are done processing the raw input image:
       inframe.done();
 
-      // Wait for the processing results:
-      fg_fut.get();
-      
       // Paste the results into the output image:
       jevois::rawimage::pasteGreyToYUYV(fgmask, outimg, w, 0);      
       jevois::rawimage::writeText(outimg, "Foreground Mask", w+3, 3, jevois::yuyv::White);
@@ -131,9 +133,51 @@ class DemoBackgroundSubtract : public jevois::Module
       outframe.send();
     }
 
+#ifdef JEVOIS_PRO
+    // ####################################################################################################
+    //! Processing function with zero-copy and GUI on JeVois-Pro
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+
+      // Start the GUI frame:
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Draw the camera frame:
+      int x = 0, y = 0; unsigned short iw = 0, ih = 0;
+      helper.drawInputFrame("camera", inframe, x, y, iw, ih);
+      helper.itext("JeVois-Pro Background Subtraction");
+
+      // Wait for next available camera image:
+      cv::Mat imgbgr = inframe.getCvRGBp();
+     
+      timer.start();
+
+      // Compute the foreground mask:
+      cv::Mat fgmask;
+      bgs->apply(imgbgr, fgmask);
+ 
+      // Convert to RGBA, with zero alpha (transparent) in background and full alpha on foreground:
+      cv::Mat chans[4] { fgmask, fgmask, fgmask, fgmask };
+      cv::Mat mask; cv::merge(chans, 4, mask);
+      
+      // Draw overlay:
+      helper.drawImage("fgmask", mask, true, x, y, iw, ih, false /* noalias */, true /* isoverlay */);
+
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      helper.iinfo(inframe, fpscpu, winw, winh);
+      
+      // Render the image and GUI:
+      helper.endFrame();
+    }
+#endif
+
   protected:
     jevois::Timer itsProcessingTimer;
-    cv::Ptr<cv::BackgroundSubtractor> pMOG2;
+    cv::Ptr<cv::BackgroundSubtractor> bgs;
 };
 
 // Allow the module to be loaded as a shared object (.so) file:

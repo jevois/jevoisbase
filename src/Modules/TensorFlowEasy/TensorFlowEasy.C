@@ -200,17 +200,17 @@ class TensorFlowEasy : public jevois::StdModule,
       itsResults.clear();
       try
       {
-	int netinw, netinh, netinc; itsTensorFlow->getInDims(netinw, netinh, netinc);
-
-	// Scale the ROI if needed:
-	cv::Mat scaledroi = jevois::rescaleCv(rgbroi, cv::Size(netinw, netinh));
-
-	// Predict:
-	float const ptime = itsTensorFlow->predict(scaledroi, itsResults);
-	LINFO("Predicted in " << ptime << "ms");
-
-	// Send serial results:
-	sendSerialObjReco(itsResults);
+        int netinw, netinh, netinc; itsTensorFlow->getInDims(netinw, netinh, netinc);
+        
+        // Scale the ROI if needed:
+        cv::Mat scaledroi = jevois::rescaleCv(rgbroi, cv::Size(netinw, netinh));
+        
+        // Predict:
+        float const ptime = itsTensorFlow->predict(scaledroi, itsResults);
+        LINFO("Predicted in " << ptime << "ms");
+        
+        // Send serial results:
+        sendSerialObjReco(itsResults);
       }
       catch (std::logic_error const & e) { } // network still loading
     }
@@ -240,7 +240,7 @@ class TensorFlowEasy : public jevois::StdModule,
 
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", outimg.width, h + 68, V4L2_PIX_FMT_YUYV);
 

@@ -98,7 +98,7 @@ class SaliencyGist : public jevois::StdModule
       inimg.require("input", w, h, V4L2_PIX_FMT_YUYV); // accept any image size but require YUYV pixels
 
       // Launch the saliency computation in a thread:
-      auto sal_fut = std::async(std::launch::async, [&](){ itsSaliency->process(inimg, true); });
+      auto sal_fut = jevois::async([&](){ itsSaliency->process(inimg, true); });
       
       // While computing, wait for an image from our gadget driver into which we will put our results:
       jevois::RawImage outimg = outframe.get();

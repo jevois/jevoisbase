@@ -202,7 +202,7 @@ class DemoArUco : public jevois::StdModule
 
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w, h + 20, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);
@@ -240,6 +240,57 @@ class DemoArUco : public jevois::StdModule
       outframe.send();
     }
 
+#ifdef JEVOIS_PRO
+    // ####################################################################################################
+    //! Processing function with zero-copy and GUI on JeVois-Pro
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+
+      // Start the GUI frame:
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Draw the camera frame:
+      int x = 0, y = 0; unsigned short iw = 0, ih = 0;
+      helper.drawInputFrame("camera", inframe, x, y, iw, ih);
+
+      // Wait for next available camera image:
+      jevois::RawImage const inimg = inframe.getp();
+      unsigned int const w = inimg.width, h = inimg.height;
+      helper.itext("JeVois-Pro ArUco Marker Detection");
+      
+      timer.start();
+
+      // Convert the image to grayscale and process:
+      cv::Mat cvimg = jevois::rawimage::convertToCvGray(inimg);
+      std::vector<int> ids;
+      std::vector<std::vector<cv::Point2f> > corners;
+      std::vector<cv::Vec3d> rvecs, tvecs;
+      itsArUco->detectMarkers(cvimg, ids, corners);
+
+      if (itsArUco->dopose::get() && ids.empty() == false)
+        itsArUco->estimatePoseSingleMarkers(corners, rvecs, tvecs);
+      
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      // Show all the results:
+      itsArUco->drawDetections(helper, ids, corners, rvecs, tvecs);
+
+      // Send serial output:
+      itsArUco->sendSerial(this, ids, corners, w, h, rvecs, tvecs);
+
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      helper.iinfo(inframe, fpscpu, winw, winh);
+
+      // Render the image and GUI:
+      helper.endFrame();
+     }
+#endif
+    
     // ####################################################################################################
   protected:
     std::shared_ptr<ArUco> itsArUco;

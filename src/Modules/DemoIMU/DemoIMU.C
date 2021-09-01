@@ -17,6 +17,7 @@
 
 #include <jevois/Core/Module.H>
 #include <jevois/Core/ICM20948.H>
+#include <jevois/Debug/Timer.H>
 
 #include <jevois/Image/RawImageOps.H>
 #include <linux/videodev2.h>
@@ -113,9 +114,7 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac, mfac
   public:
     //! Constructor
     DemoIMU(std::string const & instance) : jevois::Module(instance)
-    {
-      itsIMU = addSubComponent<jevois::ICM20948>("imu");
-    }
+    { itsIMU = addSubComponent<jevois::ICM20948>("imu"); }
 
     //! Virtual destructor for safe inheritance
     virtual ~DemoIMU() { }
@@ -200,6 +199,90 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac, mfac
       outframe.send();
     }
 
+#ifdef JEVOIS_PRO
+    //! Processing function with GUI output
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+
+      // Start the GUI frame:
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Draw the camera frame:
+      int x = 0, y = 0; unsigned short iw = 0, ih = 0;
+      helper.drawInputFrame("camera", inframe, x, y, iw, ih);
+      helper.itext("JeVois-Pro Inertial Measurement Unit (IMU)");
+      
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      timer.start();
+
+      // Get one or more IMU readings:
+      jevois::IMUdata d = itsIMU->get();
+      helper.itext(jevois::sformat("Accel: x=%+06.2fg    y=%+06.2fg    z=%+06.2fg         "
+                                   "Magn: %+09.2fuT %+09.2fuT %+09.2fuT",
+                                   d.ax(), d.ay(), d.az(), d.mx(), d.my(), d.mz()));
+
+      helper.itext(jevois::sformat("Gyro:  x=%+07.1fdps y=%+07.1fdps z=%+07.1fdps      Temp: %05.1fC  %s",
+                                   d.gx(), d.gy(), d.gz(), d.temp(), d.magovf ? "Magn overflow" : " "));
+
+      itsIMUdata.push_front(d);
+
+      // In FIFO mode at high data rates, we may have more samples in the FIFO; read a bunch:
+      while (itsIMU->dataReady() > 32) itsIMUdata.push_front(itsIMU->get());
+
+      // Only keep as much data as we can display:
+      int const count = 300;
+      while (itsIMUdata.size() > count) itsIMUdata.pop_back();
+      
+      float ax[count] = {}, ay[count] = {}, az[count] = {};
+      float gx[count] = {}, gy[count] = {}, gz[count] = {};
+      float mx[count] = {}, my[count] = {}, mz[count] = {};
+      
+      // Plot so that positive values go up (so, negate all values):
+      float const a = -afac::get(); float const g = -gfac::get(); float const m = -mfac::get();
+
+      for (int i = count - 1; jevois::IMUdata const & dd : itsIMUdata)
+      {
+        if (a) { ax[i] = dd.ax() * a; ay[i] = dd.ay() * a; az[i] = dd.az() * a; }
+        if (g) { gx[i] = dd.gx() * g; gy[i] = dd.gy() * g; gz[i] = dd.gz() * g; }
+        if (m) { mx[i] = dd.mx() * m; my[i] = dd.my() * m; mz[i] = dd.mz() * m; }
+        --i;
+      }
+
+      // Draw the data:
+      if (ImGui::Begin("IMU data"))
+      {
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 10.0F);
+        ImGui::Text("Acceleration X, Y, Z:");
+        ImGui::PlotLines("##AccelX", ax, count, 0, "Accel X", -100, 100);
+        ImGui::PlotLines("##AccelY", ay, count, 0, "Accel Y", -100, 100);
+        ImGui::PlotLines("##AccelZ", az, count, 0, "Accel Z", -100, 100);
+        ImGui::Separator();
+        ImGui::Text("Gyroscope X, Y, Z:");
+        ImGui::PlotLines("##GyroX", gx, count, 0, "Gyro X", -100, 100);
+        ImGui::PlotLines("##GyroY", gy, count, 0, "Gyro Y", -100, 100);
+        ImGui::PlotLines("##GyroZ", gz, count, 0, "Gyro Z", -100, 100);
+        ImGui::Separator();
+        ImGui::Text("Magnetometer X, Y, Z:");
+        ImGui::PlotLines("##MagnX", mx, count, 0, "Magn X", -100, 100);
+        ImGui::PlotLines("##MagnY", my, count, 0, "Magn Y", -100, 100);
+        ImGui::PlotLines("##MagnZ", mz, count, 0, "Magn Z", -100, 100);
+        ImGui::PopItemWidth();
+        ImGui::End();
+      }
+        
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      helper.iinfo(inframe, fpscpu, winw, winh);
+
+      // Render the image and GUI:
+      helper.endFrame();
+    }
+#endif
+    
   private:
     std::shared_ptr<jevois::ICM20948> itsIMU;
     std::list<jevois::IMUdata> itsIMUdata;    

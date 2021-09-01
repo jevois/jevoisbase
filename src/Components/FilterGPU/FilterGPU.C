@@ -35,7 +35,7 @@ void FilterGPU::initDisplay()
   // Initialize the EGL display connection:
   EGLint major, minor;
   GL_CHECK_BOOL(eglInitialize(itsDisplay, &major, &minor););
-  LINFO("Initialized OpenGL-ES v" << major << '.' << minor);
+  LINFO("Initialized OpenGL-ES with EGL v" << major << '.' << minor);
   
   // Get an appropriate EGL configuration:
   EGLint num_config;

@@ -258,7 +258,7 @@ class TensorFlowSaliency : public jevois::StdModule,
       
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", outimg.width, outimg.height, V4L2_PIX_FMT_YUYV);
           
@@ -308,7 +308,7 @@ class TensorFlowSaliency : public jevois::StdModule,
 	  cv::Mat scaledroi = jevois::rescaleCv(rgbroi, cv::Size(netinw, netinh));
 
 	  // In a thread, also scale the ROI to the desired output size, i.e., USB width - camera width:
-	  auto scale_fut = std::async(std::launch::async, [&]() {
+	  auto scale_fut = jevois::async([&]() {
 	      float fac = float(outimg.width - w) / float(rgbroi.cols);
 	      cv::Size displaysize(outimg.width - w, int(rgbroi.rows * fac + 0.4999F));
 	      cv::Mat displayroi = jevois::rescaleCv(rgbroi, displaysize);

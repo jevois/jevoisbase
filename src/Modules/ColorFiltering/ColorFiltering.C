@@ -138,7 +138,7 @@ class ColorFiltering : public jevois::Module,
 
       // While we process it, start a thread to wait for output frame and paste the input image into it:
       jevois::RawImage outimg; // main thread should not use outimg until paste thread is complete
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w * 2, h, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);
@@ -177,7 +177,7 @@ class ColorFiltering : public jevois::Module,
 
   protected:
     //! Parameter callback: set the selected filter algo
-    void onParamChange(effect const & param, Effect const & val)
+    void onParamChange(effect const & param, Effect const & val) override
     {
       if (itsFilter) { removeSubComponent(itsFilter); itsFilter.reset(); }
       

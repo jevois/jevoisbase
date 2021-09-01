@@ -1,4 +1,6 @@
-import libjevois as jevois
+import pyjevois
+if pyjevois.pro: import libjevoispro as jevois
+else: import libjevois as jevois
 
 ## Simple test of programming JeVois modules in Python
 #

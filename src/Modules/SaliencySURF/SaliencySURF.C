@@ -126,7 +126,7 @@ class SaliencySURF : public jevois::Module, public jevois::Parameter<inhsigma, r
     void postInit() override
     {
       // Get our run() thread going, it is in charge of compresing and saving frames:
-      itsRunFut = std::async(std::launch::async, &SaliencySURF::run, this);
+      itsRunFut = jevois::async(std::bind(&SaliencySURF::run, this));
 
       LINFO("Using " << itsMatcher->numtrain() << " Training Images.");
     }
@@ -163,7 +163,7 @@ class SaliencySURF : public jevois::Module, public jevois::Parameter<inhsigma, r
       jevois::RawImage outimg; // main thread should not use outimg until paste thread is complete
       cv::Mat grayimg;
 
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           // Convert input image to greyscale:
           grayimg = jevois::rawimage::convertToCvGray(inimg);
 

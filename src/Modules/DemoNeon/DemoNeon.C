@@ -155,7 +155,7 @@ class DemoNeon : public jevois::Module,
 
       // While we convert it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w * 3, h, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);

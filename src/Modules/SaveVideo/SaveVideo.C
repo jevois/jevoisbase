@@ -17,6 +17,8 @@
 
 #include <jevois/Core/Module.H>
 #include <jevois/Debug/Log.H>
+#include <jevois/Debug/Timer.H>
+#include <jevois/Util/Utils.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevois/Types/BoundedBuffer.H>
 
@@ -49,7 +51,12 @@ JEVOIS_DECLARE_PARAMETER(fourcc, std::string, "FourCC of the codec to use. The O
                          "Hence any video encoder supported by ffmpeg should work. Tested codecs include: MJPG, "
                          "MP4V, AVC1. Make sure you also pick the right filename extension (e.g., .avi for MJPG, "
                          ".mp4 for MP4V, etc)",
-                         "MJPG", boost::regex("^\\w{4}$"), ParamCateg);
+#ifdef JEVOIS_PRO
+                         "X264",
+#else
+                         "MJPG",
+#endif
+                         boost::regex("^\\w{4}$"), ParamCateg);
 
 //! Parameter \relates SaveVideo
 JEVOIS_DECLARE_PARAMETER(fps, double, "Video frames/sec as stored in the file and to be used both for recording and "
@@ -72,21 +79,13 @@ JEVOIS_DECLARE_PARAMETER(fps, double, "Video frames/sec as stored in the file an
     mappings are possible beyond the ones listed here.
 
     See \ref PixelFormats for information about pixel formats; with this module you can use the formats supported by the
-    camera sensor: YUYV, BAYER, RGB565
+    camera sensor.
 
-    This module accepts any resolution supported by the JeVois camera sensor:
-    
-    - SXGA (1280 x 1024): up to 15 fps
-    - VGA (640 x 480): up to 30 fps
-    - CIF (352 x 288): up to 60 fps
-    - QVGA (320 x 240): up to 60 fps
-    - QCIF (176 x 144): up to 120 fps
-    - QQVGA (160 x 120): up to 60 fps
-    - QQCIF (88 x 72): up to 120 fps
+    This module accepts any resolution supported by the JeVois camera sensor.
 
-    This module can operate both with USB video output, or no USB video output.
+    This module can operate both with USB/GUI video output, or no USB video output.
 
-    When using with no USB output (NONE output format), you should first issue a \c streamon command to start video
+    When using with no USB/GUI output (NONE output format), you should first issue a \c streamon command to start video
     streaming by the camera sensor chip, then issue a \c start when you are ready to start recording. The \c streamon is
     not necessary when using a video mapping with USB video output, as the host computer over USB triggers video
     streaming when it starts grabbing frames from the JeVois camera.
@@ -196,7 +195,7 @@ class SaveVideo : public jevois::Module,
       itsRunning.store(true);
       
       // Get our run() thread going, it is in charge of compresing and saving frames:
-      itsRunFut = std::async(std::launch::async, &SaveVideo::run, this);
+      itsRunFut = jevois::async(std::bind(&SaveVideo::run, this));
     }
 
     // ####################################################################################################
@@ -212,7 +211,7 @@ class SaveVideo : public jevois::Module,
 
       // Wait for the thread to complete:
       LINFO("Waiting for writer thread to complete, " << itsBuf.filled_size() << " frames to go...");
-      try { itsRunFut.get(); } catch (...) { jevois::warnAndIgnoreException(); }
+      if (itsRunFut.valid()) try { itsRunFut.get(); } catch (...) { jevois::warnAndIgnoreException(); }
       LINFO("Writer thread completed. Syncing disk...");
       if (std::system("/bin/sync")) LERROR("Error syncing disk -- IGNORED");
       LINFO("Video " << itsFilename << " saved.");
@@ -276,6 +275,69 @@ class SaveVideo : public jevois::Module,
       // Let camera know we are done processing the raw YUV input image:
       inframe.done();
     }
+    
+#ifdef JEVOIS_PRO
+    // ####################################################################################################
+    //! Processing function with zero-copy and GUI on JeVois-Pro
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+
+      // Start the GUI frame:
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Draw the camera frame:
+      int x = 0, y = 0; unsigned short iw = 0, ih = 0;
+      helper.drawInputFrame("camera", inframe, x, y, iw, ih);
+
+      // Wait for next available camera image:
+      jevois::RawImage const inimg = inframe.getp();
+      unsigned int const w = inimg.width, h = inimg.height;
+      helper.itext(std::string("JeVois-Pro Save Video: ") + (itsSaving.load() ? "RECORDING" : "not recording"));
+      if (itsFilename.empty() == false) helper.itext("Saving to " + itsFilename);
+      size_t const n = itsBuf.filled_size();
+      if (n) helper.itext(std::to_string(n) + " queued frames waiting to save...");
+
+      // Draw a start/stop button:
+      if (ImGui::Begin("SaveVideo Control"))
+      {
+        ImGui::Text("Click Record to start saving,");
+        ImGui::Text("click it again to stop.");
+        ImGui::Separator();
+        bool save = itsSaving.load(); bool wassaving = save; helper.toggleButton("Record", &save);
+        if (wassaving && !save) itsBuf.push(cv::Mat()); // Let writer thread know to close this file
+        itsSaving.store(save);
+        ImGui::Separator();
+        if (itsSaving.load()) ImGui::Text("Recording...");
+        else if (n) ImGui::Text("Saving queued frames...");
+        else ImGui::Text("Ready to record");
+        ImGui::End();
+      }
+      
+      timer.start();
+
+      if (itsSaving.load())
+      {
+        // Convert image to BGR and push to our writer thread:
+        if (itsBuf.filled_size() > 1000)
+          helper.reportError("Image queue too large, video writer cannot keep up - DROPPING FRAME");
+        else
+          itsBuf.push(jevois::rawimage::convertToCvBGR(inimg));
+      }
+      
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      helper.iinfo(inframe, fpscpu, winw, winh);
+
+      // Render the image and GUI:
+      helper.endFrame();
+     }
+#endif
 
     // ####################################################################################################
     //! Receive a string from a serial port which contains a user command
@@ -295,6 +357,7 @@ class SaveVideo : public jevois::Module,
         // Push an empty frame into our buffer to signal the end of video to our thread:
         itsBuf.push(cv::Mat());
 
+#ifndef JEVOIS_PRO
         // Wait for the thread to empty our image buffer:
         while (itsBuf.filled_size())
         {
@@ -303,7 +366,8 @@ class SaveVideo : public jevois::Module,
         }
         LINFO("Writer thread completed. Syncing disk...");
         if (std::system("/bin/sync")) LERROR("Error syncing disk -- IGNORED");
-        LINFO("Video " << itsFilename << " saved.");
+        LINFO("Video saved.");
+#endif
       }
       else throw std::runtime_error("Unsupported module command");
     }
@@ -354,8 +418,7 @@ class SaveVideo : public jevois::Module,
             // Fill in the file number; be nice and do not overwrite existing files:
             while (true)
             {
-              char tmp[2048];
-              std::snprintf(tmp, 2047, fn.c_str(), itsFileNum);
+              std::string tmp = jevois::sformat(fn.c_str(), itsFileNum);
               std::ifstream ifs(tmp);
               if (ifs.is_open() == false) { itsFilename = tmp; break; }
               ++itsFileNum;
@@ -376,7 +439,9 @@ class SaveVideo : public jevois::Module,
         }
 
         // Our writer runs out of scope and closes the file here.
+        LINFO("Closing " + itsFilename);
         ++itsFileNum;
+        itsFilename.clear();
       }
     }
     

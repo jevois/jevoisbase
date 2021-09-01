@@ -1,4 +1,6 @@
-import libjevois as jevois # FIXME: this may be the cause of our troubles noted in the doc below
+import pyjevois
+if pyjevois.pro: import libjevoispro as jevois
+else: import libjevois as jevois
 import cv2
 import numpy as np
 import multiprocessing as mp

@@ -128,7 +128,7 @@ class DemoCPUGPU : public jevois::StdModule
       std::unique_lock<std::mutex> lck(itsOutMtx); // mutex will be released by main thread when outimg is available
       
       // Launch the saliency computation in a thread:
-      auto sal_fut = std::async(std::launch::async, [&](){
+      auto sal_fut = jevois::async([&](){
           // Compute saliency and gist:
           itsSaliency->process(inimg, true);
 

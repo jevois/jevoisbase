@@ -48,6 +48,9 @@ Darknet::Darknet(std::string const & instance, bool show_detail_params) :
 // ####################################################################################################
 Darknet::~Darknet()
 {
+  // Wait until any loading is complete:
+  JEVOIS_WAIT_GET_FUTURE(itsReadyFut);
+
 #ifdef NNPACK
   nnp_deinitialize();
 #endif
@@ -133,7 +136,7 @@ void Darknet::loadNet()
   
   // Since loading big networks can take a while, do it in a thread so we can keep streaming video in the
   // meantime. itsReady will flip to true when the load is complete.
-  itsReadyFut = std::async(std::launch::async, [&]() {
+  itsReadyFut = jevois::async([&]() {
       std::string root = dataroot::get(); if (root.empty() == false) root += '/';
   
       // Note: darknet expects read/write pointers to the file names...

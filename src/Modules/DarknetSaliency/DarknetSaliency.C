@@ -244,11 +244,11 @@ class DarknetSaliency : public jevois::StdModule,
       
       // Launch the saliency computation in a thread:
       int rx, ry, rw, rh;
-      auto sal_fut = std::async(std::launch::async, [&](){ this->getSalROI(inimg, rx, ry, rw, rh); });
+      auto sal_fut = jevois::async([&](){ this->getSalROI(inimg, rx, ry, rw, rh); });
 
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", outimg.width, outimg.height, V4L2_PIX_FMT_YUYV);
           
@@ -355,7 +355,7 @@ class DarknetSaliency : public jevois::StdModule,
 	try
 	{
 	  int netinw, netinh, netinc; itsDarknet->getInDims(netinw, netinh, netinc); // will throw if not ready
-	  itsPredictFut = std::async(std::launch::async, [&]() { return itsDarknet->predict(itsCvImg, itsResults); });
+	  itsPredictFut = jevois::async([&]() { return itsDarknet->predict(itsCvImg, itsResults); });
 	}
 	catch (std::logic_error const & e) { itsRawPrevOutputCv.release(); } // network is not ready yet
       }

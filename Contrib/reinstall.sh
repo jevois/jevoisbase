@@ -44,7 +44,7 @@ if [ "X$REPLY" = "Xy" ]; then
     ###################################################################################################
     # Cleanup:
     /bin/rm -rf generalized-hough-tranform Ne10 NNPACK OF_DIS pixy pthreadpool tiny-dnn vlfeat ZBar NNPACK-darknet \
-	    FXdiv FP16 psimd darknet-nnpack cpuinfo darknet tensorflow
+	    FXdiv FP16 psimd darknet-nnpack cpuinfo darknet
 
     ###################################################################################################
     # Get the packages:
@@ -54,11 +54,7 @@ if [ "X$REPLY" = "Xy" ]; then
 
     # No new release in a while on tiny-dnn; fetch current state as of Sept 14, 2017:
     get_github tiny-dnn tiny-dnn dd906fed8c8aff8dc837657c42f9d55f8b793b0e
-
-    #git clone https://github.com/tiny-dnn/tiny-dnn.git  # Convolutional neural networks
-    # To avoid surprises, checkout a specific version of tiny-dnn (since it has been a while since the last release):
-    #cd tiny-dnn; git checkout dd906fed8c8aff8dc837657c42f9d55f8b793b0e; cd ..
-
+    
     # Barcode/QRcode detection:
     get_github ZBar ZBar 854a5d97059e395807091ac4d80c53f7968abb8f
     cp zbar-config.h ZBar/include/config.h
@@ -105,21 +101,17 @@ if [ "X$REPLY" = "Xy" ]; then
     # Darknet original (used for training only):
     git clone https://github.com/pjreddie/darknet.git
 
-    # Tensorflow 1.15.3:
-    get_github tensorflow tensorflow 4386a6640c9fb65503750c37714971031f3dc1fd
-    # Note: we download tensorflow dependencies below after patching
-    
+    # libcoral for C++ access to Coral Edge TPU
+    #get_github google-coral libcoral release-frogfish
+
+    # aml_NPU_app examples of neural network inference on the JeVois-Pro A311D
+    #git clone --recursive https://gitlab.com/khadas/aml_npu_app
+
     ###################################################################################################
     # Patching:
     for f in *.patch; do
-	patchit ${f/.patch/}
+	    patchit ${f/.patch/}
     done
-
-    ###################################################################################################
-    # Tensorflow dependencies:
-    cd tensorflow
-    ./tensorflow/lite/tools/make/download_dependencies.sh
-    cd ..
 
     ###################################################################################################
     # Keep track of the last installed release:

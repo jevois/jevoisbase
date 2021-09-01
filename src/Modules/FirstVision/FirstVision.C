@@ -299,9 +299,9 @@ class FirstVision : public jevois::StdModule,
     cv::Mat itsDistCoeffs; //!< Our camera distortion coefficients
     bool itsCueChanged = true; //!< True when users change ranges
 
-    void onParamChange(hcue const & param, unsigned char const & newval) { itsCueChanged = true; }
-    void onParamChange(scue const & param, unsigned char const & newval) { itsCueChanged = true; }
-    void onParamChange(vcue const & param, unsigned char const & newval) { itsCueChanged = true; }
+    void onParamChange(hcue const & param, unsigned char const & newval) override { itsCueChanged = true; }
+    void onParamChange(scue const & param, unsigned char const & newval) override { itsCueChanged = true; }
+    void onParamChange(vcue const & param, unsigned char const & newval) override { itsCueChanged = true; }
     
     // ####################################################################################################
     //! Helper struct for an HSV range triplet, where each range is specified as a mean and sigma:
@@ -462,7 +462,12 @@ class FirstVision : public jevois::StdModule,
         fs["distortion_coefficients"] >> itsDistCoeffs;
         LINFO("Loaded camera calibration from " << cpf);
       }
-      else LFATAL("Failed to read camera parameters from file [" << cpf << "]");
+      else
+      {
+        LERROR("Failed to read camera parameters from file [" << cpf << "] -- IGNORED");
+        itsCamMatrix = cv::Mat::eye(3, 3, CV_64F);
+        itsDistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
+      }
     }
     
     // ####################################################################################################
@@ -690,7 +695,7 @@ class FirstVision : public jevois::StdModule,
       
       // Compute the median filtered BGR image in a thread:
       cv::Mat medimgbgr;
-      auto median_fut = std::async(std::launch::async, [&](){ cv::medianBlur(imgbgr, medimgbgr, 3); } );
+      auto median_fut = jevois::async([&](){ cv::medianBlur(imgbgr, medimgbgr, 3); } );
       
       // Get all the cleaned-up contours:
       std::vector<std::vector<cv::Point> > contours;
@@ -699,7 +704,7 @@ class FirstVision : public jevois::StdModule,
       // If desired, draw all contours:
       std::future<void> drawc_fut;
       if (debug::get() && outimg && outimg->valid())
-        drawc_fut = std::async(std::launch::async, [&]() {
+        drawc_fut = jevois::async([&]() {
             // We reinterpret the top portion of our YUYV output image as an opencv 8UC2 image:
             cv::Mat outuc2(outimg->height, outimg->width, CV_8UC2, outimg->pixelsw<unsigned char>());
             cv::drawContours(outuc2, contours, -1, jevois::yuyv::LightPink, 2);
@@ -823,7 +828,7 @@ class FirstVision : public jevois::StdModule,
       // Launch our workers: run nthreads-1 new threads, and last worker in our current thread:
       std::vector<std::future<void> > dfut;
       for (size_t i = 0; i < nthreads - 1; ++i)
-        dfut.push_back(std::async(std::launch::async, [&](size_t tn) { detect(imghsv, tn, 3, h+2); }, i));
+        dfut.push_back(jevois::async([&](size_t tn) { detect(imghsv, tn, 3, h+2); }, i));
       detect(imghsv, nthreads - 1, 3, h+2);
       
       // Wait for all threads to complete:
@@ -836,7 +841,7 @@ class FirstVision : public jevois::StdModule,
       cleanupDetections();
       
       // Learn the object's HSV value over time:
-      auto learn_fut = std::async(std::launch::async, [&]() { learnHSV(nthreads, imgbgr); });
+      auto learn_fut = jevois::async([&]() { learnHSV(nthreads, imgbgr); });
       
       // Map to 6D (inverse perspective):
       std::vector<std::vector<cv::Point2f> > corners; std::vector<cv::Vec3d> rvecs, tvecs;
@@ -869,7 +874,7 @@ class FirstVision : public jevois::StdModule,
 
       // While we process it, start a thread to wait for output frame and paste the input image into it:
       jevois::RawImage outimg; // main thread should not use outimg until paste thread is complete
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", outimg.width, h + 50, inimg.fmt);
 	  if (outimg.width != w && outimg.width != w * 2) LFATAL("Output image width should be 1x or 2x input width");
@@ -893,7 +898,7 @@ class FirstVision : public jevois::StdModule,
       // Launch our workers: run nthreads-1 new threads, and last worker in our current thread:
       std::vector<std::future<void> > dfut;
       for (size_t i = 0; i < nthreads - 1; ++i)
-        dfut.push_back(std::async(std::launch::async, [&](size_t tn) { detect(imghsv, tn, 3, h+2, &outimg); }, i));
+        dfut.push_back(jevois::async([&](size_t tn) { detect(imghsv, tn, 3, h+2, &outimg); }, i));
       detect(imghsv, nthreads - 1, 3, h+2, &outimg);
       
       // Wait for all threads to complete:
@@ -909,7 +914,7 @@ class FirstVision : public jevois::StdModule,
       cleanupDetections();
 
       // Learn the object's HSV value over time:
-      auto learn_fut = std::async(std::launch::async, [&]() { learnHSV(nthreads, imgbgr, &outimg); });
+      auto learn_fut = jevois::async([&]() { learnHSV(nthreads, imgbgr, &outimg); });
 
       // Map to 6D (inverse perspective):
       std::vector<std::vector<cv::Point2f> > corners; std::vector<cv::Vec3d> rvecs, tvecs;

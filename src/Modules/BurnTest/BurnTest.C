@@ -135,7 +135,7 @@ class BurnTest : public jevois::Module
       else { itsSaliency->centermin::set(2); itsSaliency->smscale::set(4); }
 
       // Launch the saliency computation in a thread:
-      auto sal_fut = std::async(std::launch::async, [&](){ itsSaliency->process(inimg, true); });
+      auto sal_fut = jevois::async([&](){ itsSaliency->process(inimg, true); });
       
       // While computing, wait for an image from our gadget driver into which we will put our results:
       jevois::RawImage outimg = outframe.get();
@@ -164,7 +164,7 @@ class BurnTest : public jevois::Module
 
         // then load the GPU
         itsGrayImg = jevois::rawimage::convertToCvGray(inimg);
-        itsGPUfut = std::async(std::launch::async, [&](unsigned int ww, unsigned int hh) {
+        itsGPUfut = jevois::async([&](unsigned int ww, unsigned int hh) {
             cv::Mat gpuout(hh, ww, CV_8UC4);
             while (itsRunning.load()) itsFilter->process(itsGrayImg, gpuout);
           }, w, h);
@@ -172,7 +172,7 @@ class BurnTest : public jevois::Module
         // and load NEON too
         itsRGBAimg = jevois::rawimage::convertToCvRGBA(inimg);
 
-        itsNEONfut = std::async(std::launch::async, [&](unsigned int ww, unsigned int hh) {
+        itsNEONfut = jevois::async([&](unsigned int ww, unsigned int hh) {
             cv::Mat neonresult(hh, ww, CV_8UC4);
             ne10_size_t src_size { ww, hh }, kernel_size { 5, 5 };
             while (itsRunning.load())
@@ -213,7 +213,7 @@ class BurnTest : public jevois::Module
 
       // Asynchronously launch a bunch of saliency drawings and filter the attended locations
       auto draw_fut =
-        std::async(std::launch::async, [&]() {
+        jevois::async([&]() {
             // Filter the attended locations:
             itsKF->set(dmx, dmy, w, h);
             float kfxraw, kfyraw, kfximg, kfyimg;

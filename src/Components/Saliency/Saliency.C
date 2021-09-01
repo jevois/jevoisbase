@@ -261,7 +261,7 @@ void Saliency::process(cv::Mat const & input, bool do_gist)
   // We can get the color channel started right away:
   std::future<void> colorfut;
   if (envp.chan_c_weight > 0)
-    colorfut = std::async(std::launch::async, [&](){
+    colorfut = jevois::async([&](){
         env_chan_color("color", &envp, &imath, inpixels, dims, statfunc, statdata, &color);
         combine_output(&color, envp.chan_c_weight * (1<<WEIGHT_SCALEBITS) / total_weight, &salmap);
       });
@@ -280,21 +280,21 @@ void Saliency::process(cv::Mat const & input, bool do_gist)
   // Now parallelize the other channels:
   std::future<void> motfut;
   if (envp.chan_m_weight > 0)
-    motfut = std::async(std::launch::async, [&](){
+    motfut = jevois::async([&](){
         env_mt_motion_channel_input(&motion_chan, "motion", bwimg.dims, &lowpass5, statfunc, statdata, &motion);
         combine_output(&motion, envp.chan_m_weight * (1<<WEIGHT_SCALEBITS) / total_weight, &salmap);
       });
 
   std::future<void> orifut;
   if (envp.chan_o_weight > 0)
-    orifut = std::async(std::launch::async, [&](){
+    orifut = jevois::async([&](){
         env_mt_chan_orientation("orientation", &bwimg, statfunc, statdata, &ori);
         combine_output(&ori, envp.chan_o_weight * (1<<WEIGHT_SCALEBITS) / total_weight, &salmap);
       });
   
   std::future<void> flickfut;
   if (envp.chan_f_weight > 0)
-    flickfut = std::async(std::launch::async, [&](){
+    flickfut = jevois::async([&](){
         if (envp.multiscale_flicker)
           env_chan_msflicker("flicker", &envp, &imath, bwimg.dims, &prev_lowpass5, &lowpass5,
                              statfunc, statdata, &flicker);
@@ -315,10 +315,10 @@ void Saliency::process(cv::Mat const & input, bool do_gist)
   }
 
   // Wait for all channels to finish up:
-  if (colorfut.valid()) colorfut.get();
-  if (orifut.valid()) orifut.get();
-  if (flickfut.valid()) flickfut.get();
-  if (motfut.valid()) motfut.get();
+  JEVOIS_WAIT_GET_FUTURE(colorfut);
+  JEVOIS_WAIT_GET_FUTURE(orifut);
+  JEVOIS_WAIT_GET_FUTURE(flickfut);
+  JEVOIS_WAIT_GET_FUTURE(motfut);
 
   // Cleanup and get ready for next frame:
   if (!envp.multiscale_flicker) env_img_swap(&prev_input, &bwimg); else env_img_make_empty(&prev_input);
@@ -363,7 +363,7 @@ void Saliency::process(jevois::RawImage const & input, bool do_gist)
   intg32 * bypix = env_img_pixelsw(&byimg);
   intg32 * bwpix = env_img_pixelsw(&bwimg);
   for (int i = 0; i < nthreads-1; ++i)
-    rgbyfut.push_back(std::async(std::launch::async, [&](int ii) {    
+    rgbyfut.push_back(jevois::async([&](int ii) {    
           int offset = dims.w * hh * ii;
           convertYUYVtoRGBYL(dims.w, hh, inpix + offset*2, rgpix + offset, bypix + offset, bwpix + offset,
                              lumthresh, imath.nbits);
@@ -395,7 +395,7 @@ void Saliency::process(jevois::RawImage const & input, bool do_gist)
   // Launch RG and BY in threads:
   if (envp.chan_c_weight > 0)
   {
-    rgfut = std::async(std::launch::async, [&]() {
+    rgfut = jevois::async([&]() {
           struct env_pyr rgpyr;
           env_pyr_init(&rgpyr, depth);
           env_pyr_build_lowpass_5(&rgimg, firstlevel, &imath, &rgpyr);
@@ -403,7 +403,7 @@ void Saliency::process(jevois::RawImage const & input, bool do_gist)
           env_pyr_make_empty(&rgpyr);
       });
 
-    byfut = std::async(std::launch::async, [&]() {
+    byfut = jevois::async([&]() {
           struct env_pyr bypyr;
           env_pyr_init(&bypyr, depth);
           env_pyr_build_lowpass_5(&byimg, firstlevel, &imath, &bypyr);
@@ -421,21 +421,21 @@ void Saliency::process(jevois::RawImage const & input, bool do_gist)
   // Now parallelize the other channels:
   std::future<void> motfut;
   if (envp.chan_m_weight > 0)
-    motfut = std::async(std::launch::async, [&]() {
+    motfut = jevois::async([&]() {
         env_mt_motion_channel_input(&motion_chan, "motion", bwimg.dims, &lowpass5, statfunc, statdata, &motion);
         combine_output(&motion, envp.chan_m_weight * (1<<WEIGHT_SCALEBITS) / total_weight, &salmap);
       });
 
   std::future<void> orifut;
   if (envp.chan_o_weight > 0)
-    orifut = std::async(std::launch::async, [&]() {
+    orifut = jevois::async([&]() {
         env_mt_chan_orientation("orientation", &bwimg, statfunc, statdata, &ori);
         combine_output(&ori, envp.chan_o_weight * (1<<WEIGHT_SCALEBITS) / total_weight, &salmap);
       });
   
   std::future<void> flickfut;
   if (envp.chan_f_weight > 0)
-    flickfut = std::async(std::launch::async, [&]() {
+    flickfut = jevois::async([&]() {
         if (envp.multiscale_flicker)
           env_chan_msflicker("flicker", &envp, &imath, bwimg.dims, &prev_lowpass5, &lowpass5,
                              statfunc, statdata, &flicker);
@@ -534,7 +534,7 @@ void Saliency::env_mt_chan_orientation(const char* tagName, const struct env_ima
   std::vector<std::future<void> > fut;
   std::mutex mtx;
   for (env_size_t i = 0; i < envp.num_orientations; ++i)
-    fut.push_back(std::async(std::launch::async, [&](env_size_t ii) {
+    fut.push_back(jevois::async([&](env_size_t ii) {
           struct env_image chanOut; env_img_init_empty(&chanOut);
 
           char tagname[17]; memcpy(tagname, buf, 17);
@@ -608,7 +608,7 @@ void Saliency::env_mt_motion_channel_input(struct env_motion_channel* chan, cons
   std::vector<std::future<void> > fut;
   std::mutex mtx;
   for (env_size_t dir = 0; dir < chan->num_directions; ++dir)
-    fut.push_back(std::async(std::launch::async, [&](env_size_t d) {
+    fut.push_back(jevois::async([&](env_size_t d) {
           struct env_image chanOut; env_img_init_empty(&chanOut);
 
           char tagname[17]; memcpy(tagname, buf, 17);

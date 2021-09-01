@@ -18,7 +18,7 @@
 #include <jevoisbase/Components/ARtoolkit/ARtoolkit.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevois/Core/Module.H>
-//using namespace std;
+
 // ##############################################################################################################
 ARtoolkit::~ARtoolkit()
 { }
@@ -28,7 +28,6 @@ void ARtoolkit::postInit()
 {
   // Defer reading camera parameters to first processed frame, so we know the resolution:
   camparams::freeze();
-
 }
 
 // ##############################################################################################################
@@ -74,7 +73,7 @@ void ARtoolkit::manualinit(int w, int h, AR_PIXEL_FORMAT pixformat)
     absolutePath(camparams::get() + std::to_string(w) + 'x' + std::to_string(h) + ".dat");
 
   if (arParamLoad(absolutePath(CPARA_NAME).c_str(), 1, &cparam) < 0)
-    LFATAL("Failed to load camera parameters " << CPARA_NAME);
+    LERROR("Failed to load camera parameters " << CPARA_NAME << " -- IGNORED");
 
   if ((gCparamLT = arParamLTCreate(&cparam, AR_PARAM_LT_DEFAULT_OFFSET)) == nullptr) LFATAL("Error in arParamLTCreate");
 
@@ -197,7 +196,8 @@ void ARtoolkit::detectInternal(unsigned char const * data)
         }
       }
     }
-    // picked up the candidate markerInfo[k], I need to verify the k's confidence level at here  
+
+    // Picked up the candidate markerInfo[k], need to verify confidence level here  
     if (k != -1)
     { 
       arresults result;
@@ -229,7 +229,6 @@ void ARtoolkit::detectInternal(unsigned char const * data)
     }
     else markersSquare[i].valid = FALSE;					
   }
-
 }
 
 // ##############################################################################################################
@@ -254,6 +253,27 @@ void ARtoolkit::drawDetections(jevois::RawImage & outimg, int txtx, int txty)
     jevois::rawimage::writeText(outimg, "Detected " + std::to_string(itsResults.size()) + " ARtoolkit markers.",
                                 txtx, txty, jevois::yuyv::White);
 }
+
+// ##############################################################################################################
+#ifdef JEVOIS_PRO
+void ARtoolkit::drawDetections(jevois::GUIhelper & helper)
+{
+  static ImU32 const col = ImColor(255, 128, 128, 255); // light pink
+  
+  for (arresults const & r : itsResults)
+  {
+    helper.drawCircle(r.p2d[0], r.p2d[1], 3.0F, col, true);
+
+    std::vector<cv::Point2f> p;
+    for (int i = 0; i < 4; ++i) p.emplace_back(cv::Point2f(r.corners[i].x, r.corners[i].y));
+    helper.drawPoly(p, col, true);
+
+    helper.drawText(r.p2d[0]+5, r.p2d[1]+5, ("AR=" + std::to_string(r.id)).c_str(), col);
+  }
+
+  helper.itext("Detected " + std::to_string(itsResults.size()) + " ARtoolkit markers.");
+}
+#endif
 
 // ##############################################################################################################
 void ARtoolkit::sendSerial(jevois::StdModule * mod)

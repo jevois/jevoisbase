@@ -104,10 +104,11 @@ class DemoSaliency : public jevois::StdModule
       // Check whether the input image size is small, in which case we will scale the maps up one notch for the purposes
       // of this demo:
       if (w < 170) { itsSaliency->centermin::set(1); itsSaliency->smscale::set(3); }
-      else { itsSaliency->centermin::set(2); itsSaliency->smscale::set(4); }
-
+      else if (w <= 800) { itsSaliency->centermin::set(2); itsSaliency->smscale::set(4); }
+      else { itsSaliency->centermin::set(3); itsSaliency->smscale::set(4); }
+      
       // Launch the saliency computation in a thread:
-      auto sal_fut = std::async(std::launch::async, [&](){ itsSaliency->process(inimg, true); });
+      auto sal_fut = jevois::async([&](){ itsSaliency->process(inimg, true); });
       
       // While computing, wait for an image from our gadget driver into which we will put our results:
       jevois::RawImage outimg = outframe.get();
@@ -145,7 +146,7 @@ class DemoSaliency : public jevois::StdModule
 
       // Asynchronously launch a bunch of saliency drawings and filter the attended locations
       auto draw_fut =
-        std::async(std::launch::async, [&]() {
+        jevois::async([&]() {
             // Filter the attended locations:
             itsKF->set(dmx, dmy, w, h);
             float kfxraw, kfyraw, kfximg, kfyimg;

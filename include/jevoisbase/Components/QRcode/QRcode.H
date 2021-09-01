@@ -18,7 +18,9 @@
 #pragma once
 
 #include <jevois/Component/Component.H>
+#include <jevois/GPU/GUIhelper.H>
 #include <zbar.h>
+
 namespace jevois { class StdModule; }
 
 namespace qrcode
@@ -66,13 +68,18 @@ class QRcode : public jevois::Component,
     //! Draw any markers previously detected by process()
     /*! If txtx,txty are positive, also print a text string there */
     void drawDetections(jevois::RawImage & outimg, int txtx, int txty, zbar::Image & zgray, int w, int h, size_t nshow);
+
+#ifdef JEVOIS_PRO
+    //! Draw any markers previously detected by process()
+    void drawDetections(jevois::GUIhelper & helper, zbar::Image & zgray, int w, int h);
+#endif
     
     //! Send serial messages about our detections
     void sendSerial(jevois::StdModule * mod, zbar::Image & img, unsigned int camw, unsigned int camh);
 
   protected:
     //! Parse symbol config strings when they change
-    void onParamChange(qrcode::symbol const & param, std::string const & newval);
+    void onParamChange(qrcode::symbol const & param, std::string const & newval) override;
     
     std::shared_ptr<zbar::ImageScanner> itsScanner;
 };

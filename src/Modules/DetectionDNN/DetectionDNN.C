@@ -25,7 +25,7 @@
 
 // icon from opencv
 
-static jevois::ParameterCategory const ParamCateg("Darknet YOLO Options");
+static jevois::ParameterCategory const ParamCateg("Detection DNN Options");
 
 //! Enum \relates DetectionDNN
 JEVOIS_DEFINE_ENUM_CLASS(Model, (Custom) (Face) (MobileNetSSDvoc) (MobileNetSSDcoco) (MobileNet2SSDcoco)
@@ -40,18 +40,18 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(model, Model, "Shortcut parameter to load
 
 //! Parameter \relates DetectionDNN
 JEVOIS_DECLARE_PARAMETER(classnames, std::string, "Path to a text file with names of classes to label detected objects",
-                         "/jevois/share/opencv-dnn/detection/opencv_face_detector.classes", ParamCateg);
+                         JEVOIS_SHARE_PATH "/opencv-dnn/detection/opencv_face_detector.classes", ParamCateg);
 
 //! Parameter \relates DetectionDNN
 JEVOIS_DECLARE_PARAMETER(configname, std::string, "Path to a text file that contains network configuration. "
                          "Can have extension .prototxt (Caffe), .pbtxt (TensorFlow), or .cfg (Darknet).",
-                         "/jevois/share/opencv-dnn/detection/opencv_face_detector.prototxt", ParamCateg);
+                         JEVOIS_SHARE_PATH "/opencv-dnn/detection/opencv_face_detector.prototxt", ParamCateg);
 
 //! Parameter \relates DetectionDNN
 JEVOIS_DECLARE_PARAMETER(modelname, std::string, "Path to a binary file of model contains trained weights. "
                          "Can have extension .caffemodel (Caffe), .pb (TensorFlow), .t7 or .net (Torch), "
                          "or .weights (Darknet).",
-                         "/jevois/share/opencv-dnn/detection/opencv_face_detector.caffemodel", ParamCateg);
+                         JEVOIS_SHARE_PATH "/opencv-dnn/detection/opencv_face_detector.caffemodel", ParamCateg);
 
 //! Parameter \relates DetectionDNN
 JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the neural network input layer, or [0 0] "
@@ -77,6 +77,16 @@ JEVOIS_DECLARE_PARAMETER(scale, float, "Value scaling factor applied to input pi
 //! Parameter \relates DetectionDNN
 JEVOIS_DECLARE_PARAMETER(mean, cv::Scalar, "Mean BGR value subtracted from input image",
                          cv::Scalar(127.5F, 127.5F, 127.5F), ParamCateg);
+
+#ifdef JEVOIS_PRO
+//! Enum \relates DetectionDNN
+JEVOIS_DEFINE_ENUM_CLASS(Target, (CPU) (OpenCL) (OpenCL_FP16) );
+
+//! Parameter \relates DetectionDNN
+JEVOIS_DECLARE_PARAMETER(target, Target, "OpenCV compute target to use. Changes will take effect "
+                         "next time you load a different model.",
+                         Target::OpenCL, Target_Values, ParamCateg);
+#endif
 
 //! Detect and recognize multiple objects in scenes using OpenCV Deep Neural Nets (DNN)
 /*! This module runs an object detection deep neural network using the OpenCV DNN library. Detection networks analyze a
@@ -160,7 +170,11 @@ JEVOIS_DECLARE_PARAMETER(mean, cv::Scalar, "Mean BGR value subtracted from input
     \ingroup modules */
 class DetectionDNN : public jevois::StdModule,
                      public jevois::Parameter<model, classnames, configname, modelname, netin,
-                                              thresh, nms, rgb, scale, mean>
+                                              thresh, nms, rgb, scale, mean
+#ifdef JEVOIS_PRO
+                                              , target
+#endif
+                                              >
 {
   public: 
     // ####################################################################################################
@@ -178,7 +192,7 @@ class DetectionDNN : public jevois::StdModule,
     // ####################################################################################################
     //! Parameter callback: set the selected model
     // ####################################################################################################
-    void onParamChange(model const & param, Model const & val)
+    void onParamChange(model const & param, Model const & val) override
     {
       // Un-freeze the dependent parameters:
       classnames::unFreeze();
@@ -200,43 +214,43 @@ class DetectionDNN : public jevois::StdModule,
         break;
 
       case Model::Face:
-        classnames::set("/jevois/share/opencv-dnn/detection/opencv_face_detector.classes");
-        modelname::set("/jevois/share/opencv-dnn/detection/opencv_face_detector.caffemodel");
-        configname::set("/jevois/share/opencv-dnn/detection/opencv_face_detector.prototxt");
+        classnames::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/opencv_face_detector.classes");
+        modelname::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/opencv_face_detector.caffemodel");
+        configname::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/opencv_face_detector.prototxt");
         scale::set(1.0F);
         mean::set(cv::Scalar(104.0F, 177.0F, 123.0F));
         rgb::set(false);
         break;
         
       case Model::MobileNetSSDvoc:
-        classnames::set("/jevois/share/darknet/yolo/data/voc.names");
-        modelname::set("/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.caffemodel");
-        configname::set("/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.prototxt");
+        classnames::set(JEVOIS_SHARE_PATH "/darknet/yolo/data/voc.names");
+        modelname::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/MobileNetSSD_deploy.caffemodel");
+        configname::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/MobileNetSSD_deploy.prototxt");
         break;
         
       case Model::MobileNetSSDcoco:
-        classnames::set("/jevois/share/opencv-dnn/detection/coco_tf.names");
-        modelname::set("/jevois/share/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pb");
-        configname::set("/jevois/share/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pbtxt");
+        classnames::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/coco_tf.names");
+        modelname::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pb");
+        configname::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pbtxt");
         nms::set(10.0F);
         break;
 
       case Model::MobileNet2SSDcoco:
-        classnames::set("/jevois/share/opencv-dnn/detection/coco_tf.names");
-        modelname::set("/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pb");
-        configname::set("/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pbtxt");
+        classnames::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/coco_tf.names");
+        modelname::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pb");
+        configname::set(JEVOIS_SHARE_PATH "/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pbtxt");
         break;
         
       case Model::TinyYOLOv3:
-        classnames::set("/jevois/share/darknet/yolo/data/coco.names");
-        modelname::set("/jevois/share/darknet/yolo/weights/yolov3-tiny.weights");
-        configname::set("/jevois/share/darknet/yolo/cfg/yolov3-tiny.cfg");
+        classnames::set(JEVOIS_SHARE_PATH "/darknet/yolo/data/coco.names");
+        modelname::set(JEVOIS_SHARE_PATH "/darknet/yolo/weights/yolov3-tiny.weights");
+        configname::set(JEVOIS_SHARE_PATH "/darknet/yolo/cfg/yolov3-tiny.cfg");
         break;
         
       case Model::TinyYOLOv2:
-        classnames::set("/jevois/share/darknet/yolo/data/voc.names");
-        modelname::set("/jevois/share/darknet/yolo/weights/yolov2-tiny-voc.weights");
-        configname::set("/jevois/share/darknet/yolo/cfg/yolov2-tiny-voc.cfg");
+        classnames::set(JEVOIS_SHARE_PATH "/darknet/yolo/data/voc.names");
+        modelname::set(JEVOIS_SHARE_PATH "/darknet/yolo/weights/yolov2-tiny-voc.weights");
+        configname::set(JEVOIS_SHARE_PATH "/darknet/yolo/cfg/yolov2-tiny-voc.cfg");
         netin::set(cv::Size(320, 240));
       }
 
@@ -269,9 +283,17 @@ class DetectionDNN : public jevois::StdModule,
 
       // Create and load the network:
       itsNet = cv::dnn::readNet(modelname::get(), configname::get());
-      itsNet.setPreferableBackend(cv::dnn::DNN_BACKEND_DEFAULT);
+      itsNet.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+#ifdef JEVOIS_PRO
+      switch(target::get())
+      {
+      case Target::CPU: itsNet.setPreferableTarget(cv::dnn::DNN_TARGET_CPU); break;
+      case Target::OpenCL: itsNet.setPreferableTarget(cv::dnn::DNN_TARGET_OPENCL); break;
+      case Target::OpenCL_FP16: itsNet.setPreferableTarget(cv::dnn::DNN_TARGET_OPENCL_FP16); break;
+      }
+#else
       itsNet.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
-
+#endif
       // Get names of the network's output layers:
       itsOutLayers = itsNet.getUnconnectedOutLayers();
       std::vector<cv::String> layersNames = itsNet.getLayerNames();
@@ -441,7 +463,7 @@ class DetectionDNN : public jevois::StdModule,
 
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w, h + 18, inimg.fmt);
           

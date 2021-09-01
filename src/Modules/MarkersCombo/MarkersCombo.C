@@ -110,7 +110,7 @@ class MarkersCombo : public jevois::StdModule
       cv::Mat cvimg = inframe.getCvGRAY();
 
       // Launch QRcode:
-      auto qr_fut = std::async(std::launch::async, [&]() {
+      auto qr_fut = jevois::async([&]() {
           zbar::Image zgray(cvimg.cols, cvimg.rows, "Y800", cvimg.data, cvimg.total());
           itsQRcode->process(zgray);
           itsQRcode->sendSerial(this, zgray, cvimg.cols, cvimg.rows);
@@ -118,7 +118,7 @@ class MarkersCombo : public jevois::StdModule
         });
 
       // Launch AR toolkit:
-      auto ar_fut = std::async(std::launch::async, [&]() {
+      auto ar_fut = jevois::async([&]() {
           itsARtoolkit->detectMarkers(cvimg);
           itsARtoolkit->sendSerial(this);
         });
@@ -149,7 +149,7 @@ class MarkersCombo : public jevois::StdModule
       // While we process it, start a thread to wait for out frame and paste the input into it. It will hold a unique
       // lock onto mtx. Other threads should attempt a shared_lock onto mtx before they draw into outimg:
       jevois::RawImage outimg; //boost::shared_mutex mtx; boost::unique_lock<boost::shared_mutex> ulck(mtx);
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w, h + 66, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);
@@ -163,7 +163,7 @@ class MarkersCombo : public jevois::StdModule
       cv::Mat cvimg = jevois::rawimage::convertToCvGray(inimg);
 
       // Launch QRcode:
-      auto qr_fut = std::async(std::launch::async, [&]() {
+      auto qr_fut = jevois::async([&]() {
           zbar::Image zgray(cvimg.cols, cvimg.rows, "Y800", cvimg.data, cvimg.total());
           itsQRcode->process(zgray);
           itsQRcode->sendSerial(this, zgray, w, h);
@@ -173,7 +173,7 @@ class MarkersCombo : public jevois::StdModule
         });
 
       // Launch AR toolkit:
-      auto ar_fut = std::async(std::launch::async, [&]() {
+      auto ar_fut = jevois::async([&]() {
           itsARtoolkit->detectMarkers(cvimg);
           itsARtoolkit->sendSerial(this);
           //boost::shared_lock<boost::shared_mutex> _(mtx);
@@ -203,6 +203,74 @@ class MarkersCombo : public jevois::StdModule
       outframe.send();
     }
 
+#ifdef JEVOIS_PRO
+    // ####################################################################################################
+    //! Processing function with GUI output
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+
+      // Start the GUI frame:
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Draw the camera frame:
+      int x = 0, y = 0; unsigned short iw = 0, ih = 0;
+      helper.drawInputFrame("camera", inframe, x, y, iw, ih);
+
+      // Wait for next available camera image:
+      jevois::RawImage const inimg = inframe.getp();
+      unsigned int const w = inimg.width, h = inimg.height;
+      helper.itext("JeVois-Pro ArUco + ARtoolkit + QRcode/Barcode Detection");
+
+      timer.start();
+
+      // Convert the image to grayscale:
+      cv::Mat cvimg = jevois::rawimage::convertToCvGray(inimg);
+
+      // Launch QRcode:
+      zbar::Image zgray(cvimg.cols, cvimg.rows, "Y800", cvimg.data, cvimg.total());
+      auto qr_fut = jevois::async([&]() {
+          itsQRcode->process(zgray);
+          itsQRcode->sendSerial(this, zgray, w, h);
+        });
+
+      // Launch AR toolkit:
+      auto ar_fut = jevois::async([&]() {
+          itsARtoolkit->detectMarkers(cvimg);
+          itsARtoolkit->sendSerial(this);
+        });
+      
+      // Process ArUco in the main thread:
+      std::vector<int> ids; std::vector<std::vector<cv::Point2f> > corners; std::vector<cv::Vec3d> rvecs, tvecs;
+      itsArUco->detectMarkers(cvimg, ids, corners);
+      if (itsArUco->dopose::get() && ids.empty() == false) itsArUco->estimatePoseSingleMarkers(corners, rvecs, tvecs);
+
+      // Show aruco results and send serial:
+      itsArUco->sendSerial(this, ids, corners, w, h, rvecs, tvecs);
+      itsArUco->drawDetections(helper, ids, corners, rvecs, tvecs);
+
+      // Wait for all threads to finish up, draw results:
+      ar_fut.get();
+      itsARtoolkit->drawDetections(helper);
+
+      qr_fut.get();
+      itsQRcode->drawDetections(helper, zgray, w, h);
+      zgray.set_data(nullptr, 0);
+
+      // Let camera know we are done processing the input image:
+      inframe.done();
+
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      helper.iinfo(inframe, fpscpu, winw, winh);
+
+      // Render the image and GUI:
+      helper.endFrame();
+    }
+#endif
+    
     // ####################################################################################################
   protected:
     std::shared_ptr<ArUco> itsArUco;

@@ -1,4 +1,6 @@
-import libjevois as jevois
+import pyjevois
+if pyjevois.pro: import libjevoispro as jevois
+else: import libjevois as jevois
 import cv2 as cv
 import numpy as np
 
@@ -52,13 +54,11 @@ class PyEmotion:
         
         # Load the network if needed:
         if not hasattr(self, 'net'):
-            backend = cv.dnn.DNN_BACKEND_DEFAULT
-            target = cv.dnn.DNN_TARGET_CPU
             self.classes = [ "neutral", "happiness", "surprise", "sadness", "anger", "disgust",
                              "fear", "contempt" ]
             self.model = 'FER+ ONNX'
-            self.net = cv.dnn.readNet('/jevois/share/opencv-dnn/classification/emotion_ferplus.onnx', '')
-            self.net.setPreferableBackend(cv.dnn.DNN_BACKEND_DEFAULT)
+            self.net = cv.dnn.readNet(pyjevois.share + "/opencv-dnn/classification/emotion_ferplus.onnx", '')
+            self.net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
             self.net.setPreferableTarget(cv.dnn.DNN_TARGET_CPU)
                 
         # Get the next frame from the camera sensor:

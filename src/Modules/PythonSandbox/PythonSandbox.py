@@ -1,4 +1,6 @@
-import libjevois as jevois
+import pyjevois
+if pyjevois.pro: import libjevoispro as jevois
+else: import libjevois as jevois
 import cv2
 import numpy as np
 
@@ -72,3 +74,30 @@ class PythonSandbox:
 
         # Convert our OpenCv output image to video output format and send to host over USB:
         outframe.sendCv(outimg)
+
+    # ###################################################################################################
+    ## Process function with GUI output
+    def processGUI(self, inframe, helper):
+        # Start a new display frame, gets its size and also whether mouse/keyboard are idle:
+        idle, winw, winh = helper.startFrame()
+
+        # Draw full-resolution input frame from camera:
+        x, y, w, h = helper.drawInputFrame("c", inframe, False, False)
+        
+        # Get the next camera image (may block until it is captured):
+        #inimg = inframe.getCvBGR()
+        
+        # Start measuring image processing time (NOTE: does not account for input conversion time):
+        self.timer.start()
+
+        # Some drawings:
+        helper.drawCircle(50, 50, 20, 0xffffffff, True)
+        helper.drawRect(100, 100, 300, 200, 0xffffffff, True)
+        
+        # Write frames/s info from our timer:
+        fps = self.timer.stop()
+        helper.iinfo(inframe, fps, winw, winh);
+
+        # End of frame:
+        helper.endFrame()
+        

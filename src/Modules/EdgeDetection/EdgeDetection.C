@@ -17,6 +17,7 @@
 
 #include <jevois/Core/Module.H>
 #include <jevois/Image/RawImageOps.H>
+#include <jevois/Debug/Timer.H>
 
 #include <linux/videodev2.h>
 #include <opencv2/core/core.hpp>
@@ -93,6 +94,49 @@ class EdgeDetection : public jevois::Module,
       // Send the output image with our processing results to the host over USB:
       outframe.send();
     }
+
+#ifdef JEVOIS_PRO
+    // ####################################################################################################
+    //! Processing function with zero-copy and GUI on JeVois-Pro
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+
+      // Start the GUI frame:
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Draw the camera frame:
+      int x = 0, y = 0; unsigned short iw = 0, ih = 0;
+      helper.drawInputFrame("camera", inframe, x, y, iw, ih);
+
+      // Wait for next available camera image:
+      jevois::RawImage const inimg = inframe.getp();
+      unsigned int const w = inimg.width, h = inimg.height;
+      helper.itext("JeVois-Pro Edge Detection");
+     
+      timer.start();
+
+      // Convert the image to grayscale and process:
+      cv::Mat grayimg = jevois::rawimage::convertToCvGray(inimg), edges;
+      cv::Canny(grayimg, edges, thresh1::get(), thresh2::get(), aperture::get(), l2grad::get());
+
+      // Convert to RGBA, with zero alpha (transparent) in background and full alpha on edges:
+      cv::Mat chans[4] { edges, edges, edges, edges };
+      cv::Mat mask; cv::merge(chans, 4, mask);
+      
+      // Draw overlay:
+      helper.drawImage("edges", mask, true, x, y, iw, ih, false /* noalias */, true /* isoverlay */);
+
+      // Show processing fps:
+      std::string const & fpscpu = timer.stop();
+      helper.iinfo(inframe, fpscpu, winw, winh);
+      
+      // Render the image and GUI:
+      helper.endFrame();
+    }
+#endif
 };
 
 // Allow the module to be loaded as a shared object (.so) file:

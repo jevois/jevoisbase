@@ -54,7 +54,10 @@ TensorFlow::TensorFlow(std::string const & instance) :
 
 // ####################################################################################################
 TensorFlow::~TensorFlow()
-{ }
+{
+  // Wait until any loading is complete:
+  JEVOIS_WAIT_GET_FUTURE(itsReadyFut);
+}
 
 // ####################################################################################################
 void TensorFlow::onParamChange(tflow::netdir const & param, std::string const & newval)
@@ -147,26 +150,27 @@ void TensorFlow::loadNet()
 
   // Since loading big networks can take a while, do it in a thread so we can keep streaming video in the
   // meantime. itsReady will flip to true when the load is complete.
-  itsReadyFut = std::async(std::launch::async, [&]() {
+  itsReadyFut = jevois::async([&]()
+    {
       if (model)
       {
-	LINFO("Closing model..");
-	model.reset();
-	interpreter.reset();
-	labels.clear();
-	numlabels = 0;
+        LINFO("Closing model..");
+        model.reset();
+        interpreter.reset();
+        labels.clear();
+        numlabels = 0;
       }
-
+      
       std::string root = dataroot::get(); if (root.empty() == false) root += '/';
       std::string const modelfile = absolutePath(root + netdir::get() + "/model.tflite");
       std::string const labelfile = absolutePath(root + netdir::get() + "/labels.txt");
-
+      
       LINFO("Using model from " << modelfile);
       LINFO("Using labels from " << labelfile);
-
+      
       // Load the labels:
       readLabelsFile(labelfile);
-
+      
       // Create the model from flatbuffer file using mmap:
       model = tflite::FlatBufferModel::BuildFromFile(modelfile.c_str(), &itsErrorReporter);
       if (!model) LFATAL("Failed to mmap model " << modelfile);
@@ -176,31 +180,31 @@ void TensorFlow::loadNet()
       tflite::InterpreterBuilder(*model, resolver)(&interpreter);
       if (!interpreter) LFATAL("Failed to construct interpreter");
       //////interpreter->UseNNAPI(s->accel);
-
+      
       LINFO("Tensors size: " << interpreter->tensors_size());
       LINFO("Nodes size: " << interpreter->nodes_size());
       LINFO("inputs: " << interpreter->inputs().size());
       LINFO("input(0) name: " << interpreter->GetInputName(0));
-
+      
       int t_size = interpreter->tensors_size();
       for (int i = 0; i < t_size; ++i)
-	if (interpreter->tensor(i)->name)
-	  LINFO(i << ": " << interpreter->tensor(i)->name << ", "
-		<< interpreter->tensor(i)->bytes << ", "
-		<< interpreter->tensor(i)->type << ", "
-		<< interpreter->tensor(i)->params.scale << ", "
-		<< interpreter->tensor(i)->params.zero_point);
+        if (interpreter->tensor(i)->name)
+          LINFO(i << ": " << interpreter->tensor(i)->name << ", "
+                << interpreter->tensor(i)->bytes << ", "
+                << interpreter->tensor(i)->type << ", "
+                << interpreter->tensor(i)->params.scale << ", "
+                << interpreter->tensor(i)->params.zero_point);
 
       if (threads::get()) interpreter->SetNumThreads(threads::get());
-
+      
       LINFO("input: " << interpreter->inputs()[0]);
       LINFO("number of inputs: " << interpreter->inputs().size());
       LINFO("number of outputs: " << interpreter->outputs().size());
-
+      
       if (interpreter->AllocateTensors() != kTfLiteOk) LFATAL("Failed to allocate tensors");
-
+      
       LINFO("TensorFlow network ready");
-
+      
       // We are ready to rock:
       itsReady.store(true);
     });

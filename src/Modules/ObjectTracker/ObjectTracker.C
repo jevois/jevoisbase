@@ -202,7 +202,7 @@ class ObjectTracker : public jevois::StdModule
 
       // While we process it, start a thread to wait for output frame and paste the input image into it:
       jevois::RawImage outimg; // main thread should not use outimg until paste thread is complete
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", w, h + 14, inimg.fmt);
           jevois::rawimage::paste(inimg, outimg, 0, 0);
@@ -224,7 +224,7 @@ class ObjectTracker : public jevois::StdModule
       inframe.done();
 
       // Draw all detected contours in a thread:
-      std::future<void> draw_fut = std::async(std::launch::async, [&]() {
+      std::future<void> draw_fut = jevois::async([&]() {
 	  // We reinterpret the top portion of our YUYV output image as an opencv 8UC2 image:
 	  cv::Mat outuc2 = jevois::rawimage::cvImage(outimg); // pixel data shared
 	  cv::drawContours(outuc2, contours, -1, jevois::yuyv::LightPink, 2, 8);

@@ -231,7 +231,7 @@ class TensorFlowSingle : public jevois::StdModule
 
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
-      auto paste_fut = std::async(std::launch::async, [&]() {
+      auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", outimg.width, outimg.height, V4L2_PIX_FMT_YUYV);
 
@@ -346,7 +346,7 @@ class TensorFlowSingle : public jevois::StdModule
 	  itsCvImg = jevois::rescaleCv(itsCvImg, cv::Size(netinw, netinh));
 
 	  // Launch the predictions:
-	  itsPredictFut = std::async(std::launch::async, [&]()
+	  itsPredictFut = jevois::async([&]()
 				     { return itsTensorFlow->predict(itsCvImg, itsResults); });
 	}
 	catch (std::logic_error const & e) { itsRawPrevOutputCv.release(); } // network is not ready yet

@@ -14,7 +14,9 @@
 # Tel: +1 213 740 3527 - itti@pollux.usc.edu - http://iLab.usc.edu - http://jevois.org
 ######################################################################################################################
         
-import libjevois as jevois
+import pyjevois
+if pyjevois.pro: import libjevoispro as jevois
+else: import libjevois as jevois
 import cv2
 import numpy as np
 import math # for cos, sin, etc
@@ -106,14 +108,16 @@ class FirstPython:
     # ###################################################################################################
     ## Load camera calibration from JeVois share directory
     def loadCameraCalibration(self, w, h):
-        cpf = "/jevois/share/camera/calibration{}x{}.yaml".format(w, h)
+        cpf = pyjevois.share + "/camera/calibration{}x{}.yaml".format(w, h)
         fs = cv2.FileStorage(cpf, cv2.FILE_STORAGE_READ)
         if (fs.isOpened()):
             self.camMatrix = fs.getNode("camera_matrix").mat()
             self.distCoeffs = fs.getNode("distortion_coefficients").mat()
             jevois.LINFO("Loaded camera calibration from {}".format(cpf))
         else:
-            jevois.LFATAL("Failed to read camera parameters from file [{}]".format(cpf))
+            jevois.LERROR("Failed to read camera parameters from file [{}] -- IGNORED".format(cpf))
+            self.camMatrix = np.eye(3, 3, dtype=double)
+            self.distCoeffs = np.zeros(5, 1, dtype=double)
 
     # ###################################################################################################
     ## Detect objects within our HSV range

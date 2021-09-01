@@ -148,7 +148,7 @@ class JeVoisIntro : public jevois::StdModule
       itsBanner.height = banner_bgr.rows;
       itsBanner.fmt = V4L2_PIX_FMT_YUYV;
       itsBanner.bufindex = 0;
-      itsBanner.buf.reset(new jevois::VideoBuf(-1, itsBanner.bytesize(), 0));
+      itsBanner.buf.reset(new jevois::VideoBuf(-1, itsBanner.bytesize(), 0, -1));
       jevois::rawimage::convertCvBGRtoRawImage(banner_bgr, itsBanner, 100);
 
       // Allow our movie to load a bit:
@@ -167,6 +167,7 @@ class JeVoisIntro : public jevois::StdModule
       static bool intromoviedone = false; // turns true when intro movie complete
       static ScriptItem const * scriptitem = &TheScript[0];
       static int scriptframe = 0;
+      unsigned short const txtcol = jevois::yuyv::White;
       
       // Wait for next available camera image:
       jevois::RawImage inimg = inframe.get();
@@ -177,53 +178,54 @@ class JeVoisIntro : public jevois::StdModule
       itsProcessingTimer.start();
       int const roihw = 32; // face & object roi half width and height
       
-      // Compute saliency, in a thread:
-      auto sal_fut = std::async(std::launch::async, [&](){ itsSaliency->process(inimg, true); });
-      
-      // While computing, wait for an image from our gadget driver into which we will put our results:
-      jevois::RawImage outimg = outframe.get();
-      outimg.require("output", 640, outimg.height, V4L2_PIX_FMT_YUYV);
-      switch (outimg.height)
-      {
-      case 312: break; // normal mode
-      case 360:
-      case 480: intromode = true; break; // intro mode
-      default: LFATAL("Incorrect output height: should be 312, 360 or 480");
-      }
+      // In a thread, wait for an image from our gadget driver into which we will put our results:
+      jevois::RawImage outimg;
+      auto paste_fut =
+        jevois::async([&]()
+           {
+             outimg = outframe.get();
+             outimg.require("output", 640, outimg.height, V4L2_PIX_FMT_YUYV);
+             switch (outimg.height)
+             {
+             case 312: break; // normal mode
+             case 360:
+             case 480: intromode = true; break; // intro mode
+             default: LFATAL("Incorrect output height: should be 312, 360 or 480");
+             }
 
-      // Play the intro movie first if requested:
-      if (intromode && intromoviedone == false)
-      {
-        cv::Mat m = itsVideo->get();
+             // Play the intro movie first if requested:
+             if (intromode && intromoviedone == false)
+             {
+               cv::Mat m = itsVideo->get();
+               
+               if (m.empty()) intromoviedone = true;
+               else
+               {
+                 jevois::rawimage::convertCvBGRtoRawImage(m, outimg, 75);
+                 
+                 // Handle bottom of the frame: blank or banner
+                 if (outimg.height == 480)
+                   jevois::rawimage::paste(itsBanner, outimg, 0, 360);
+                 else if (outimg.height > 360)
+                   jevois::rawimage::drawFilledRect(outimg, 0, 360, outimg.width, outimg.height - 360, 0x8000);
+                 
+                 // If on a mac with height = 480, need to flip horizontally for photobooth to work (will flip again):
+                 if (outimg.height == 480) jevois::rawimage::hFlipYUYV(outimg);
+               }
+             }
+             else
+             {
+               // Paste the original image to the top-left corner of the display:
+               jevois::rawimage::paste(inimg, outimg, 0, 0);
+               jevois::rawimage::writeText(outimg, "JeVois Saliency + Gist + Faces + Objects", 3, 3, txtcol);
+             }               
+           });
 
-        if (m.empty()) intromoviedone = true;
-        else
-        {
-          jevois::rawimage::convertCvBGRtoRawImage(m, outimg, 75);
-
-          // Handle bottom of th eframe: blank or banner
-          if (outimg.height == 480)
-            jevois::rawimage::paste(itsBanner, outimg, 0, 360);
-          else if (outimg.height > 360)
-            jevois::rawimage::drawFilledRect(outimg, 0, 360, outimg.width, outimg.height - 360, 0x8000);
-
-          // If on a mac with height = 480, need to flip horizontally for photobooth to work (it will flip again):
-          if (outimg.height == 480) jevois::rawimage::hFlipYUYV(outimg);
-
-          sal_fut.get(); // yes, we are wasting CPU here, just to keep code more readable with the intro stuff added
-          inframe.done();
-          outframe.send();
-          return;
-        }
-      }
-      
-      // Paste the original image to the top-left corner of the display:
-      unsigned short const txtcol = jevois::yuyv::White;
-      jevois::rawimage::paste(inimg, outimg, 0, 0);
-      jevois::rawimage::writeText(outimg, "JeVois Saliency + Gist + Faces + Objects", 3, 3, txtcol);
-      
-      // Wait until saliency computation is complete:
-      sal_fut.get();
+      // Compute saliency:
+      itsSaliency->process(inimg, true);
+      paste_fut.get();
+      inframe.done();
+      if (intromode && intromoviedone == false) { outframe.send(); return; }
       
       // find most salient point:
       int mx, my; intg32 msal;
@@ -241,7 +243,7 @@ class JeVoisIntro : public jevois::StdModule
       
       // Asynchronously launch a bunch of saliency drawings and filter the attended locations
       auto draw_fut =
-        std::async(std::launch::async, [&]() {
+        jevois::async([&]() {
             // Paste the various saliency results:
             drawMap(outimg, &itsSaliency->salmap, 320, 0, 16, 20);
             jevois::rawimage::writeText(outimg, "Saliency Map", 640 - 12*6-4, 3, txtcol);

@@ -1,4 +1,6 @@
-import libjevois as jevois
+import pyjevois
+if pyjevois.pro: import libjevoispro as jevois
+else: import libjevois as jevois
 import cv2 as cv
 import numpy as np
 import sys
@@ -77,39 +79,39 @@ class PyDetectionDNN:
         #model = 'YOLOv2'           # Darknet Tiny YOLO v2 trained on Pascal VOC (20 object classes), Darknet model
 
         # You should not have to edit anything beyond this point.
-        backend = cv.dnn.DNN_BACKEND_DEFAULT
+        backend = cv.dnn.DNN_BACKEND_OPENCV
         target = cv.dnn.DNN_TARGET_CPU
         self.classes = None
         classnames = None
         if (model == 'MobileNetSSD'):
-            classnames = '/jevois/share/darknet/yolo/data/voc.names'
-            modelname = '/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.caffemodel'
-            configname = '/jevois/share/opencv-dnn/detection/MobileNetSSD_deploy.prototxt'
+            classnames = pyjevois.share + '/darknet/yolo/data/voc.names'
+            modelname = pyjevois.share + '/opencv-dnn/detection/MobileNetSSD_deploy.caffemodel'
+            configname = pyjevois.share + '/opencv-dnn/detection/MobileNetSSD_deploy.prototxt'
             self.rgb = False
         elif (model == 'MobileNetV2SSD'):
-            classnames = '/jevois/share/darknet/yolo/data/coco.names'
-            modelname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pb'
-            configname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pbtxt'
+            classnames = pyjevois.share + '/darknet/yolo/data/coco.names'
+            modelname = pyjevois.share + '/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pb'
+            configname = pyjevois.share + '/opencv-dnn/detection/ssd_mobilenet_v2_coco_2018_03_29.pbtxt'
         elif (model == 'MobileNetSSDcoco'):
-            classnames = '/jevois/share/darknet/yolo/data/coco.names'
-            modelname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pb'
-            configname = '/jevois/share/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pbtxt'
+            classnames = pyjevois.share + '/darknet/yolo/data/coco.names'
+            modelname = pyjevois.share + '/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pb'
+            configname = pyjevois.share + '/opencv-dnn/detection/ssd_mobilenet_v1_coco_2017_11_17.pbtxt'
             self.rgb = False
             self.nmsThreshold = 0.1
         elif (model == 'YOLOv3'):
-            classnames = '/jevois/share/darknet/yolo/data/coco.names'
-            modelname = '/jevois/share/darknet/yolo/weights/yolov3-tiny.weights'
-            configname = '/jevois/share/darknet/yolo/cfg/yolov3-tiny.cfg'
+            classnames = pyjevois.share + '/darknet/yolo/data/coco.names'
+            modelname = pyjevois.share + '/darknet/yolo/weights/yolov3-tiny.weights'
+            configname = pyjevois.share + '/darknet/yolo/cfg/yolov3-tiny.cfg'
         elif (model == 'YOLOv2'):
-            classnames = '/jevois/share/darknet/yolo/data/voc.names'
-            modelname = '/jevois/share/darknet/yolo/weights/yolov2-tiny-voc.weights'
-            configname = '/jevois/share/darknet/yolo/cfg/yolov2-tiny-voc.cfg'
+            classnames = pyjevois.share + '/darknet/yolo/data/voc.names'
+            modelname = pyjevois.share + '/darknet/yolo/weights/yolov2-tiny-voc.weights'
+            configname = pyjevois.share + '/darknet/yolo/cfg/yolov2-tiny-voc.cfg'
             self.inpWidth = 320
             self.inpHeight = 240
         else:
-            classnames = '/jevois/share/opencv-dnn/detection/opencv_face_detector.classes'
-            modelname = '/jevois/share/opencv-dnn/detection/opencv_face_detector.caffemodel'
-            configname = '/jevois/share/opencv-dnn/detection/opencv_face_detector.prototxt'
+            classnames = pyjevois.share + '/opencv-dnn/detection/opencv_face_detector.classes'
+            modelname = pyjevois.share + '/opencv-dnn/detection/opencv_face_detector.caffemodel'
+            configname = pyjevois.share + '/opencv-dnn/detection/opencv_face_detector.prototxt'
             self.scale = 1.0
             self.mean = [104.0, 177.0, 123.0]
             self.rgb = False

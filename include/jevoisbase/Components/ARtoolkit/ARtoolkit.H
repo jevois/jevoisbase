@@ -19,6 +19,8 @@
 
 #include <jevois/Component/Component.H>
 #include <jevois/Types/Enum.H>
+#include <jevois/GPU/GUIhelper.H>
+
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
@@ -43,7 +45,7 @@ namespace artoolkit
                            "here and running the camera sensor at 320x240 will attempt to load "
                            "camera_para320x240.dat from within the module's directory (if relative stem) or "
                            "from the specified absolute location (if absolute stem).",
-                           "/jevois/share/camera/camera_para", ParamCateg);
+                           JEVOIS_SHARE_PATH "/camera/camera_para", ParamCateg);
 
   //! Parameter \relates ARtoolkit
   JEVOIS_DECLARE_PARAMETER(contpose, bool, "Use continuous pose estimation in good quality video",
@@ -89,16 +91,15 @@ class ARtoolkit : public jevois::Component,
 				  public jevois::Parameter<artoolkit::camparams, artoolkit::contpose, artoolkit::dictionary,
                                            artoolkit::msg3d, artoolkit::confthresh, artoolkit::threshmode>
 {
-	public:
-
+  public:
 	//! Constructor
 	using jevois::Component::Component;
-
+    
     //! Core initialization
     /*! Note that initialization is only partial and will complete once the frame size and format is known at the first
         call to detectMarkers() */
     void postInit() override;
-
+    
     // Un-init in preparation for destruction
     void postUninit() override;
     
@@ -116,6 +117,12 @@ class ARtoolkit : public jevois::Component,
     /*! If txtx,txty are positive, also print a text string there */
     void drawDetections(jevois::RawImage & outimg, int txtx = -1, int txty = -1);
 
+#ifdef JEVOIS_PRO
+    //! Draw any markers previously detected by detectMarkers() using ImGui
+    /*! Detections are drawn to scale on the last image drawn by the helper. */
+    void drawDetections(jevois::GUIhelper & helper);
+#endif
+    
     //! Send serial messages about detections
     /*! The module given should be the owner of this component, we will use it to actually send each serial message
         using some variant of jevois::Module::sendSetial(). */
@@ -133,17 +140,17 @@ class ARtoolkit : public jevois::Component,
     };
 
     std::vector<arresults> itsResults; //!< Results of the last detection round
-
+    
   protected:
     //! Manual initialization which should be run on first frame once its size is known
     /*! pixformat should be AR_PIXEL_FORMAT_BGR, AR_PIXEL_FORMAT_RGB_565, etc */
     void manualinit(int w, int h, AR_PIXEL_FORMAT pixformat);
-
+    
     void detectInternal(unsigned char const * data);
     
 	// some other not important parameters related to the initialization of the ARtoolkit 
-
-	// initilization required
+    
+	// initialization required
 	ARHandle * arHandle = nullptr;
 	ARPattHandle  *arPattHandle;
 	int gARPattDetectionMode;

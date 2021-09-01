@@ -140,7 +140,7 @@ double ObjectMatcher::match(std::vector<cv::KeyPoint> const & keypoints, cv::Mat
     if (percore == 0) break;
     
     size_t const endidx = std::min(startidx + percore, ntrain);
-    fut.push_back(std::async(std::launch::async, [&](size_t cn, size_t mi, size_t ma)
+    fut.push_back(jevois::async([&](size_t cn, size_t mi, size_t ma)
                              { return this->matchcore(cn, keypoints, descriptors, mi, ma, true); },
                              i, startidx, endidx));
     startidx += percore;
@@ -181,7 +181,7 @@ double ObjectMatcher::match(std::vector<cv::KeyPoint> const & keypoints, cv::Mat
     if (percore == 0) break;
     
     size_t const endidx = std::min(startidx + percore, ntrain);
-    fut.push_back(std::async(std::launch::async, [&](size_t cn, size_t mi, size_t ma)
+    fut.push_back(jevois::async([&](size_t cn, size_t mi, size_t ma)
                              { return this->matchcore(cn, keypoints, descriptors, mi, ma, false); },
                              i, startidx, endidx));
     startidx += percore;
