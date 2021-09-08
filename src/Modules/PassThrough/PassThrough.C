@@ -237,28 +237,28 @@ class PassThrough : public jevois::Module
       
         // Just draw a simple ImGui window that shows fps if we are not idle:
         ImGuiIO & io = ImGui::GetIO();
-        ImGui::Begin("JeVois-Pro PassThrough Module");
-        ImGui::Text("Framerate: %3.2f fps", io.Framerate);
-        ImGui::Text("Video: raw %dx%d aspect=%f, render %dx%d @ %d,%d", imgdebug.width, imgdebug.height,
-                    float(imgdebug.width) / float(imgdebug.height), w, h, x, y);
-        if (inframe.hasScaledImage())
+        if (ImGui::Begin("JeVois-Pro PassThrough Module"))
         {
-          ImGui::Checkbox("Show ISP scaled image", &showscaled);
-          ImGui::SliderInt("Scaled image x", &scaledx, 0, winw);
-          ImGui::SliderInt("Scaled image y", &scaledy, 0, winh);
+          ImGui::Text("Framerate: %3.2f fps", io.Framerate);
+          ImGui::Text("Video: raw %dx%d aspect=%f, render %dx%d @ %d,%d", imgdebug.width, imgdebug.height,
+                      float(imgdebug.width) / float(imgdebug.height), w, h, x, y);
+          if (inframe.hasScaledImage())
+          {
+            ImGui::Checkbox("Show ISP scaled image", &showscaled);
+            ImGui::SliderInt("Scaled image x", &scaledx, 0, winw);
+            ImGui::SliderInt("Scaled image y", &scaledy, 0, winh);
+          }
+          
+          ImGui::Checkbox("Use DMABUF", &usedma);
+          ImGui::Checkbox("Test mode", &testmode);
+          if (testmode)
+          {
+            ImGui::Checkbox("Pattern 1", &halt);
+            ImGui::Checkbox("Pattern 2", &valt);
+            ImGui::Checkbox("No aliasing", &noalias);
+          }
         }
-        
-        ImGui::Checkbox("Use DMABUF", &usedma);
-        ImGui::Checkbox("Test mode", &testmode);
-        if (testmode)
-        {
-          ImGui::Checkbox("Pattern 1", &halt);
-          ImGui::Checkbox("Pattern 2", &valt);
-          ImGui::Checkbox("No aliasing", &noalias);
-        }
-
         ImGui::End();
-
 
         // To draw things on top of input video and on top of ImGui windows, use ImGui global foregound draw list:
         auto dlf = ImGui::GetForegroundDrawList();

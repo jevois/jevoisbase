@@ -313,8 +313,8 @@ class SaveVideo : public jevois::Module,
         if (itsSaving.load()) ImGui::Text("Recording...");
         else if (n) ImGui::Text("Saving queued frames...");
         else ImGui::Text("Ready to record");
-        ImGui::End();
       }
+      ImGui::End();
       
       timer.start();
 

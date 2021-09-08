@@ -271,8 +271,8 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac, mfac
         ImGui::PlotLines("##MagnY", my, count, 0, "Magn Y", -100, 100);
         ImGui::PlotLines("##MagnZ", mz, count, 0, "Magn Z", -100, 100);
         ImGui::PopItemWidth();
-        ImGui::End();
       }
+      ImGui::End();
         
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
