@@ -8,7 +8,7 @@ if [ `grep -c JeVois /proc/cpuinfo` -gt 0 ]; then ncpu=4; fi
 ./Contrib/check.sh
 
 # Build everything:
-/bin/rm -rf phbuild \
+sudo /bin/rm -rf phbuild \
     && mkdir phbuild \
     && cd phbuild \
     && cmake "$@" -DJEVOIS_HARDWARE=PRO .. \
