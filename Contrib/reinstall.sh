@@ -6,6 +6,12 @@
 # this reinstall script:
 release=`cat RELEASE`
 
+# Get the current jevoisbase version from CMakeLists.txt
+# CAUTION: This is very brittle and requires this exact format in jevoisbase/CMakeLists.txt:
+#   set(JEVOISBASE_SOVERSION "1.16.0")
+sdir="$( dirname "${BASH_SOURCE[0]}" )"
+jvbver=`grep JEVOISBASE_SOVERSION "${sdir}/../CMakeLists.txt | head -1 | awk -F '"' '{ print $2 }'`
+
 ###################################################################################################
 function get_github # owner, repo, revision
 {
@@ -118,7 +124,7 @@ if [ "X$REPLY" = "Xy" ]; then
     echo $release > .installed
 fi
 
-
+cd ..
 ###################################################################################################
 if [ "x$1" = "x-y" ]; then
     REPLY="y";
@@ -128,10 +134,9 @@ fi
 
 
 if [ "X$REPLY" = "Xy" ]; then
-    cd ../share
-    wget http://jevois.org/data/contrib-data-jevois.tbz
-    tar jxvf contrib-data-jevois.tbz
-    /bin/rm contrib-data-jevois.tbz
+    wget http://jevois.org/data/contrib-data-jevois-${jvbver}.tbz
+    tar jxvf contrib-data-jevois-${jvbver}.tbz
+    /bin/rm contrib-data-jevois-${jvbver}.tbz
 fi
 
 ###################################################################################################
@@ -143,8 +148,7 @@ fi
 
 
 if [ "X$REPLY" = "Xy" ]; then
-    cd ../share
-    wget http://jevois.org/data/contrib-data-jevoispro.tbz
-    tar jxvf contrib-data-jevoispro.tbz
-    /bin/rm contrib-data-jevoispro.tbz
+    wget http://jevois.org/data/contrib-data-jevoispro-${jvbver}.tbz
+    tar jxvf contrib-data-jevoispro-${jvbver}.tbz
+    /bin/rm contrib-data-jevoispro-${jvbver}.tbz
 fi

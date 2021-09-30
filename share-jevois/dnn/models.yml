@@ -61,7 +61,7 @@ SqueezeNet:
   mean: "0 0 0"
   scale: 1.0
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "opencv-dnn/classification/imagenet_labels.txt"
   classoffset: 1
 
 # Inception V3 on CPU:
@@ -69,10 +69,10 @@ Inception-V3:
   preproc: Blob
   nettype: OpenCV
   postproc: Classify
-  model: "openvino/classification/inception-v3/inception_v3_2016_08_28_frozen.pb"
+  model: "opencv-dnn/classification/inception_v3_2016_08_28_frozen.pb"
   intensors: "NCHW:32F:1x3x299x299"
   rgb: false
-  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+  classes: "opencv-dnn/classification/imagenet_slim_labels.txt"
 
 # Googlenet from https://github.com/BVLC/caffe/tree/master/models/bvlc_googlenet on CPU
 GoogleNet:
@@ -85,7 +85,7 @@ GoogleNet:
   mean: "104.0 117.0 123.0"
   scale: 1.0
   rgb: false
-  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+  classes: "opencv-dnn/classification/imagenet_slim_labels.txt"
   classoffset: 1
 
 ####################################################################################################
