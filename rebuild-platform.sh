@@ -12,10 +12,6 @@ if [ "X$1" = "X--staging" ]; then extra="-DJEVOIS_MODULES_TO_STAGING=ON"; shift;
 if [ "X$1" = "X--microsd" ]; then extra="-DJEVOIS_MODULES_TO_MICROSD=ON"; shift; fi
 if [ "X$1" = "X--live" ]; then extra="-DJEVOIS_MODULES_TO_LIVE=ON"; shift; fi
 
-# On ARM hosts like Raspberry Pi3, we will likely run out of memory if attempting more than 1 compilation thread:
-ncpu=`cat /proc/cpuinfo |grep processor|wc -l`
-if [ `cat /proc/cpuinfo | grep ARM | wc -l` -gt 0 ]; then ncpu=1; fi
-
 # Get the external contributed packages if they are not here or are outdated:
 ./Contrib/check.sh
 
@@ -30,6 +26,6 @@ sudo /bin/rm -rf pbuild \
     && mkdir pbuild \
     && cd pbuild \
     && cmake "${extra} $@" -DJEVOIS_PLATFORM=ON .. \
-    && make -j ${ncpu} \
+    && make -j \
     && sudo make install
 

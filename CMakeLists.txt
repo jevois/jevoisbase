@@ -455,8 +455,8 @@ target_link_libraries(${JEVOIS}base ${JEVOIS_OPENCV_LIBS} opencv_alphamat opencv
 ########################################################################################################################
 # Install shared resources (cascade classifiers, neural network weights, etc):
 
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/share"
-  DESTINATION "${JEVOIS_MODULES_ROOT}" COMPONENT bin)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/share-${JEVOIS}/"
+  DESTINATION "${JEVOIS_MODULES_ROOT}/share" COMPONENT bin)
 
 ########################################################################################################################
 # Documentation:

@@ -123,13 +123,28 @@ fi
 if [ "x$1" = "x-y" ]; then
     REPLY="y";
 else			   
-    read -p "Do you want to fetch and unpack contributed data [y/N]? "
+    read -p "Do you want to fetch and unpack contributed data for JeVois-A33 [y/N]? "
 fi
 
 
 if [ "X$REPLY" = "Xy" ]; then
     cd ../share
-    wget http://jevois.org/data/contrib-data.tbz
-    tar jxvf contrib-data.tbz
-    /bin/rm contrib-data.tbz
+    wget http://jevois.org/data/contrib-data-jevois.tbz
+    tar jxvf contrib-data-jevois.tbz
+    /bin/rm contrib-data-jevois.tbz
+fi
+
+###################################################################################################
+if [ "x$1" = "x-y" ]; then
+    REPLY="y";
+else			   
+    read -p "Do you want to fetch and unpack contributed data for JeVois-Pro [y/N]? "
+fi
+
+
+if [ "X$REPLY" = "Xy" ]; then
+    cd ../share
+    wget http://jevois.org/data/contrib-data-jevoispro.tbz
+    tar jxvf contrib-data-jevoispro.tbz
+    /bin/rm contrib-data-jevoispro.tbz
 fi

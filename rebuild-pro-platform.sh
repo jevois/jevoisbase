@@ -4,10 +4,6 @@
 # Note: on jevois-pro, we only ever build for staging:
 extra="-DJEVOIS_MODULES_TO_STAGING=ON"
 
-# On JeVoisPro, limit the number of compile threads to not run out of memory:
-ncpu=`grep -c processor /proc/cpuinfo`
-if [ `grep -c JeVois /proc/cpuinfo` -gt 0 ]; then ncpu=4; fi
-
 # Get the external contributed packages if they are not here or are outdated:
 ./Contrib/check.sh
 
@@ -22,6 +18,6 @@ sudo /bin/rm -rf ppbuild \
     && mkdir ppbuild \
     && cd ppbuild \
     && cmake "${extra} $@" -DJEVOIS_HARDWARE=PRO -DJEVOIS_PLATFORM=ON .. \
-    && make -j ${ncpu} \
+    && make -j \
     && sudo make install
 
