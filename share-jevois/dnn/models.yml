@@ -1,0 +1,191 @@
+%YAML 1.0
+---
+
+# Make sure the first entry always works -- add new entries at the end of the file.
+
+# It is ok to have duplicate model names as long as <ACCEL>:<TYPE>:<NAME> is unique, where ACCEL is OpenCV on JeVois-A33
+# and TYPE is one of (Classify:Detect:Segment:Custom).
+
+# For an up to date list of supported keys in this file, see all the parameters defined in:
+#
+# jevois/include/jevois/DNN/PreProcessor*.H
+# jevois/include/jevois/DNN/Network*.H
+# jevois/include/jevois/DNN/PostProcessor*.H
+# jevois/include/jevois/DNN/Pipeline.H
+
+# The parameters are all reset to their default values specified in the above files when a new model is loaded, except
+# for those of Pipeline. So, no need to set these parameters again. For example, in PostProcessor.H, parameter 'nms'
+# (for non-maximum suppression) defaults to 45.0, so no need to repeat that here if that value works for your model. But
+# you can set it here with a different value that may work better for a given model.
+
+# You can (recursively) include additional YAML files here using:
+#
+# include: my_extra_zoo.yml
+#
+# to load /jevoispro/share/dnn/my_extra_zoo.yml, or include all .yml files in a directory as follows:
+
+# Include all YAML files in the /jevoispro/share/dnn/custom/ directory:
+includedir: custom
+
+# Note that you can set global parameters at the beginning of a YAML file, which will be applied, if appropriate, to
+# any pipeline selected. For example, if you put all your OpenCV classification networks in one YAML file, you could set
+# this at tbe beginning:
+#
+# preproc: Blob
+# nettype: OpenCV
+# postproc: Classify
+#
+# and then you do not need to repeat it for every model. Make sure you declare these before any pipeline
+# definition. Note that these apply to the current file only, and they do not combine recursively to/from included
+# files.
+
+# Finally note that our current preferred organization strategy is that custom models should have one directory each
+# under /jevoispro/share/dnn/custom/ that contains their model files, label file, and one model.yml file with a single
+# entry for that model. When organized in that way, the YAML file for each custom model will show up in the GUI as one
+# of the config files you can edit under the "Config" tab.
+
+
+
+####################################################################################################
+# Image classification models.
+####################################################################################################
+
+# SqueezeNet v1.1 from https://github.com/DeepScale/SqueezeNet
+SqueezeNet:
+  preproc: Blob
+  nettype: OpenCV
+  postproc: Classify
+  model: "opencv-dnn/classification/squeezenet_v1.1.caffemodel"
+  config: "opencv-dnn/classification/squeezenet_v1.1.prototxt"
+  intensors: "NCHW:32F:1x3x227x227"
+  mean: "0 0 0"
+  scale: 1.0
+  rgb: false
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+
+# Inception V3 on CPU:
+Inception-V3:
+  preproc: Blob
+  nettype: OpenCV
+  postproc: Classify
+  model: "openvino/classification/inception-v3/inception_v3_2016_08_28_frozen.pb"
+  intensors: "NCHW:32F:1x3x299x299"
+  rgb: false
+  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+
+# Googlenet from https://github.com/BVLC/caffe/tree/master/models/bvlc_googlenet on CPU
+GoogleNet:
+  preproc: Blob
+  nettype: OpenCV
+  postproc: Classify
+  model: "opencv-dnn/classification/bvlc_googlenet.caffemodel"
+  config: "opencv-dnn/classification/bvlc_googlenet.prototxt"
+  intensors: "NCHW:32F:1x3x224x224"
+  mean: "104.0 117.0 123.0"
+  scale: 1.0
+  rgb: false
+  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+  classoffset: 1
+
+####################################################################################################
+# Object detection models.
+####################################################################################################
+
+# YOLO4 object detection family from Darknet (https://github.com/AlexeyAB/darknet)
+# YOLO object detection family from Darknet (https://pjreddie.com/darknet/yolo/)
+# Might be used for all YOLOv2, TinyYolov2, YOLOv3, YOLOv4 and TinyYolov4
+YoloV3-Tiny-Coco:
+  preproc: Blob
+  nettype: OpenCV
+  postproc: Detect
+  detecttype: YOLO
+  model: "darknet/yolo/weights/yolov3-tiny.weights"
+  config: "darknet/yolo/cfg/yolov3-tiny.cfg"
+  intensors: "NCHW:32F:1x3x416x416"
+  mean: "0 0 0"
+  scale: "0.00392"
+  classes: "darknet/yolo/data/coco.names"
+
+YoloV2-Tiny-Voc:
+  preproc: Blob
+  nettype: OpenCV
+  postproc: Detect
+  detecttype: YOLO
+  model: "darknet/yolo/weights/yolov2-tiny-voc.weights"
+  config: "darknet/yolo/cfg/yolov2-tiny-voc.cfg"
+  intensors: "NCHW:32F:1x3x416x416"
+  mean: "0 0 0"
+  scale: "0.00392"
+  classes: "darknet/yolo/data/voc.names"
+
+# OpenCV's face detection network
+OpenCV-Face:
+  preproc: Blob
+  nettype: OpenCV
+  postproc: Detect
+  detecttype: SSD
+  model: "opencv-dnn/detection/opencv_face_detector.caffemodel"
+  config: "opencv-dnn/detection/opencv_face_detector.prototxt"
+  intensors: "NCHW:32F:1x3x300x300"
+  mean: "104 177 123"
+  scale: "1.0"
+  rgb: false
+  scorescale: "1.0"
+  classes: "opencv-dnn/detection/face.txt"
+
+# OpenCV's YOLOv3 on CPU
+YoloV3-CPU:
+  preproc: Blob
+  nettype: OpenCV
+  postproc: Detect
+  detecttype: YOLO
+  model: "darknet/yolo/weights/yolov3.weights"
+  config: "darknet/yolo/cfg/yolov3.cfg"
+  intensors: "NCHW:32F:1x3x416x416"
+  mean: "0 0 0"
+  scale: 0.00392
+  classes: "darknet/yolo/data/coco.names"
+
+# OpenCV's MobileNet-SSD Caffe on CPU
+SSD-Caffe:
+  preproc: Blob
+  nettype: OpenCV
+  postproc: Detect
+  detecttype: SSD
+  model: "opencv-dnn/detection/MobileNetSSD_deploy.caffemodel"
+  config: "opencv-dnn/detection/MobileNetSSD_deploy.prototxt"
+  intensors: "NCHW:32F:1x3x300x300"
+  mean: "127.5 127.5 127.5"
+  scale: 0.007843
+  rgb: false
+  classes: "darknet/yolo/data/voc.names"
+
+####################################################################################################
+# Semantic segmentation models
+####################################################################################################
+
+# FIXME error at l313_torchMaxUnpooling on host
+#ENet-CityScapes:
+#  preproc: Blob
+#  nettype: OpenCV
+#  postproc: Segment
+#  segtype: ArgMax
+#  #model: "opencv-dnn/segmentation/Enet-model-best.net"
+#  model: "opencv-dnn/segmentation/enet-model.net"
+#  #intensors: "NCHW:8U:1x3x512x1024"
+#  intensors: "NCHW:8U:1x3x256x512"
+#  mean: "0 0 0"
+#  scale: 0.00392
+#  classes: "opencv-dnn/segmentation/enet-classes.txt"
+
+DeepLabV3-CPU:
+  preproc: Blob
+  nettype: OpenCV
+  postproc: Segment
+  segtype: Classes2
+  model: "opencv-dnn/segmentation/opt_deeplabv3_mnv2_513.pb"
+  intensors: "NCHW:32F:1x3x513x513"
+  mean: "127.5 127.5 127.5"
+  scale: 0.007843
+
