@@ -10,7 +10,7 @@ release=`cat RELEASE`
 # CAUTION: This is very brittle and requires this exact format in jevoisbase/CMakeLists.txt:
 #   set(JEVOISBASE_SOVERSION "1.16.0")
 sdir="$( dirname "${BASH_SOURCE[0]}" )"
-jvbver=`grep JEVOISBASE_SOVERSION "${sdir}/../CMakeLists.txt | head -1 | awk -F '"' '{ print $2 }'`
+jvbver=`grep JEVOISBASE_SOVERSION "${sdir}/../CMakeLists.txt" | head -1 | awk -F '"' '{ print $2 }'`
 
 ###################################################################################################
 function get_github # owner, repo, revision
