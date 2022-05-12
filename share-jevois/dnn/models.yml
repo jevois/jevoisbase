@@ -65,14 +65,15 @@ SqueezeNet:
   classoffset: 1
 
 # Inception V3 on CPU:
-Inception-V3:
-  preproc: Blob
-  nettype: OpenCV
-  postproc: Classify
-  model: "opencv-dnn/classification/inception_v3_2016_08_28_frozen.pb"
-  intensors: "NCHW:32F:1x3x299x299"
-  rgb: false
-  classes: "opencv-dnn/classification/imagenet_slim_labels.txt"
+# too big for JeVois-A33, runs out of memory...
+#Inception-V3:
+#  preproc: Blob
+#  nettype: OpenCV
+#  postproc: Classify
+#  model: "opencv-dnn/classification/inception_v3_2016_08_28_frozen.pb"
+#  intensors: "NCHW:32F:1x3x299x299"
+#  rgb: false
+#  classes: "opencv-dnn/classification/imagenet_slim_labels.txt"
 
 # Googlenet from https://github.com/BVLC/caffe/tree/master/models/bvlc_googlenet on CPU
 GoogleNet:
@@ -134,18 +135,19 @@ OpenCV-Face:
   scorescale: "1.0"
   classes: "opencv-dnn/detection/face.txt"
 
+# Too big/slow for jevois-a33
 # OpenCV's YOLOv3 on CPU
-YoloV3-CPU:
-  preproc: Blob
-  nettype: OpenCV
-  postproc: Detect
-  detecttype: YOLO
-  model: "darknet/yolo/weights/yolov3.weights"
-  config: "darknet/yolo/cfg/yolov3.cfg"
-  intensors: "NCHW:32F:1x3x416x416"
-  mean: "0 0 0"
-  scale: 0.00392
-  classes: "darknet/yolo/data/coco.names"
+#YoloV3-CPU:
+#  preproc: Blob
+#  nettype: OpenCV
+#  postproc: Detect
+#  detecttype: YOLO
+#  model: "darknet/yolo/weights/yolov3.weights"
+#  config: "darknet/yolo/cfg/yolov3.cfg"
+#  intensors: "NCHW:32F:1x3x416x416"
+#  mean: "0 0 0"
+#  scale: 0.00392
+#  classes: "darknet/yolo/data/coco.names"
 
 # OpenCV's MobileNet-SSD Caffe on CPU
 SSD-Caffe:
@@ -179,13 +181,14 @@ SSD-Caffe:
 #  scale: 0.00392
 #  classes: "opencv-dnn/segmentation/enet-classes.txt"
 
-DeepLabV3-CPU:
-  preproc: Blob
-  nettype: OpenCV
-  postproc: Segment
-  segtype: Classes2
-  model: "opencv-dnn/segmentation/opt_deeplabv3_mnv2_513.pb"
-  intensors: "NCHW:32F:1x3x513x513"
-  mean: "127.5 127.5 127.5"
-  scale: 0.007843
+# too slow for jevois-a33, 6.5s/inference...
+#DeepLabV3-CPU:
+#  preproc: Blob
+#  nettype: OpenCV
+#  postproc: Segment
+#  segtype: Classes2
+#  model: "opencv-dnn/segmentation/opt_deeplabv3_mnv2_513.pb"
+#  intensors: "NCHW:32F:1x3x513x513"
+#  mean: "127.5 127.5 127.5"
+#  scale: 0.007843
 

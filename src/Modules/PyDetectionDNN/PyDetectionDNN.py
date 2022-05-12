@@ -127,12 +127,7 @@ class PyDetectionDNN:
         self.net.setPreferableTarget(target)
         self.timer = jevois.Timer('Neural detection', 10, jevois.LOG_DEBUG)
         self.model = model
-        
-    # ####################################################################################################
-    ## Get names of the network's output layers
-    def getOutputsNames(self, net):
-        layersNames = self.net.getLayerNames()
-        return [layersNames[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+        self.outNames = self.net.getUnconnectedOutLayersNames()
     
     # ####################################################################################################
     ## Analyze and draw boxes, object names, and confidence scores
@@ -226,9 +221,25 @@ class PyDetectionDNN:
             jevois.LERROR('Unknown output layer type: ' + lastLayer.type)
             return
 
-        indices = cv.dnn.NMSBoxes(boxes, confidences, self.confThreshold, self.nmsThreshold)
+        # NMS is used inside Region layer only on DNN_BACKEND_OPENCV for another backends we need NMS in sample
+        # or NMS is required if number of outputs > 1
+        if len(self.outNames) > 1:
+            indices = []
+            classIds = np.array(classIds)
+            boxes = np.array(boxes)
+            confidences = np.array(confidences)
+            unique_classes = set(classIds)
+            for cl in unique_classes:
+                class_indices = np.where(classIds == cl)[0]
+                conf = confidences[class_indices]
+                box  = boxes[class_indices].tolist()
+                nms_indices = cv.dnn.NMSBoxes(box, conf, self.confThreshold, self.nmsThreshold)
+                #nms_indices = nms_indices[:, 0] if len(nms_indices) else []
+                indices.extend(class_indices[nms_indices])
+        else:
+            indices = np.arange(0, len(classIds))
+            
         for i in indices:
-            i = i[0]
             box = boxes[i]
             left = box[0]
             top = box[1]
@@ -253,7 +264,7 @@ class PyDetectionDNN:
         if self.net.getLayer(0).outputNameToIndex('im_info') != -1:  # Faster-RCNN or R-FCN
             frame = cv.resize(frame, (self.inpWidth, self.inpHeight))
             self.net.setInput(np.array([self.inpHeight, self.inpWidth, 1.6], dtype=np.float32), 'im_info')
-        outs = self.net.forward(self.getOutputsNames(self.net))
+        outs = self.net.forward(self.outNames)
         
         self.postprocess(frame, outs)
 
