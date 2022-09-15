@@ -30,7 +30,7 @@ namespace morphologyfilter
 
   //! Parameter \relates MorphologyFilter
   JEVOIS_DECLARE_PARAMETER(op, MorphoOp, "Morphological operation to apply",
-                           MorphoOp::Close, MorphoOp_Values, ParamCateg);
+                           MorphoOp::Gradient, MorphoOp_Values, ParamCateg);
 
   //! Enum \relates MorphologyFilter
   JEVOIS_DEFINE_ENUM_CLASS(KernelShape, (Rectangle) (Cross) (Ellipse) );

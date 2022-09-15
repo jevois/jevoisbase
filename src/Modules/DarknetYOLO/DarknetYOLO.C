@@ -139,7 +139,7 @@ class DarknetYOLO : public jevois::StdModule,
     // ####################################################################################################
     virtual void postUninit() override
     {
-      try { itsPredictFut.get(); } catch (...) { }
+      if (itsPredictFut.valid()) try { itsPredictFut.get(); } catch (...) { }
     }
     
     // ####################################################################################################
@@ -161,12 +161,12 @@ class DarknetYOLO : public jevois::StdModule,
       if (nsz.width != 0 && nsz.height != 0)
       {
         itsYolo->resizeInDims(nsz.width, nsz.height);
-	itsNetInput = jevois::rescaleCv(cvimg, nsz);
+        itsNetInput = jevois::rescaleCv(cvimg, nsz);
       }
       else
       {
         itsYolo->resizeInDims(cvimg.cols, cvimg.rows);
-	itsNetInput = cvimg;
+        itsNetInput = cvimg;
       }
 
       cvimg.release();

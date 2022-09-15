@@ -47,7 +47,7 @@ include_directories("include")
 include_directories("..")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with the current version number:
-set(JEVOISBASE_SOVERSION "1.17.0")
+set(JEVOISBASE_SOVERSION "1.18.0")
 jevois_setup_library(src/Components ${JEVOIS}base ${JEVOISBASE_SOVERSION})
 
 # Check that we are not trying to compile a newer jevoisbase against an older jevois-sdk, which would typically fail:
@@ -442,14 +442,16 @@ endif()
 # Link to OpenCV libraries for superpixels, aruco, and others:
 # From this: ls /usr/share/jevois-opencv-4.*/lib/|grep ".so$"|sed -e s/.so//|sed -e s/^lib//|xargs
 message(STATUS "opencv libs: ${JEVOIS_OPENCV_LIBS}")
-target_link_libraries(${JEVOIS}base ${JEVOIS_OPENCV_LIBS} opencv_alphamat opencv_aruco opencv_bgsegm opencv_bioinspired
-  opencv_calib3d opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dnn_superres
-  opencv_dpm opencv_face opencv_features2d opencv_flann opencv_fuzzy opencv_gapi opencv_hfs opencv_imgcodecs
-  opencv_img_hash opencv_imgproc opencv_intensity_transform opencv_line_descriptor opencv_mcc opencv_ml opencv_objdetect
-  opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot opencv_quality opencv_rapid opencv_reg opencv_saliency
-  opencv_shape opencv_stereo opencv_stitching opencv_structured_light opencv_superres opencv_surface_matching
-  opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_xfeatures2d opencv_ximgproc
-  opencv_xobjdetect opencv_xphoto)
+
+target_link_libraries(${JEVOIS}base ${JEVOIS_OPENCV_LIBS} opencv_alphamat opencv_aruco opencv_barcode opencv_bgsegm
+opencv_bioinspired opencv_calib3d opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn
+opencv_dnn_superres opencv_dpm opencv_face opencv_features2d opencv_flann opencv_fuzzy opencv_gapi opencv_hfs
+opencv_imgcodecs opencv_img_hash opencv_imgproc opencv_intensity_transform opencv_line_descriptor opencv_mcc opencv_ml
+opencv_objdetect opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot opencv_quality opencv_rapid opencv_reg
+opencv_saliency opencv_shape opencv_stereo opencv_stitching opencv_structured_light opencv_superres
+opencv_surface_matching opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_wechat_qrcode
+opencv_xfeatures2d opencv_ximgproc opencv_xobjdetect opencv_xphoto)
+
 # removed: opencv_freetype (not available on platform), opencv_highgui (not needed), opencv_rgbd (not needed)
 
 ########################################################################################################################

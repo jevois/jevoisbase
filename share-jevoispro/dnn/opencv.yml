@@ -1,0 +1,217 @@
+%YAML 1.0
+---
+
+# OpenCV models
+
+# These models run using the OpenCV DNN module. Here, we list models that run on CPU. OpenCV also supports models that
+# run on Myriad-X VPU and on Verisilicon NPU via TIM-VX. Those are listed in the VPU and NPU zoo files.
+
+# outtensors is not required for these models, but intensors is. For some models (e.g., fully convolutional), intensors
+# can be set to various input sizes. Usually, resizing will not work for classification models as most include one or
+# more fully-connected layers, which have fixed size. Note that for RAWYOLO models, resizing the input would also
+# require resizing the anchors.
+
+####################################################################################################
+# Global defaults for all models in this file
+####################################################################################################
+
+preproc: Blob
+nettype: OpenCV
+
+####################################################################################################
+# Image classification models.
+####################################################################################################
+
+postproc: Classify
+
+SqueezeNet:
+  comment: "SqueezeNet v1.1 on CPU"
+  url: "https://github.com/DeepScale/SqueezeNet"
+  mean: "0 0 0"
+  scale: 1.0
+  rgb: false
+  model: "opencv-dnn/classification/squeezenet_v1.1.caffemodel"
+  config: "opencv-dnn/classification/squeezenet_v1.1.prototxt"
+  intensors: "NCHW:32F:1x3x227x227"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+
+# Python version of SqueezeNet v1.1 from https://github.com/DeepScale/SqueezeNet
+SqueezeNet:
+  comment: "Using Python pre/net/post"
+  url: "https://github.com/DeepScale/SqueezeNet"
+  processing: Sync # required if network type is Python and preproc or postproc are Python too
+  preproc: Python
+  pypre: "pydnn/pre/PyPreBlob.py"
+  mean: "0 0 0"
+  scale: 1.0
+  rgb: false
+  nettype: Python
+  pynet: "pydnn/net/PyNetOpenCV.py"
+  model: "opencv-dnn/classification/squeezenet_v1.1.caffemodel"
+  config: "opencv-dnn/classification/squeezenet_v1.1.prototxt"
+  intensors: "NCHW:32F:1x3x227x227"
+  postproc: Python
+  pypost: "pydnn/post/PyPostClassify.py"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+
+Inception-V3:
+  comment: "TensorFlow model"
+  url: "https://keras.io/api/applications/inceptionv3/"
+  rgb: false
+  model: "openvino/classification/inception-v3/inception_v3_2016_08_28_frozen.pb"
+  intensors: "NCHW:32F:1x3x299x299"
+  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+
+GoogleNet:
+  comment: "Caffe model"
+  url: "https://github.com/BVLC/caffe/tree/master/models/bvlc_googlenet"
+  mean: "104.0 117.0 123.0"
+  scale: 1.0
+  rgb: false
+  model: "opencv-dnn/classification/bvlc_googlenet.caffemodel"
+  config: "opencv-dnn/classification/bvlc_googlenet.prototxt"
+  intensors: "NCHW:32F:1x3x224x224"
+  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+  classoffset: 1
+
+ResNet-50-int8:
+  comment: "Quantized int8 on CPU"
+  mean: "123.675 116.280 103.530"
+  stdev: "0.229 0.224 0.225"
+  scale: 0.0039215686
+  rgb: false
+  model: "npu/classification/resnet50-v1-12-int8.onnx"
+  intensors: "NCHW:32F:1x3x224x224"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+  softmax: true
+
+####################################################################################################
+# Object detection models.
+####################################################################################################
+
+postproc: Detect
+
+# YOLO4 object detection family from Darknet (https://github.com/AlexeyAB/darknet)
+# YOLO object detection family from Darknet (https://pjreddie.com/darknet/yolo/)
+# Might be used for all YOLOv2, TinyYolov2, YOLOv3, YOLOv4 and TinyYolov4
+YoloV3-Tiny:
+  comment: "Darknet model, COCO classes"
+  mean: "0 0 0"
+  scale: 0.00392
+  model: "darknet/yolo/weights/yolov3-tiny.weights"
+  config: "darknet/yolo/cfg/yolov3-tiny.cfg"
+  intensors: "NCHW:32F:1x3x416x416"
+  detecttype: YOLO
+  classes: "darknet/yolo/data/coco.names"
+
+YoloV2-Tiny-VOC:
+  comment: "Darknet model, Pascal VOC classes"
+  mean: "0 0 0"
+  scale: 0.00392
+  model: "darknet/yolo/weights/yolov2-tiny-voc.weights"
+  config: "darknet/yolo/cfg/yolov2-tiny-voc.cfg"
+  intensors: "NCHW:32F:1x3x416x416"
+  detecttype: YOLO
+  classes: "darknet/yolo/data/voc.names"
+
+OpenCV-Face:
+  comment: "Face detection, Caffe model"
+  mean: "104 177 123"
+  scale: 1.0
+  rgb: false
+  model: "opencv-dnn/detection/opencv_face_detector.caffemodel"
+  config: "opencv-dnn/detection/opencv_face_detector.prototxt"
+  intensors: "NCHW:32F:1x3x300x300"
+  detecttype: SSD
+  classes: "opencv-dnn/detection/face.txt"
+  classoffset: -1
+  
+YOLOv3:
+  comment: "Darknet model, COCO classes"
+  mean: "0 0 0"
+  scale: 0.00392
+  model: "darknet/yolo/weights/yolov3.weights"
+  config: "darknet/yolo/cfg/yolov3.cfg"
+  intensors: "NCHW:32F:1x3x416x416"
+  detecttype: YOLO
+  classes: "darknet/yolo/data/coco.names"
+
+MobileNet-SSD-VOC:
+  comment: "Caffe model, Pascal VOC classes"
+  mean: "127.5 127.5 127.5"
+  scale: 0.007843
+  rgb: false
+  model: "opencv-dnn/detection/MobileNetSSD_deploy.caffemodel"
+  config: "opencv-dnn/detection/MobileNetSSD_deploy.prototxt"
+  intensors: "NCHW:32F:1x3x300x300"
+  detecttype: SSD
+  classes: "darknet/yolo/data/voc.names"
+  classoffset: 1
+  
+# Works but way too slow...
+# FIXME does not work anymore, squished boxes
+#YOLOv5-COCO:
+#  comment "ONNX model, COCO classes"
+#  detecttype: YOLO
+#  model: "opencv-dnn/detection/yolov5-640x640.onnx"
+#  mean: "127.5 127.5 127.5"
+#  scale: 0.003921
+#  dthresh: 5.0
+#  cthresh: 5.0
+#  intensors: "NCHW:32F:1x3x640x640"
+#  classes: "darknet/yolo/data/coco.names"
+
+YOLOv7-Tiny:
+  comment: "Resized 480x256 ONNX model, COCO classes"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/307_YOLOv7"
+  mean: "0.0 0.0 0.0"
+  scale: 0.003921
+  model: "opencv-dnn/detection/yolov7-tiny_256x480.onnx"
+  intensors: "NCHW:32F:1x3x256x480"
+  detecttype: YOLO
+  dthresh: 10.0
+  cthresh: 10.0
+  classes: "darknet/yolo/data/coco.names"
+
+####################################################################################################
+# Semantic segmentation models
+####################################################################################################
+
+postproc: Segment
+
+ENet-CityScapes:
+  comment: Segments urban scenes into 20 classes"
+  url: "https://arxiv.org/abs/1706.05587"
+  model: "opencv-dnn/segmentation/enet-model.net"
+  intensors: "NCHW:8U:1x3x256x512"
+  mean: "0 0 0"
+  scale: 0.00392
+  segtype: ClassesCHW
+  #classes: "opencv-dnn/segmentation/enet-classes.txt"
+
+DeepLabV3-CPU:
+  comment: "Human detector"
+  url: "https://arxiv.org/abs/1706.05587"
+  mean: "127.5 127.5 127.5"
+  scale: 0.007843
+  model: "opencv-dnn/segmentation/opt_deeplabv3_mnv2_513.pb"
+  intensors: "NCHW:32F:1x3x513x513"
+  segtype: ClassesCHW
+
+####################################################################################################
+# Other models
+####################################################################################################
+
+YuNet-Face-512x288:
+  comment: "Face + landmarks, int8 on CPU"
+  url: "https://github.com/opencv/opencv_zoo/tree/master/models/face_detection_yunet"
+  nettype: OpenCV
+  postproc: YuNet
+  nms: 30.0
+  dthresh: 90.0
+  cthresh: 90.0
+  model: "npu/detection/yunet_int8.onnx"
+  intensors: "NCHW:8U:1x3x288x512"

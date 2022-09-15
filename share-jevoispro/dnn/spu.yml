@@ -1,0 +1,169 @@
+%YAML 1.0
+---
+
+# Hailo Stream Processing Unit (SPU) models
+
+# These models run on the optional Hailo8 M.2 SPU board. Note that we do not need to specify input and output tensors,
+# as those specifications are embedded in the model's HEF file.
+
+####################################################################################################
+# Global defaults for all models in this file
+####################################################################################################
+
+preproc: Blob
+scale: 1.0
+mean: "0 0 0"
+nettype: SPU
+
+####################################################################################################
+# Image classification models.
+####################################################################################################
+
+postproc: Classify
+comment: "Demo model from Hailo"
+url: "https://hailo.ai/devzone-model-zoo/segmentation/"
+
+ResNext-50-32x4d:
+  comment: "Demo model from Hailo"
+  url: "https://hailo.ai/devzone-model-zoo/segmentation/"
+  model: "hailo/classification/resnext50_32x4d.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+  softmax: true
+
+EfficientNet-Large:
+  model: "hailo/classification/efficientnet_l.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+
+EfficientNet-Medium:
+  model: "hailo/classification/efficientnet_m.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+
+EfficientNet-Small:
+  mean: "127.5 127.5 127.5"
+  scale: 0.0039215686
+  model: "hailo/classification/efficientnet_s.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  
+EfficientNet-Lite4:
+  model: "hailo/classification/efficientnet_lite4.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+
+Hardnet68:
+  model: "hailo/classification/hardnet68.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+  softmax: true
+  
+Inception-v1:
+  model: "hailo/classification/inception_v1.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  
+MobileNetV3:
+  model: "hailo/classification/mobilenet_v3.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  
+ResNet-V1-50:
+  postproc: Classify
+  model: "hailo/classification/resnet_v1_50.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+  
+ResNet-V2-34:
+  model: "hailo/classification/resnet_v2_34.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+  softmax: true
+  
+SqueezeNet:
+  model: "hailo/classification/squeezenet_v1.1.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+
+####################################################################################################
+# Object detection models.
+####################################################################################################
+
+postproc: Detect
+comment: "Demo model from Hailo"
+url: "https://hailo.ai/devzone-model-zoo/object-detection/"
+
+YOLOv5m:
+  detecttype: RAWYOLO
+  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
+  scale: 1.0
+  model: "hailo/detection/yolov5m_wo_spp_60p.hef"
+  classes: "darknet/yolo/data/coco.names"
+  scalexy: 2.0
+  sigmoid: false
+
+YOLOv3-tiny:
+  detecttype: RAWYOLO
+  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
+  model: "hailo/detection/tiny_yolov3.hef"
+  classes: "darknet/yolo/data/coco.names"
+
+# This network was converted to output 8 tensors, which our post-processor cannot handle
+# Try to re-convert but keep the usual 3 YOLO outputs
+#YOLOv4-tiny:
+#  detecttype: RAWYOLO
+#  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
+#  model: "hailo/detection/tiny_yolov4.hef"
+#  classes: "darknet/yolo/data/coco.names"
+
+# This network was converted to output 8 tensors, which our post-processor cannot handle
+# Try to re-convert but keep the usual 3 YOLO outputs
+#YOLOv3-416:
+#  detecttype: RAWYOLO
+#  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
+#  model: "hailo/detection/yolov3_gluon_416.hef"
+#  classes: "darknet/yolo/data/coco.names"
+
+YOLOv5s:
+  detecttype: RAWYOLO
+  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
+  model: "hailo/detection/yolov5s_wo_spp.hef"
+  classes: "darknet/yolo/data/coco.names"
+  scalexy: 2.0
+  sigmoid: false
+
+YOLOv5xs:
+  detecttype: RAWYOLO
+  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
+  model: "hailo/detection/yolov5xs_wo_spp.hef"
+  classes: "darknet/yolo/data/coco.names"
+  scalexy: 2.0
+  sigmoid: false
+
+yolov7-640:
+  comment: "Converted by JeVois using Hailo SDK"
+  url: "https://github.com/WongKinYiu/yolov7"
+  scale: 0.0039215686
+  model: "hailo/detection/yolov7-640.hef"
+  detecttype: RAWYOLO
+  anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
+  classes: "npu/detection/coco-labels.txt"
+  sigmoid: true
+  scalexy: 2.0
+
+####################################################################################################
+# Semantic segmentation models
+####################################################################################################
+
+postproc: Segment
+dequant: false
+comment: "Demo model from Hailo"
+url: "https://hailo.ai/devzone-model-zoo/segmentation/"
+
+DeepLabV3-MobileNetV2:
+  segtype: ClassesHWC
+  model: "hailo/segmentation/deeplab_v3_mobilenet_v2.hef"
+
+DeepLabV3-MobileNetV2-NoDilation:
+  segtype: ArgMax
+  model: "hailo/segmentation/deeplab_v3_mobilenet_v2_wo_dilation.hef"
+
+####################################################################################################
+# Other models
+####################################################################################################

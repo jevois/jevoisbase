@@ -70,10 +70,13 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
     How to use this module
     ----------------------
 
-    - Either try it with JeVois Inventor using <b>YUYV 640x240 @@ 30 fps</b>. Note that each time you select a new \p
-      effect, this will affect the set of parameters that are available for that effect, but currently JeVois Inventor
-      has no way of being notified of that change. So just click to another tab (e.g., the \b Info tab), and then back
-      to the \b Parameters tab each time you change the effect. This will refresh the parameter list.
+    - On JeVois-Pro, select the effect and set its parameters in the Parameters tab of the GUI. You can also drag the
+      cyan handles left and right on screen to change which portion of the image is shown as original vs processed.
+
+    - On JeVois-A33, either try it with JeVois Inventor using <b>YUYV 640x240 @@ 30 fps</b>. Note that each time you
+      select a new \p effect, this will affect the set of parameters that are available for that effect, but currently
+      JeVois Inventor has no way of being notified of that change. So just click to another tab (e.g., the \b Info tab),
+      and then back to the \b Parameters tab each time you change the effect. This will refresh the parameter list.
 
     - Or, open a video viewer on your host computer and select <b>YUYV 640x240 @@ 30 fps</b> (see \ref UserQuick)
 
@@ -89,6 +92,7 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "Image processing effect 
       (parameter \p op), structuring element shape (parameter \p kshape) and size (parameter \p ksize), etc.
 
       Complete example:
+
       \code
       setpar effect Morpho
       help
@@ -118,14 +122,20 @@ class ColorFiltering : public jevois::Module,
                        public jevois::Parameter<effect>
 {
   public:
+    // ####################################################################################################
     //! Inherited constructor ok
+    // ####################################################################################################
     using jevois::Module::Module;
 
+    // ####################################################################################################
     //! Virtual destructor for safe inheritance
+    // ####################################################################################################
     virtual ~ColorFiltering()
     { }
 
+    // ####################################################################################################
     //! Processing function with video output to USB
+    // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
       static jevois::Timer timer("processing", 30, LOG_DEBUG);
@@ -162,8 +172,7 @@ class ColorFiltering : public jevois::Module,
       std::string const & fpscpu = timer.stop();
 
       // Write a few things:
-      std::ostringstream oss; oss << "JeVois image filter: " << effect::get();
-      jevois::rawimage::writeText(outimg, oss.str(), w + 3, 3, jevois::yuyv::White);
+      jevois::rawimage::writeText(outimg, "JeVois image filter: " + effect::strget(), w + 3, 3, jevois::yuyv::White);
 
       std::vector<std::string> svec = jevois::split(settings, "\n");
       for (size_t i = 0; i < svec.size(); ++i)
@@ -175,6 +184,101 @@ class ColorFiltering : public jevois::Module,
       outframe.send();
     }
 
+#ifdef JEVOIS_PRO
+    // ####################################################################################################
+    //! Processing function with zero-copy and GUI on JeVois-Pro
+    // ####################################################################################################
+    virtual void process(jevois::InputFrame && inframe, jevois::GUIhelper & helper) override
+    {
+      static jevois::Timer timer("processing", 100, LOG_DEBUG);
+      static int left = -1, right = -1;
+      
+      // Start the GUI frame:
+      unsigned short winw, winh;
+      bool idle = helper.startFrame(winw, winh);
+
+      // Draw the camera frame:
+      int x = 0, y = 0; unsigned short iw = 0, ih = 0;
+      helper.drawInputFrame("camera", inframe, x, y, iw, ih);
+
+      helper.itext("JeVois-Pro Color Filtering");
+      
+      timer.start();
+
+      // Wait for next available camera image:
+      cv::Mat src = inframe.getCvRGBp(); // should be BGR but RGB is faster and should not affect processing...
+      int const sw = src.cols; int const sh = src.rows;
+      inframe.done();
+
+      // Apply the filter (if any):
+      cv::Mat dst; std::string settings;
+      if (itsFilter) settings = itsFilter->process(src, dst);
+      else dst = cv::Mat(sh, sw, CV_8UC3, cv::Scalar(0,0,0));
+
+      // We will display the processed image as a partial overlay between two vertical lines defined by 'left' and
+      // 'right', where each also has a mouse drag handle (small square).
+      
+      ImU32 const col = IM_COL32(128,255,255,255); // color of the vertical lines and square handles
+      int const siz = 20; // size of the square handles, in image pixels
+      static bool dragleft = false, dragright = false;
+
+      // Initialize the handles at 1/4 and 3/4 of image width on first video frame after module is loaded:
+      if (jevois::frameNum() == 0) { left = sw / 4; right = 3 * sw / 4; }
+
+      // Make sure the handles do not overlap and/or get out of the image bounds:
+      if (left > right - siz) { if (dragright) left = right - siz; else right = left + siz; }
+      left = std::max(siz, std::min(sw - siz * 2, left));
+      right = std::max(left + siz, std::min(sw - siz, right));
+
+      // Mask and draw the overlay.  To achieve this, we convert the whole result image to RGBA and then assign a zero
+      // alpha channel to all pixels to the left of the 'left' bound and to the right of the 'right' bound:
+      cv::Mat ovl; cv::cvtColor(dst, ovl, cv::COLOR_RGB2RGBA);
+      ovl(cv::Rect(0, 0, left, sh)) = 0; // make left side transparent
+      ovl(cv::Rect(right, 0, sw-right, sh)) = 0; // make right side transparent
+      int ox = 0, oy = 0; unsigned short ow = 0, oh = 0;
+      helper.drawImage("filtered", ovl, true, ox, oy, ow, oh, false, true /* overlay */);
+
+      helper.drawLine(left, 0, left, sh, col);
+      helper.drawRect(left-siz, (sh-siz)/2, left, (sh+siz)/2, col);
+      helper.drawLine(right, 0, right, sh, col);
+      helper.drawRect(right, (sh-siz)/2, right+siz, (sh+siz)/2, col);
+
+      // Adjust the left and right handles if they get clicked and dragged:
+      ImVec2 const ip = helper.d2i(ImGui::GetMousePos());
+
+      if (ImGui::IsMouseClicked(0))
+      {
+        // Are we clicking on the left or right handle?
+        if (ip.x > left-siz && ip.x < left && ip.y > (sh-siz)/2 && ip.y < (sh+siz)/2) dragleft = true;
+        if (ip.x > right && ip.x < right+siz && ip.y > (sh-siz)/2 && ip.y < (sh+siz)/2) dragright = true;
+      }
+
+      if (ImGui::IsMouseDragging(0))
+      {
+        if (dragleft) left = ip.x + 0.5F * siz;
+        if (dragright) right = ip.x - 0.5F * siz;
+        // We will enforce validity of left and right on next frame.
+      }
+
+      if (ImGui::IsMouseReleased(0))
+      {
+        dragleft = false;
+        dragright = false;
+      }
+
+      // Write a few things:
+      std::string const & fpscpu = timer.stop();
+      helper.itext("JeVois image filter: " + effect::strget());
+      std::vector<std::string> svec = jevois::split(settings, "\n");
+      for (std::string const & s : svec) helper.itext(s);
+      helper.iinfo(inframe, fpscpu, winw, winh);
+
+      // Render the image and GUI:
+      helper.endFrame();
+     }
+#endif
+
+    // ####################################################################################################
   protected:
     //! Parameter callback: set the selected filter algo
     void onParamChange(effect const & param, Effect const & val) override

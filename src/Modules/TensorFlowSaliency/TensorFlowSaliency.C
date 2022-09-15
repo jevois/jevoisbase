@@ -279,7 +279,7 @@ class TensorFlowSaliency : public jevois::StdModule,
         });
 
       // On even frames, update the salient ROI, on odd frames, run the deep network on the latest ROI:
-      if ((frameNum() & 1) == 0 || itsRw == 0)
+      if ((jevois::frameNum() & 1) == 0 || itsRw == 0)
       {
 	// Run the saliency model, will update itsRx, itsRy, itsRw, and itsRh:
 	getSalROI(inimg);

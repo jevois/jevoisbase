@@ -85,7 +85,7 @@ class PythonSandbox:
         x, y, w, h = helper.drawInputFrame("c", inframe, False, False)
         
         # Get the next camera image (may block until it is captured):
-        #inimg = inframe.getCvBGR()
+        #inimg = inframe.getCvBGRp()
         
         # Start measuring image processing time (NOTE: does not account for input conversion time):
         self.timer.start()

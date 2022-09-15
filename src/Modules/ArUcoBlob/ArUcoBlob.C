@@ -209,15 +209,15 @@ class ArUcoBlob : public jevois::StdModule,
     void sendBlobs(unsigned int w, unsigned int h, jevois::RawImage * outimg = nullptr)
     {
       for (auto & f : itsBlobFuts)
-	try { f.get(); } catch (...) { LERROR("Ooops, some blob detector threw -- IGNORED"); }
+        try { f.get(); } catch (...) { LERROR("Ooops, some blob detector threw -- IGNORED"); }
       itsBlobFuts.clear();
       
       // Send a serial message for each detected blob:
       for (auto const & cc : itsContours)
-	for (auto const & c : cc.second)
-	  sendSerialContour2D(w, h, c, cc.first);
+        for (auto const & c : cc.second)
+          sendSerialContour2D(w, h, c, cc.first);
     }
-
+    
     // ####################################################################################################
     //! Detect ArUcos
     // ####################################################################################################
@@ -226,14 +226,14 @@ class ArUcoBlob : public jevois::StdModule,
 		     unsigned int h, jevois::RawImage * outimg = nullptr)
     {
       itsArUco->detectMarkers(cvimg, ids, corners);
-
+      
       if (itsArUco->dopose::get() && ids.empty() == false)
         itsArUco->estimatePoseSingleMarkers(corners, rvecs, tvecs);
-
+      
       // Show all the results:
       if (outimg) itsArUco->drawDetections(*outimg, 3, h+2, ids, corners, rvecs, tvecs);
     }
-
+    
     // ####################################################################################################
     //! Processing function, no USB video output
     // ####################################################################################################
@@ -241,20 +241,20 @@ class ArUcoBlob : public jevois::StdModule,
     {
       // Wait for next available camera image. Any resolution and format ok:
       jevois::RawImage inimg = inframe.get(); unsigned int const w = inimg.width, h = inimg.height;
-
+      
       // Convert input image to BGR24, then to HSV:
       cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
       cv::cvtColor(imgbgr, itsImgHsv, cv::COLOR_BGR2HSV);
-
+      
       // Detect blobs in parallel threads:
       detectBlobs();
-			    
+      
       // In our thread, detect ArUcos; first convert to gray:
       cv::Mat cvimg = jevois::rawimage::convertToCvGray(inimg);
-
+      
       // Let camera know we are done processing the input image:
       inframe.done();
-
+      
       // Detect ArUcos:
       std::vector<int> ids; std::vector<std::vector<cv::Point2f> > corners; std::vector<cv::Vec3d> rvecs, tvecs;
       detectArUco(cvimg, ids, corners, rvecs, tvecs, h);
@@ -317,22 +317,22 @@ class ArUcoBlob : public jevois::StdModule,
 
       // Draw all detected contours in a thread:
       std::future<void> draw_fut = jevois::async([&]() {
-	  // We reinterpret the top portion of our YUYV output image as an opencv 8UC2 image:
-	  cv::Mat outuc2 = jevois::rawimage::cvImage(outimg); // pixel data shared
-	  for (auto const & cc : itsContours)
-	  {
-	    int color = (cc.first.back() - '0') * 123;
-	    cv::drawContours(outuc2, cc.second, -1, color, 2, 8);
-	    for (auto const & cont : cc.second)
+	    // We reinterpret the top portion of our YUYV output image as an opencv 8UC2 image:
+	    cv::Mat outuc2 = jevois::rawimage::cvImage(outimg); // pixel data shared
+	    for (auto const & cc : itsContours)
 	    {
-	      cv::Moments moment = cv::moments(cont);
-	      double const area = moment.m00;
-	      int const x = int(moment.m10 / area + 0.4999);
-	      int const y = int(moment.m01 / area + 0.4999);
-	      jevois::rawimage::drawCircle(outimg, x, y, 20, 1, color);
+	      int color = (cc.first.back() - '0') * 123;
+	      cv::drawContours(outuc2, cc.second, -1, color, 2, 8);
+	      for (auto const & cont : cc.second)
+	      {
+	        cv::Moments moment = cv::moments(cont);
+	        double const area = moment.m00;
+	        int const x = int(moment.m10 / area + 0.4999);
+	        int const y = int(moment.m01 / area + 0.4999);
+	        jevois::rawimage::drawCircle(outimg, x, y, 20, 1, color);
+	      }
 	    }
-	  }
-	});
+	  });
 
       // Show number of detected objects:
       std::string str = "Detected ";

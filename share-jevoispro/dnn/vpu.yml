@@ -1,0 +1,186 @@
+%YAML 1.0
+---
+
+# Intel Myriad-X models
+
+# These models run using the OpenCV DNN module, but selecting the Myriad-X VPU target. If a hardware VPU is not
+# connected to JeVois-Pro, these models will still be available as "VPUX" models, which run on CPU using VPU
+# emulation. That emulation is quite slow currently, though.
+
+# intensors is required but outtensors is optional
+
+####################################################################################################
+# Global defaults for all models in this file
+####################################################################################################
+
+preproc: Blob
+nettype: OpenCV
+backend: InferenceEngine
+target: Myriad
+
+# Most VPU models use BGR, so set as default. Explicitly set rgb to true in a given model below if needed.
+rgb: false
+
+####################################################################################################
+# Image classification models.
+####################################################################################################
+
+postproc: Classify
+
+Inception-V3:
+  comment: "On VPU, with fallback to VPUX emulation if no VPU"
+  model: "openvino/classification/inception-v3/inception_v3_2016_08_28_frozen.pb"
+  intensors: "NCHW:32F:1x3x299x299"
+  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+
+####################################################################################################
+# Object detection models.
+####################################################################################################
+
+postproc: Detect
+
+face-detection-retail-0004:
+  comment: "SqueezeNet light backbone + SSD"
+  url: "https://docs.openvino.ai/latest/omz_models_model_face_detection_retail_0004.html"
+  model: "openvino/detection/face-detection-retail-0004/FP16/face-detection-retail-0004.bin"
+  config: "openvino/detection/face-detection-retail-0004/FP16/face-detection-retail-0004.xml"
+  intensors: "NCHW:8U:1x3x300x300"
+  detecttype: SSD
+  classes: "opencv-dnn/detection/face.txt"
+
+face-detection-adas-0001:
+  comment: "MobileNet backbone + SSD"
+  url: "https://docs.openvino.ai/latest/omz_models_model_face_detection_adas_0001.html"
+  model: "openvino/detection/face-detection-adas-0001/FP16/face-detection-adas-0001.bin"
+  config: "openvino/detection/face-detection-adas-0001/FP16/face-detection-adas-0001.xml"
+  intensors: "NCHW:8U:1x3x384x672"
+  detecttype: SSD
+  classes: "opencv-dnn/detection/face.txt"
+
+person-detection-retail-0013:
+  comment: "MobileNetV2-like backbone + SSD"
+  url: "https://docs.openvino.ai/latest/omz_models_model_person_detection_retail_0013.html"
+  model: "openvino/detection/person-detection-retail-0013/FP16/person-detection-retail-0013.bin"
+  config: "openvino/detection/person-detection-retail-0013/FP16/person-detection-retail-0013.xml"
+  intensors: "NCHW:8U:1x3x320x544"
+  detecttype: SSD
+  classes: "opencv-dnn/detection/person.txt"
+
+pedestrian-detection-adas-0002:
+  comment: "MobileNetV1 backbone + SSD"
+  url: "https://docs.openvino.ai/latest/omz_models_model_pedestrian_detection_adas_0002.html"
+  model: "openvino/detection/pedestrian-detection-adas-0002/FP16/pedestrian-detection-adas-0002.bin"
+  config: "openvino/detection/pedestrian-detection-adas-0002/FP16/pedestrian-detection-adas-0002.xml"
+  intensors: "NCHW:8U:1x3x384x672"
+  detecttype: SSD
+  classes: "opencv-dnn/detection/person.txt"
+
+vehicle-detection-adas-0002:
+  comment: "MobileNetV1 backbone + SSD"
+  url: "https://docs.openvino.ai/latest/omz_models_model_vehicle_detection_adas_0002.html"
+  model: "openvino/detection/vehicle-detection-adas-0002/FP16/vehicle-detection-adas-0002.bin"
+  config: "openvino/detection/vehicle-detection-adas-0002/FP16/vehicle-detection-adas-0002.xml"
+  intensors: "NCHW:8U:1x3x384x672"
+  detecttype: SSD
+  classes: "opencv-dnn/detection/vehicle.txt"
+
+pedestrian-and-vehicle-detector-adas-0001:
+  comment: "MobileNetV1 backbone + SSD"
+  url: "https://docs.openvino.ai/latest/omz_models_model_pedestrian_and_vehicle_detector_adas_0001.html"
+  model: "openvino/detection/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.bin"
+  config: "openvino/detection/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml"
+  intensors: "NCHW:8U:1x3x384x672"
+  detecttype: SSD
+  classes: "openvino/detection/pedestrian-and-vehicle-detector-adas-0001/classes.txt"
+
+product-detection-0001:
+  comment: "MobileNetV2 backbone + SSD-lite"
+  url: "https://docs.openvino.ai/latest/omz_models_model_product_detection_0001.html"
+  model: "openvino/detection/product-detection-0001/FP16/product-detection-0001.bin"
+  config: "openvino/detection/product-detection-0001/FP16/product-detection-0001.xml"
+  intensors: "NCHW:8U:1x3x512x512"
+  detecttype: SSD
+  classes: "openvino/detection/product-detection-0001/classes.txt"
+  classoffset: 1
+
+# Bunch of models based on YOLOv2 retrained (but anchors are not changed?):
+
+# runs but no sensible outputs, may need to check reshaping and anchors
+
+#detecttype: RAWYOLO
+#anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
+
+#yolo-v2-tiny-ava-0001:
+#   model: "openvino/detection/yolo-v2-tiny-ava-0001/FP16/yolo-v2-tiny-ava-0001.bin"
+#   config: "openvino/detection/yolo-v2-tiny-ava-0001/FP16/yolo-v2-tiny-ava-0001.xml"
+#   intensors: "NCHW:8U:1x3x416x416"
+#   outtensors: "32F:1x21125"
+#   outreshape: "32F:1x125x13x13"
+#   classes: "darknet/yolo/data/voc.names"
+
+#yolo-v2-tiny-ava-sparse-60-0001:
+#   model: "openvino/detection/yolo-v2-tiny-ava-sparse-60-0001/FP16/yolo-v2-tiny-ava-sparse-60-0001.bin"
+#   config: "openvino/detection/yolo-v2-tiny-ava-sparse-60-0001/FP16/yolo-v2-tiny-ava-sparse-60-0001.xml"
+#   intensors: "NCHW:8U:1x3x416x416"
+#   outtensors: "32F:1x21125"
+#   outreshape: "32F:1x125x13x13"
+#   classes: "darknet/yolo/data/voc.names"
+
+#yolo-v2-tiny-vehicle-detection-0001:
+#   model: "openvino/detection/yolo-v2-tiny-vehicle-detection-0001/FP16/yolo-v2-tiny-vehicle-detection-0001.bin"
+#   config: "openvino/detection/yolo-v2-tiny-vehicle-detection-0001/FP16/yolo-v2-tiny-vehicle-detection-0001.xml"
+#   intensors: "NCHW:8U:1x3x416x416"
+#   outtensors: "32F:1x71825"
+#   outreshape: "32F:1x425x13x13"
+#   classes: "darknet/yolo/data/coco.names"
+
+#yolo-v2-ava-0001:
+#   model: "openvino/detection/yolo-v2-ava-0001/FP16/yolo-v2-ava-0001.bin"
+#   config: "openvino/detection/yolo-v2-ava-0001/FP16/yolo-v2-ava-0001.xml"
+#   intensors: "NCHW:8U:1x3x416x416"
+#   outtensors: "32F:1x21125"
+#   outreshape: "32F:1x125x13x13"
+#   classes: "darknet/yolo/data/voc.names"
+
+#yolo-v2-ava-sparse-70-0001:
+#   model: "openvino/detection/yolo-v2-ava-sparse-70-0001/FP16/yolo-v2-ava-sparse-70-0001.bin"
+#   config: "openvino/detection/yolo-v2-ava-sparse-70-0001/FP16/yolo-v2-ava-sparse-70-0001.xml"
+#   intensors: "NCHW:8U:1x3x416x416"
+#   outtensors: "32F:1x21125"
+#   outreshape: "32F:1x125x13x13"
+#   classes: "darknet/yolo/data/voc.names"
+
+#unset: anchors
+#unset: detecttype
+
+YoloV5s:
+  comment: "Converted using OpenVino model optimizer"
+  url: "https://github.com/ultralytics/yolov5"
+  rgb: true
+  model: "openvino/detection/YoloV5s.bin"
+  config: "openvino/detection/YoloV5s.xml"
+  intensors: "NCHW:8U:1x3x640x640"
+  detecttype: RAWYOLO
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  classes: "npu/detection/coco-labels.txt"
+  sigmoid: true
+  scalexy: 2.0
+
+####################################################################################################
+# Semantic segmentation models
+####################################################################################################
+
+postproc: Segment
+
+road-segmentation-adas-0001:
+  comment: "Based on ENet. Segments background, road, curb, mark"
+  url: "https://docs.openvino.ai/latest/omz_models_model_road_segmentation_adas_0001.html"
+  model: "openvino/segmentation/road-segmentation-adas-0001/FP16/road-segmentation-adas-0001.bin"
+  config: "openvino/segmentation/road-segmentation-adas-0001/FP16/road-segmentation-adas-0001.xml"
+  intensors: "NCHW:8U:1x3x512x896"
+  segtype: ClassesCHW
+
+
+####################################################################################################
+# Other models
+####################################################################################################

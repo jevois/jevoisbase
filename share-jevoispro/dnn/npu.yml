@@ -1,0 +1,265 @@
+%YAML 1.0
+---
+
+# Neural Processing Unit (NPU) models
+
+# These models run on the NPU that is integrated into the A311D processor of JeVois-Pro. Models that are natively
+# compiled for NPU will show up with an "NPU" label in the JeVois-Pro GUI, while those compiled for execution on NPU via
+# the Tim-VX backend for OpenCV will show up as "NPUX".
+
+####################################################################################################
+# Global defaults for all models in this file
+####################################################################################################
+
+preproc: Blob
+nettype: NPU
+
+####################################################################################################
+# Image classification models.
+####################################################################################################
+
+postproc: Classify
+
+Inception-V3:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/classification/inception_v3.nb"
+  intensors: "NHWC:8U:1x299x299x3:AA:0.0078125:128"
+  outtensors: "16F:1x1001"
+  classes: "coral/classification/imagenet_labels.txt"
+
+MobileNet-V1:
+  mean: "0 0 0"
+  model: "npu/classification/mobilenet_tf.nb"
+  intensors: "NHWC:8S:1x224x224x3:DFP:7"
+  outtensors: "16F:1x1001"
+  classes: "coral/classification/imagenet_labels.txt"
+
+ResNet-50-int8:
+  comment: "Resnet-50 on NPU via TIM-VX"
+  url: "https://github.com/opencv/opencv_zoo/blob/master/README.md"
+  mean: "123.675 116.280 103.530"
+  stdev: "0.229 0.224 0.225"
+  scale: 0.0039215686
+  rgb: false
+  nettype: OpenCV
+  backend: TimVX
+  target: NPU
+  model: "npu/classification/resnet50-v1-12-int8.onnx"
+  intensors: "NCHW:32F:1x3x224x224"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+  softmax: true
+
+####################################################################################################
+# Object detection models.
+####################################################################################################
+
+postproc: Detect
+detecttype: RAWYOLO
+mean: "0 0 0"
+
+Yolo-Face-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolo_face_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x30x13x13:DFP:2"
+  anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
+  classes: "opencv-dnn/detection/face.txt"
+
+YoloV3-Tiny-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolotiny_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x255x13x13:DFP:2, 8S:1x255x26x26:DFP:2"
+  anchors: "10,14, 23,27, 37,58;   40.5,41, 67.5,84.5, 172,159.5"
+  #anchors: "10,14,  23,27,  37,58;  81,82,  135,169,  344,319" ## official
+  classes: "npu/detection/coco-labels.txt"
+
+YoloV4-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolov4_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x255x52x52:DFP:1, 8S:1x255x26x26:DFP:2, 8S:1x255x13x13:DFP:2"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  classes: "npu/detection/coco-labels.txt"
+
+YoloV3-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolov3_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x255x13x13:DFP:2, 8S:1x255x26x26:DFP:2, 8S:1x255x52x52:DFP:2"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  classes: "npu/detection/coco-labels.txt"
+
+YoloV2-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolov2_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x425x13x13:DFP:2"
+  anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
+  classes: "npu/detection/coco-labels.txt"
+
+YoloV7-Tiny-AA:
+  comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
+  scale: 0.0039215686
+  model: "npu/detection/YOLOv7-Tiny-AA.nb"
+  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
+  outtensors: "8U:1x255x52x52:AA:0.0038335032295435667:0, 8U:1x255x26x26:AA:0.0038371747359633446:0, 8U:1x255x13x13:AA:0.003918845672160387:0"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  scalexy: 2.0
+  sigmoid: false
+  classes: "npu/detection/coco-labels.txt"
+
+YoloV7-Tiny-DFP:
+  comment: "JeVois converted using NPU SDK and Dynamic Fixed Point quant"
+  model: "npu/detection/YOLOv7-Tiny-DFP.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x255x52x52:DFP:7, 8S:1x255x26x26:DFP:7, 8S:1x255x13x13:DFP:7"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  scalexy: 2.0
+  sigmoid: false
+  classes: "npu/detection/coco-labels.txt"
+
+yolov7-tiny-512x288:
+  comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
+  scale: 0.0039215686
+  model: "npu/detection/yolov7-tiny-512x288.nb"
+  intensors: "NCHW:8U:1x3x288x512:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x36x64:AA:0.003916095942258835:0, NCHW:8U:1x255x18x32:AA:0.00392133416607976:0, NCHW:8U:1x255x9x16:AA:0.003921062219887972:0"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  scalexy: 2.0
+  sigmoid: false
+  classes: "npu/detection/coco-labels.txt"
+
+yolov7-tiny-1024x576:
+  comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
+  scale: 0.0039215686
+  model: "npu/detection/yolov7-tiny-1024x576.nb"
+  intensors: "NCHW:8U:1x3x576x1024:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x72x128:AA:0.003911261446774006:0, NCHW:8U:1x255x36x64:AA:0.003920680843293667:0, NCHW:8U:1x255x18x32:AA:0.003921556286513805:0"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  scalexy: 2.0
+  sigmoid: false
+  classes: "npu/detection/coco-labels.txt"
+
+yolov2-coco:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  scale: 0.0039215686
+  model: "npu/detection/yolov2-coco.nb"
+  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x425x13x13:AA:0.14820359647274017:147"
+  anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
+  classes: "npu/detection/coco-labels.txt"
+
+yolov2-voc:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  scale: 0.0039215686
+  model: "npu/detection/yolov2-voc.nb"
+  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x125x13x13:AA:0.11101983487606049:134"
+  anchors: "10.5768,13.85160, 25.54200,32.07552, 40.44696,64.79136, 75.76896,38.72424, 89.8912,80.0568"
+  classes: "darknet/yolo/data/voc.names"
+
+yolov3-tiny:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  scale: 0.0039215686
+  model: "npu/detection/yolov3-tiny.nb"
+  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x13x13:AA:0.0827922374010086:214,NCHW:8U:1x255x26x26:AA:0.1048106923699379:202"
+  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
+  classes: "npu/detection/coco-labels.txt"
+
+yolov4-tiny:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  scale: 0.0039215686
+  model: "npu/detection/yolov4-tiny.nb"
+  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x13x13:AA:0.10826179385185242:192, NCHW:8U:1x255x26x26:AA:0.10561909526586533:185"
+  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
+  classes: "npu/detection/coco-labels.txt"
+
+yolov3-spp:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  scale: "0.0039215686"
+  model: "npu/detection/yolov3-spp.nb"
+  intensors: "NCHW:8U:1x3x608x608:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x19x19:AA:0.09413968771696091:199, NCHW:8U:1x255x38x38:AA:0.12566116452217102:180, NCHW:8U:1x255x76x76:AA:0.12598100304603577:196"
+  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
+  classes: "npu/detection/coco-labels.txt"
+
+yolov4-csp-x-swish:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  scale: "0.0039215686"
+  model: "npu/detection/yolov4-csp-x-swish.nb"
+  intensors: "NCHW:8U:1x3x640x640:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x80x80:AA:0.003918692469596863:0, NCHW:8U:1x255x40x40:AA:0.003918323200196028:0, NCHW:8U:1x255x20x20:AA:0.003918614238500595:0"
+  anchors: "12,16, 19,36, 40,28;  36,75, 76,55, 72,146;  142,110, 192,243, 459,401"
+  scalexy: 2.0
+  sigmoid: false
+  classes: "npu/detection/coco-labels.txt"
+
+unset: detecttype
+unset: mean
+
+# need a post-processor...
+#FaceNet:
+#  model: "npu/detection/faceNet_88.nb"
+#  intensors: "NHWC:8S:1x160x160x3:DFP:7"
+#  mean: "0 0 0"
+#  outtensors: "8S:1x128:DFP:5"
+
+####################################################################################################
+# Semantic segmentation models
+####################################################################################################
+
+postproc: Segment
+
+# NPU human segmentation, will appear as NPUX in GUI as it is using OpenCV + TIM-VX
+PP-HumanSeg:
+  comment: "Human segmentation on NPU via TIM-VX"
+  url: "https://github.com/opencv/opencv_zoo/blob/master/README.md"
+  nettype: OpenCV
+  backend: TimVX
+  target: NPU
+  segtype: ClassesCHW
+  bgid: 1
+  model: "npu/segmentation/human_segmentation_pphumanseg_2021oct-act_int8-wt_int8-quantized.onnx"
+  intensors: "NCHW:8U:1x3x192x192"
+
+####################################################################################################
+# Other models
+####################################################################################################
+
+YuNet-Face-512x288:
+  comment: "YuNet on NPU via TIM-VX"
+  url: "https://github.com/khadas/OpenCV_NPU_Demo"
+  nettype: OpenCV
+  backend: TimVX
+  target: NPU
+  model: "npu/detection/yunet_int8.onnx"
+  postproc: YuNet
+  nms: 30.0
+  dthresh: 90.0
+  cthresh: 90.0
+  intensors: "NCHW:8U:1x3x288x512"
+
+YuNet-Face-768x432:
+  comment: "YuNet on NPU via TIM-VX"
+  url: "https://github.com/khadas/OpenCV_NPU_Demo"
+  preproc: Blob
+  nettype: OpenCV
+  backend: TimVX
+  target: NPU
+  model: "npu/detection/yunet_int8.onnx"
+  postproc: YuNet
+  nms: 30.0
+  dthresh: 90.0
+  cthresh: 90.0
+  intensors: "NCHW:8U:1x3x432x768"
+
