@@ -63,8 +63,8 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(effect, Effect, "GPU image processing eff
     disabled by default. In addition, RGB565 does not seem to work in older \c guvcview either, on Ubuntu prior to
     17.04! Proceed as follows to enable and use this module on a Linux host:
 
-    Edit <b>JEVOIS:/jevois/config/videomappings.cfg</b> and look for the line that mentions DemoGPU. It is commented
-    out, so just remove the leading \b # sign. The line should then look like this:
+    Edit <b>JEVOIS:/jevois/config/videomappings.cfg</b> and look for the line that mentions \jvmod{DemoGPU}. It is
+    commented out, so just remove the leading \b # sign. The line should then look like this:
 
     \verbatim
     RGB565 320 240 22.0 YUYV 320 240 22.0 JeVois DemoGPU

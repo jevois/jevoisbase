@@ -25,7 +25,7 @@
 
 //! Augmented reality markers using ARtoolkit
 /*! Detect and decode patterns known as ARtoolkit markers, which are small 2D barcodes often used in augmented
-    reality and robotics. See https://archive.artoolkit.org/ - This module uses version 5.x for now.
+    reality and robotics. See https://github.com/artoolkit/ARToolKit5 - This module uses version 5.x for now.
 
     This algorithm is very fast. It runs at 400+ frames/s at 320x240 and can easily sustain the maximum 15 frames/s of
     the JeVois camera sensor chip at 1280x1024. It may be interesting to combine it with other algorithms running on the

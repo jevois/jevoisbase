@@ -100,7 +100,7 @@ JEVOIS_DECLARE_PARAMETER(ctxframes, unsigned int, "Number of context video frame
 
     \youtube{aSKncW7Jxrs}
 
-    Here is what the SurpriseRecorder module found (4 true events plus 2 false alarms):
+    Here is what the \jvmod{SurpriseRecorder} module found (4 true events plus 2 false alarms):
 
     \youtube{zIslIsHBfYw}
 

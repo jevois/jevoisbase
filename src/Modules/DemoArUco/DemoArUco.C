@@ -32,10 +32,8 @@
     ArUco markers are very useful as tags for many robotics and augmented reality applications. For example, one may
     place an ArUco next to a robot's charging station, an elevator button, or an object that a robot should manipulate.
 
-    For more information about ArUco, see https://www.uco.es/investiga/grupos/ava/node/26
-
     The implementation of ArUco used by JeVois is the one of OpenCV-Contrib, documented here:
-    http://docs.opencv.org/3.2.0/d5/dae/tutorial_aruco_detection.html
+    https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html
 
     ArUco markers can be created with several standard dictionaries. Different dictionaries give rise to different
     numbers of pixels in the markers, and to different numbers of possible symbols that can be created using the

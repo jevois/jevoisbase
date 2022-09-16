@@ -125,7 +125,7 @@
     This module supports RGB or grayscale inputs, byte or float32. You should create and train your network using fast
     GPUs, and then follow the instruction here to convert your trained network to TFLite format:
 
-    https://www.tensorflow.org/mobile/tflite/
+    https://www.tensorflow.org/lite/
 
     Then you just need to create a directory under <b>JEVOIS:/share/tensorflow/</B> with the name of your network, and,
     in there, two files, \b labels.txt with the category labels, and \b model.tflite with your model converted to

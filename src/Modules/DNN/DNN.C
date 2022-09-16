@@ -23,7 +23,7 @@
 // icon from opencv
 
 //! Detect and recognize multiple objects in scenes using OpenCV, NPU, TPU, or VPU Deep Neural Nets
-/*! This module runs a deep neural network using the OpenCV DNN library. Classification networks try to identify the
+/*! This module runs a deep neural network using the OpenCV #DNN library. Classification networks try to identify the
     whole object or scene in the field of view, and return the top scoring object classes. Detection networks analyze a
     scene and produce a number of bounding boxes around detected objects, together with identity labels and confidence
     scores for each detected box. Semantic segmentation networks create a pixel-by-pixel mask which assigns a class

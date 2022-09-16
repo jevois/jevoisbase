@@ -138,7 +138,7 @@
     camera to manual color, gain, and exposure mode (for more reliable color values), and to setup communication with a
     pan/tilt head as described in \ref ArduinoTutorial.
 
-    The \b script.cfg file for ObjectTracker is stored on your microSD at
+    The \b script.cfg file for \jvmod{ObjectTracker} is stored on your microSD at
     <b>JEVOIS:/modules/JeVois/ObjectTracker/script.cfg</b> and is shown in \ref ArduinoTutorial as an example.
 
 

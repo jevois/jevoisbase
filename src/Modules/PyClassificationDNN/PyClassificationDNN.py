@@ -22,7 +22,7 @@ import sys
 # See the module's constructor (__init__) code and select a value for \b model to switch network.
 #
 # Object category names for models trained on ImageNet are at
-# https://github.com/jevois/jevoisbase/blob/master/share/opencv-dnn/classification/synset_words.txt
+# https://github.com/HoldenCaulfieldRye/caffe/blob/master/data/ilsvrc12/synset_words.txt
 #
 # Sometimes it will make mistakes! The performance of SqueezeNet v1.1 is about 56.1% correct (mean average precision,
 # top-1) on the ImageNet test set.
