@@ -31,6 +31,23 @@
 
     To select a network, see parameter \p pipe of component Pipeline.
 
+    The following keys are used in the JeVois-Pro GUI (\p pipe parameter of Pipeline component):
+
+    - **OpenCV:** network loaded by OpenCV #DNN framework and running on CPU.
+    - **NPU:** network running native on the JeVois-Pro integrated 5-TOPS NPU (neural processing unit).
+    - **SPU:** network running on the optional 26-TOPS Hailo8 SPU accelerator (stream processing unit).
+    - **TPU:** network running on the optional 4-TOPS Google Coral TPU accelerator (tensor processing unit).
+    - **VPU:** network running on the optional 1-TOPS MyriadX VPU accelerator (vector processing unit).
+    - **NPUX:** network loaded by OpenCV and running on NPU via the TIM-VX OpenCV extension. To run efficiently, network
+      should have been quantized to int8, otherwise some slow CPU-based emulation will occur.
+    - **VPUX:** network optimized for VPU but running on CPU if VPU is not available. Note that VPUX entries are
+      automatically created by scanning all VPU entries and changing their target from Myriad to CPU, if a VPU
+      accelerator is not detected. If a VPU is detected, then VPU models are listed and VPUX ones are not.
+      VPUX emulation runs on the JeVois-Pro CPU using the Arm Compute Library to provide efficient implementation
+      of various network layers and operations.
+
+    For expected network speed, see \subpage JeVoisProBenchmarks
+
     Serial messages
     ---------------
 
