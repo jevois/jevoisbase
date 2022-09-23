@@ -36,6 +36,23 @@ class PythonSandbox:
         self.timer = jevois.Timer("sandbox", 100, jevois.LOG_INFO)
         
     # ###################################################################################################
+    ## Process function with no USB or GUI output (headless)
+    def processNoUSB(self, inframe):
+        # Here we will just report video capture framerate
+        
+        # Stop our timer here, then start it, so that we will measure the delay between two calls to processNoUSB(),
+        # which will be limited by video capture framerate:
+        self.timer.stop()
+        self.timer.start()
+
+        # Grab a frame from the camera sensor. Will block until the next video frame has been captured by the hardware
+        # and is available:
+        inrawimg = inframe.get()
+
+        # Could process the raw image here...
+        
+    
+    # ###################################################################################################
     ## Process function with USB output
     def process(self, inframe, outframe):
         # Get the next camera image (may block until it is captured) and here convert it to OpenCV BGR by default. If
