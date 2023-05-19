@@ -4,7 +4,7 @@
 ./Contrib/check.sh
 
 # Build everything:
-/bin/rm -rf hbuild \
+sudo /bin/rm -rf hbuild \
     && mkdir hbuild \
     && cd hbuild \
     && cmake "$@" .. \

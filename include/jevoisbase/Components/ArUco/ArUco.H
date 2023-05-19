@@ -184,7 +184,6 @@ class ArUco : public jevois::Component,
     cv::Mat itsDistCoeffs;
 
   protected:
-    cv::Ptr<cv::aruco::DetectorParameters> itsDetectorParams;
-    cv::Ptr<cv::aruco::Dictionary> itsDictionary;
+    cv::Ptr<cv::aruco::ArucoDetector> itsDetector;
 };
 

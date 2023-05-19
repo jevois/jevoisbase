@@ -33,99 +33,72 @@ void ArUco::postInit()
   // Defer reading camera parameters to first processed frame, so we know the resolution:
   aruco::camparams::freeze();
 
-  // Initialize default detector parameters:
-  itsDetectorParams = cv::aruco::DetectorParameters::create();
-  
   // Init detector parameters:
   aruco::dictionary::freeze();
+  aruco::detparams::freeze();
+  cv::aruco::DetectorParameters dparams;
+  
   switch (aruco::dictionary::get())
   {
   case aruco::Dict::ATAG_16h5:
   case aruco::Dict::ATAG_25h9:
   case aruco::Dict::ATAG_36h10:
   case aruco::Dict::ATAG_36h11:
-    itsDetectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_APRILTAG;
+    dparams.cornerRefinementMethod = cv::aruco::CORNER_REFINE_APRILTAG;
     break;
     
   default:
-    itsDetectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+    dparams.cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
   }
   
   // Read detector parameters if any:
-  aruco::detparams::freeze();
   std::string const dpf = aruco::detparams::get();
   if (dpf.empty() == false)
   {
     cv::FileStorage fs(dpf, cv::FileStorage::READ);
     if (fs.isOpened())
     {
-      fs["adaptiveThreshWinSizeMin"] >> itsDetectorParams->adaptiveThreshWinSizeMin;
-      fs["adaptiveThreshWinSizeMax"] >> itsDetectorParams->adaptiveThreshWinSizeMax;
-      fs["adaptiveThreshWinSizeStep"] >> itsDetectorParams->adaptiveThreshWinSizeStep;
-      fs["adaptiveThreshConstant"] >> itsDetectorParams->adaptiveThreshConstant;
-      fs["minMarkerPerimeterRate"] >> itsDetectorParams->minMarkerPerimeterRate;
-      fs["maxMarkerPerimeterRate"] >> itsDetectorParams->maxMarkerPerimeterRate;
-      fs["polygonalApproxAccuracyRate"] >> itsDetectorParams->polygonalApproxAccuracyRate;
-      fs["minCornerDistanceRate"] >> itsDetectorParams->minCornerDistanceRate;
-      fs["minDistanceToBorder"] >> itsDetectorParams->minDistanceToBorder;
-      fs["minMarkerDistanceRate"] >> itsDetectorParams->minMarkerDistanceRate;
-      fs["cornerRefinementMethod"] >> itsDetectorParams->cornerRefinementMethod;
-      fs["cornerRefinementWinSize"] >> itsDetectorParams->cornerRefinementWinSize;
-      fs["cornerRefinementMaxIterations"] >> itsDetectorParams->cornerRefinementMaxIterations;
-      fs["cornerRefinementMinAccuracy"] >> itsDetectorParams->cornerRefinementMinAccuracy;
-      fs["markerBorderBits"] >> itsDetectorParams->markerBorderBits;
-      fs["perspectiveRemovePixelPerCell"] >> itsDetectorParams->perspectiveRemovePixelPerCell;
-      fs["perspectiveRemoveIgnoredMarginPerCell"] >> itsDetectorParams->perspectiveRemoveIgnoredMarginPerCell;
-      fs["maxErroneousBitsInBorderRate"] >> itsDetectorParams->maxErroneousBitsInBorderRate;
-      fs["minOtsuStdDev"] >> itsDetectorParams->minOtsuStdDev;
-      fs["errorCorrectionRate"] >> itsDetectorParams->errorCorrectionRate;
-
-      fs["aprilTagQuadDecimate"] >> itsDetectorParams->aprilTagQuadDecimate;
-      fs["aprilTagQuadSigma"] >> itsDetectorParams->aprilTagQuadSigma;
-      fs["aprilTagMinClusterPixels"] >> itsDetectorParams->aprilTagMinClusterPixels;
-      fs["aprilTagMaxNmaxima"] >> itsDetectorParams->aprilTagMaxNmaxima;
-      fs["aprilTagCriticalRad"] >> itsDetectorParams->aprilTagCriticalRad;
-      fs["aprilTagMaxLineFitMse"] >> itsDetectorParams->aprilTagMaxLineFitMse;
-      fs["aprilTagMinWhiteBlackDiff"] >> itsDetectorParams->aprilTagMinWhiteBlackDiff;
-      fs["aprilTagDeglitch"] >> itsDetectorParams->aprilTagDeglitch;
-      fs["detectInvertedMarker"] >> itsDetectorParams->detectInvertedMarker;
+      if (dparams.readDetectorParameters(fs.root()) == false)
+        LERROR("Error reading ArUco detector parameters from file [" << dpf <<"] -- IGNORED");
     }
-    else LERROR("Failed to read detector parameters from file [" << dpf << "] -- IGNORED");
+    else LERROR("Failed to read ArUco detector parameters from file [" << dpf << "] -- IGNORED");
   }
   
   // Instantiate the dictionary:
+  cv::aruco::Dictionary dico;
   switch (aruco::dictionary::get())
   {
-  case aruco::Dict::Original: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);break;
-  case aruco::Dict::D4X4_50: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50); break;
-  case aruco::Dict::D4X4_100: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100); break;
-  case aruco::Dict::D4X4_250: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250); break;
-  case aruco::Dict::D4X4_1000: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_1000); break;
-  case aruco::Dict::D5X5_50: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_50); break;
-  case aruco::Dict::D5X5_100: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_100); break;
-  case aruco::Dict::D5X5_250: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_250); break;
-  case aruco::Dict::D5X5_1000: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_1000); break;
-  case aruco::Dict::D6X6_50: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_50); break;
-  case aruco::Dict::D6X6_100: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_100); break;
-  case aruco::Dict::D6X6_250: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250); break;
-  case aruco::Dict::D6X6_1000: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000); break;
-  case aruco::Dict::D7X7_50: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_50); break;
-  case aruco::Dict::D7X7_100: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_100); break;
-  case aruco::Dict::D7X7_250: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_250); break;
-  case aruco::Dict::D7X7_1000: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_1000); break;
-
-  case aruco::Dict::ATAG_16h5: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_16h5); break;
-  case aruco::Dict::ATAG_25h9: itsDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_25h9); break;
-  case aruco::Dict::ATAG_36h10: itsDictionary=cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h10); break;
-  case aruco::Dict::ATAG_36h11: itsDictionary=cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h11); break;
+  case aruco::Dict::Original: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);break;
+  case aruco::Dict::D4X4_50: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50); break;
+  case aruco::Dict::D4X4_100: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100); break;
+  case aruco::Dict::D4X4_250: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250); break;
+  case aruco::Dict::D4X4_1000: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_1000); break;
+  case aruco::Dict::D5X5_50: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_50); break;
+  case aruco::Dict::D5X5_100: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_100); break;
+  case aruco::Dict::D5X5_250: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_250); break;
+  case aruco::Dict::D5X5_1000: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_1000); break;
+  case aruco::Dict::D6X6_50: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_50); break;
+  case aruco::Dict::D6X6_100: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_100); break;
+  case aruco::Dict::D6X6_250: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250); break;
+  case aruco::Dict::D6X6_1000: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000); break;
+  case aruco::Dict::D7X7_50: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_50); break;
+  case aruco::Dict::D7X7_100: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_100); break;
+  case aruco::Dict::D7X7_250: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_250); break;
+  case aruco::Dict::D7X7_1000: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_1000); break;
+  case aruco::Dict::ATAG_16h5: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_16h5); break;
+  case aruco::Dict::ATAG_25h9: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_25h9); break;
+  case aruco::Dict::ATAG_36h10: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h10); break;
+  case aruco::Dict::ATAG_36h11: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h11); break;
   }
+
+  // Instantiate the detector (we use default refinement parameters):
+  itsDetector = cv::Ptr<cv::aruco::ArucoDetector>(new cv::aruco::ArucoDetector(dico, dparams));
 }
 
 // ##############################################################################################################
 void ArUco::postUninit()
 {
-  itsDictionary.release();
-  itsDetectorParams.release();
+  itsDetector.release();
   itsCamMatrix = cv::Mat();
   itsDistCoeffs = cv::Mat();
   aruco::camparams::unFreeze();
@@ -156,7 +129,7 @@ void ArUco::detectMarkers(cv::InputArray image, cv::OutputArray ids, cv::OutputA
     }
   }
 
-  cv::aruco::detectMarkers(image, itsDictionary, corners, ids, itsDetectorParams);
+  itsDetector->detectMarkers(image, corners, ids);
 }
 
 // ##############################################################################################################
