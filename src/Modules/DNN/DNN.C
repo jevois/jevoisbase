@@ -34,6 +34,7 @@
     The following keys are used in the JeVois-Pro GUI (\p pipe parameter of Pipeline component):
 
     - **OpenCV:** network loaded by OpenCV #DNN framework and running on CPU.
+    - **ORT:**  network loaded by ONNX-Runtime framework and running on CPU.
     - **NPU:** network running native on the JeVois-Pro integrated 5-TOPS NPU (neural processing unit).
     - **SPU:** network running on the optional 26-TOPS Hailo8 SPU accelerator (stream processing unit).
     - **TPU:** network running on the optional 4-TOPS Google Coral TPU accelerator (tensor processing unit).
@@ -132,7 +133,7 @@ class DNN : public jevois::StdModule
     }
     
     // ####################################################################################################
-    //! Processing function with video output to USB
+    //! Processing function with video output to USB on JeVois-A33
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
@@ -149,7 +150,7 @@ class DNN : public jevois::StdModule
       // Copy input to output:
       jevois::rawimage::paste(inimg, outimg, 0, 0);
 
-      // Process:
+      // Process and draw any results (e.g., detected boxes) into outimg:
       doprocess(inframe, &outimg, nullptr, false);
 
       // Send the output image with our processing results to the host over USB:
@@ -167,19 +168,19 @@ class DNN : public jevois::StdModule
       std::string const & fpscpu = timer.stop();
       timer.start();
       
-      // Start the display frame:
+      // Start the display frame: winw, winh will be set by startFrame() to the display size, e.g., 1920x1080
       unsigned short winw, winh;
       bool idle = helper.startFrame(winw, winh);
 
-      // Display the camera input frame:
-      jevois::RawImage const & img = inframe.get();
+      // Display the camera input frame: if all zeros, x, y, w, h will be set by drawInputFrame() so as to show the
+      // video frame as large as possible and centered within the display (of size winw,winh)
       int x = 0, y = 0; unsigned short w = 0, h = 0;
       helper.drawInputFrame("c", inframe, x, y, w, h, true);
 
-      // Process:
+      // Process and draw any results (e.g., detected boxes) as OpenGL overlay:
       doprocess(inframe, nullptr, &helper, idle);
 
-      // Show overall frame rate and camera and display info:
+      // Show overall frame rate, CPU, camera resolution, and display resolution, at bottom of screen:
       helper.iinfo(inframe, fpscpu, winw, winh);
       
       // Render the image and GUI:

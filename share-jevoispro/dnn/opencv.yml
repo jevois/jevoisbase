@@ -183,7 +183,7 @@ YOLOv7-Tiny:
 postproc: Segment
 
 ENet-CityScapes:
-  comment: Segments urban scenes into 20 classes"
+  comment: "Segments urban scenes into 20 classes"
   url: "https://arxiv.org/abs/1706.05587"
   model: "opencv-dnn/segmentation/enet-model.net"
   intensors: "NCHW:8U:1x3x256x512"
@@ -201,6 +201,42 @@ DeepLabV3-CPU:
   intensors: "NCHW:32F:1x3x513x513"
   segtype: ClassesCHW
 
+Skin-Clothes-Hair-DeepLab:
+  comment: "Blue: skin, Dark blue: hair, Black: clothes"
+  url: "https://github.com/Kazuhito00/Skin-Clothes-Hair-Segmentation-using-SMP"
+  mean: "123.675 116.280 103.530"
+  stdev: "0.229 0.224 0.225"
+  scale: 0.0039215
+  model: "opencv-dnn/segmentation/skin-clothes-hair-deeplab.onnx"
+  intensors: "NCHW:32F:1x3x512x512"
+  segtype: ClassesCHW
+  bgid: 3
+  alpha: 160
+
+Skin-Clothes-Hair-PAN:
+  comment: "Blue: skin, Dark blue: hair, Black: clothes"
+  url: "https://github.com/Kazuhito00/Skin-Clothes-Hair-Segmentation-using-SMP"
+  mean: "123.675 116.280 103.530"
+  stdev: "0.229 0.224 0.225"
+  scale: 0.0039215
+  model: "opencv-dnn/segmentation/skin-clothes-hair-pan.onnx"
+  intensors: "NCHW:32F:1x3x512x512"
+  segtype: ClassesCHW
+  bgid: 3
+  alpha: 160
+
+Skin-Clothes-Hair-UNet:
+  comment: "Blue: skin, Dark blue: hair, Black: clothes"
+  url: "https://github.com/Kazuhito00/Skin-Clothes-Hair-Segmentation-using-SMP"
+  mean: "123.675 116.280 103.530"
+  stdev: "0.229 0.224 0.225"
+  scale: 0.0039215
+  model: "opencv-dnn/segmentation/skin-clothes-hair-unetpp.onnx"
+  intensors: "NCHW:32F:1x3x512x512"
+  segtype: ClassesCHW
+  bgid: 3
+  alpha: 160
+
 ####################################################################################################
 # Other models
 ####################################################################################################
@@ -208,10 +244,18 @@ DeepLabV3-CPU:
 YuNet-Face-512x288:
   comment: "Face + landmarks, int8 on CPU"
   url: "https://github.com/opencv/opencv_zoo/tree/master/models/face_detection_yunet"
-  nettype: OpenCV
   postproc: YuNet
   nms: 30.0
   dthresh: 90.0
   cthresh: 90.0
   model: "npu/detection/yunet_int8.onnx"
   intensors: "NCHW:8U:1x3x288x512"
+
+FastDepth:
+  comment: "Depth estimation from monocular camera"
+  url: "https://hailo.ai/devzone-model-zoo/depth-estimation/"
+  postproc: Python
+  pypost: "pydnn/post/PyPostDepth.py"
+  model: "opencv-dnn/other/fastdepth.onnx"
+  intensors: "NCHW:8U:1x3x224x224"
+

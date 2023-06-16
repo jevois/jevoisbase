@@ -31,6 +31,7 @@ class PythonTest:
     def __init__(self):
         jevois.LINFO("PythonTest Constructor")
         self.frame = 0 # a simple frame counter used to demonstrate sendSerial()
+        self.timer = jevois.Timer("pytest", 100, jevois.LOG_INFO)
 
     # ###################################################################################################
     ## JeVois optional extra init once the instance is fully constructed

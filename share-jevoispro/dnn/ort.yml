@@ -1,0 +1,217 @@
+%YAML 1.0
+---
+
+# ONNX-Runtime models
+
+# These models run on CPU using the ONNX-Runtime library.
+
+####################################################################################################
+# Global defaults for all models in this file
+####################################################################################################
+
+preproc: Blob
+nettype: ORT
+
+####################################################################################################
+# Image classification models.
+####################################################################################################
+
+postproc: Classify
+
+####################################################################################################
+# Object detection models.
+####################################################################################################
+
+postproc: Detect
+
+YOLOv7-Tiny:
+  comment: "Resized 480x256 ONNX model, COCO classes"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/307_YOLOv7"
+  mean: "0.0 0.0 0.0"
+  scale: 0.003921
+  model: "opencv-dnn/detection/yolov7-tiny_256x480.onnx"
+  detecttype: YOLO
+  dthresh: 10.0
+  cthresh: 10.0
+  classes: "darknet/yolo/data/coco.names"
+
+DamoYOLO-tinynasL20_T-320x192:
+  comment: "Resized ONNX model by PINTO0309"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/334_DAMO-YOLO"
+  mean: "0 0 0"
+  scale: 1
+  postproc: Python
+  pypost: "pydnn/post/PyPostDAMOyolo.py"
+  model: "ort/detection/damoyolo_tinynasL20_T_192x320.onnx"
+  classes: "darknet/yolo/data/coco.names"
+  cthresh: 25
+  nms: 85
+
+# Same as previous one but with python API to run ONNX-Runtime:
+# Note: currently need to specify intensors (even though they are defined in the onnx file), will work on that.
+DamoYOLO-tinynasL20_T-320x192-Python:
+  comment: "Resized ONNX model by PINTO0309"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/334_DAMO-YOLO"
+  mean: "0 0 0"
+  scale: 1
+  nettype: Python
+  pynet: "pydnn/net/PyNetORT.py"
+  model: "ort/detection/damoyolo_tinynasL20_T_192x320.onnx"
+  intensors: "NCHW:32F:1x3x192x320"
+  postproc: Python
+  pypost: "pydnn/post/PyPostDAMOyolo.py"
+  classes: "darknet/yolo/data/coco.names"
+  cthresh: 25
+  nms: 85
+  # Sync processing required if network type is Python and preproc or postproc are Python too, as Python not re-entrant
+  processing: Sync
+  
+DamoYOLO-tinynasL20_T-480x288:
+  comment: "Resized ONNX model by PINTO0309"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/334_DAMO-YOLO"
+  mean: "0 0 0"
+  scale: 1
+  postproc: Python
+  pypost: "pydnn/post/PyPostDAMOyolo.py"
+  model: "ort/detection/damoyolo_tinynasL20_T_288x480.onnx"
+  classes: "darknet/yolo/data/coco.names"
+  cthresh: 25
+  nms: 85
+
+DamoYOLO-tinynasL25_S-320x192:
+  comment: "Resized ONNX model by PINTO0309"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/334_DAMO-YOLO"
+  mean: "0 0 0"
+  scale: 1
+  postproc: Python
+  pypost: "pydnn/post/PyPostDAMOyolo.py"
+  model: "ort/detection/damoyolo_tinynasL25_S_192x320.onnx"
+  classes: "darknet/yolo/data/coco.names"
+  cthresh: 25
+  nms: 85
+
+DamoYOLO-tinynasL25_S-480x288:
+  comment: "Resized ONNX model by PINTO0309"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/334_DAMO-YOLO"
+  mean: "0 0 0"
+  scale: 1
+  postproc: Python
+  pypost: "pydnn/post/PyPostDAMOyolo.py"
+  model: "ort/detection/damoyolo_tinynasL25_S_288x480.onnx"
+  classes: "darknet/yolo/data/coco.names"
+  cthresh: 25
+  nms: 85
+
+DamoYOLO-tinynasL35_M-320x192:
+  comment: "Resized ONNX model by PINTO0309"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/334_DAMO-YOLO"
+  mean: "0 0 0"
+  scale: 1
+  postproc: Python
+  pypost: "pydnn/post/PyPostDAMOyolo.py"
+  model: "ort/detection/damoyolo_tinynasL35_M_192x320.onnx"
+  classes: "darknet/yolo/data/coco.names"
+  cthresh: 25
+  nms: 85
+
+DamoYOLO-tinynasL35_M-480x288:
+  comment: "Resized ONNX model by PINTO0309"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/334_DAMO-YOLO"
+  mean: "0 0 0"
+  scale: 1
+  postproc: Python
+  pypost: "pydnn/post/PyPostDAMOyolo.py"
+  model: "ort/detection/damoyolo_tinynasL35_M_288x480.onnx"
+  classes: "darknet/yolo/data/coco.names"
+  cthresh: 25
+  nms: 85
+
+####################################################################################################
+# Semantic segmentation models
+####################################################################################################
+
+postproc: Segment
+
+Skin-Clothes-Hair-DeepLab:
+  comment: "Blue: skin, Dark blue: hair, Black: clothes"
+  url: "https://github.com/Kazuhito00/Skin-Clothes-Hair-Segmentation-using-SMP"
+  mean: "123.675 116.280 103.530"
+  stdev: "0.229 0.224 0.225"
+  scale: 0.0039215
+  model: "opencv-dnn/segmentation/skin-clothes-hair-deeplab.onnx"
+  segtype: ClassesCHW
+  bgid: 3
+  alpha: 160
+
+Skin-Clothes-Hair-PAN:
+  comment: "Blue: skin, Dark blue: hair, Black: clothes"
+  url: "https://github.com/Kazuhito00/Skin-Clothes-Hair-Segmentation-using-SMP"
+  mean: "123.675 116.280 103.530"
+  stdev: "0.229 0.224 0.225"
+  scale: 0.0039215
+  model: "opencv-dnn/segmentation/skin-clothes-hair-pan.onnx"
+  segtype: ClassesCHW
+  bgid: 3
+  alpha: 160
+
+Skin-Clothes-Hair-UNet:
+  comment: "Blue: skin, Dark blue: hair, Black: clothes"
+  url: "https://github.com/Kazuhito00/Skin-Clothes-Hair-Segmentation-using-SMP"
+  mean: "123.675 116.280 103.530"
+  stdev: "0.229 0.224 0.225"
+  scale: 0.0039215
+  model: "opencv-dnn/segmentation/skin-clothes-hair-unetpp.onnx"
+  segtype: ClassesCHW
+  bgid: 3
+  alpha: 160
+
+# Very slow
+LaneSOD:
+  comment: "Lane detection"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/374_LaneSOD"
+  mean: "123.675 116.280 103.530"
+  stdev: "0.229 0.224 0.225"
+  scale: 0.0039215
+  model: "ort/segmentation/lanesod_192x320.onnx"
+  segtype: ClassesCHW
+  bgid: 1
+  cthresh: 5
+  alpha: 160
+
+####################################################################################################
+# Other models
+####################################################################################################
+
+# Works but very slow, 3.8s/frame on platform
+#URetinex-Net:
+#  comment: "Color enhancement model for low-light"
+#  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/372_URetinex-Net"
+#  mean: "0 0 0"
+#  scale: 0.0039215
+#  nettype: Python
+#  pynet: "pydnn/net/PyNetURetinex.py"
+#  model: "ort/other/uretinex_net_180x320.onnx"
+#  intensors: "NCHW:32F:1x3x180x320"
+#  postproc: Python
+#  pypost: "pydnn/post/PyPostURetinex.py"
+#  processing: Sync
+
+# Works but very slow, 3.8s/frame on platform
+URetinex-Net:
+  comment: "Color enhancement model for low-light"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/372_URetinex-Net"
+  mean: "0 0 0"
+  scale: 0.0039215
+  model: "ort/other/uretinex_net_180x320.onnx"
+  # Extra input tensor for exposure:
+  extraintensors: "32F:1:5.0"
+  postproc: Python
+  pypost: "pydnn/post/PyPostURetinex.py"
+
+FastDepth:
+  comment: "Depth estimation from monocular camera"
+  url: "https://hailo.ai/devzone-model-zoo/depth-estimation/"
+  model: "ort/other/fastdepth.onnx"
+  postproc: Python
+  pypost: "pydnn/post/PyPostDepth.py"
+

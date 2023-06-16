@@ -66,19 +66,24 @@ add_subdirectory(include)
 # Enable address sanitizer (to debug illegal memory accesses and such; should normally be commented out):
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
+########################################################################################################################
+# Find any include files installed by JeVois into /${JEVOIS}/include, e.g., imgui:
+if (JEVOIS_PLATFORM)
+  include_directories(${JEVOIS_BUILD_BASE}/${JEVOIS_MODULES_ROOT}/include)
+else ()
+  include_directories(${JEVOIS_MODULES_ROOT}/include)
+endif ()
 
 ########################################################################################################################
-# Find any include files installed by JeVois into /${JEVOIS}/include:
-include_directories(${JEVOIS_MODULES_ROOT}/include)
-
-########################################################################################################################
-# OpenVX and ovxlib support
+# OpenVX, ovxlib, onnxruntime support
 if (JEVOIS_PLATFORM)
   include_directories(${JEVOIS_BUILD_BASE}/usr/include/ovxlib)
   include_directories(${JEVOIS_BUILD_BASE}/usr/include/VX)
+  include_directories(${JEVOIS_BUILD_BASE}/usr/include/onnxruntime)
 else ()
   include_directories(/usr/include/ovxlib)
   include_directories(/usr/include/VX)
+  include_directories(/usr/include/onnxruntime)
 endif ()
 
 ########################################################################################################################

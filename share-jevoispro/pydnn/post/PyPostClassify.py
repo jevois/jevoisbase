@@ -81,7 +81,7 @@ class PyPostClassify:
         fudge = self.classoffset.get()
         topn = self.top.get()
         
-        # Process the newly received network outputs:1
+        # Process the newly received network outputs:
         for o in outs:
             # Remove all dimensions that are 1, e.g., from 1x1x1000 to 1000
             o = np.squeeze(o)
@@ -115,7 +115,7 @@ class PyPostClassify:
     ## [Optional] Report the latest results obtained by process() by drawing them
     ## outimg is None or a RawImage to draw into when in Legacy mode (drawing to an image sent to USB)
     ## helper is None or a GUIhelper to do OpenGL drawings when in JeVois-Pro GUI mode
-    ## overlay is True if users wishes to see overlay text
+    ## overlay is True if user wishes to see overlay text
     ## idle is true if keyboard/mouse have been idle for a while, which typically would reduce what is displayed
     ##
     ## Note that report() is called on every frame even though the network may run slower or take some time to load and

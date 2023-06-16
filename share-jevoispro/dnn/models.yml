@@ -35,12 +35,31 @@
 # Include all YAML files in the /jevoispro/share/dnn/custom/ directory:
 includedir: custom
 
+# Default model to run if there are no custom models above. On host, which has no NPU, this one will be skipped and
+# the first one from the next included file (opencv.yml) will be loaded instead:
+yolov7-tiny-NPU:
+  comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
+  preproc: Blob
+  mean: "0 0 0"
+  scale: 0.0039215686
+  nettype: NPU
+  model: "npu/detection/yolov7-tiny-512x288.nb"
+  intensors: "NCHW:8U:1x3x288x512:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x36x64:AA:0.003916095942258835:0, NCHW:8U:1x255x18x32:AA:0.00392133416607976:0, NCHW:8U:1x255x9x16:AA:0.003921062219887972:0"
+  postproc: Detect
+  detecttype: RAWYOLO
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  scalexy: 2.0
+  sigmoid: false
+  classes: "npu/detection/coco-labels.txt"
+
 # Include (recursively) zoo files for various accelerators:
 include: opencv.yml
 include: npu.yml
 include: spu.yml
 include: tpu.yml
 include: vpu.yml
+include: ort.yml
 
 # Note that you can set global parameters, which will be applied, if appropriate, to any pipeline selected. For example,
 # if you put all your OpenCV classification networks in one YAML file, you could set this at the beginning:

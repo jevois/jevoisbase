@@ -4,8 +4,11 @@ else: import libjevois as jevois
 
 import numpy as np
 import cv2
+import onnxruntime as rt
 
-## Simple DNN network invoked from OpenCV in python
+## Simple DNN network invoked from ONNX-Runtime in python for URetinex-Net
+#
+# This network expects a fixed 1x1 tensor for a parameter, in addition to the image input
 #
 # @author Laurent Itti
 # 
@@ -19,12 +22,11 @@ import cv2
 # @distribution Unrestricted
 # @restrictions None
 # @ingroup pydnn
-class PyNetOpenCV:
+class PyNetURetinex:
     # ###################################################################################################
     ## [Optional] Constructor
     def __init__(self):
-        self.net = None # we do not have a network yet, we will load it after parameters have been set
-        self.gflops = None # need a network and an image to compute number of operations in net
+        self.session = None # we do not have a network yet, we will load it after parameters have been set
         
     # ###################################################################################################
     ## [Optional] JeVois parameters initialization
@@ -35,43 +37,37 @@ class PyNetOpenCV:
                         "Root directory to use when config or model parameters are relative paths.",
                         pyjevois.share, pc) # pyjevois.share contains '/jevois[pro]/share'
         
+        self.model = jevois.Parameter(self, 'model', 'str',
+                        "Path to a binary file of model contains trained weights with .onnx extension. " +
+                        "If path is relative, it will be prefixed by dataroot.",
+                        "", pc);
+
+        # Note: input shapes are stored in the network already; however, here we require them as a parameter that the
+        # pre-processor will be able to query to create the input tensors. In the future, we may add some callback
+        # function here to allow the pre-processor to get the input shapes directly from the ONNX net
         self.intensors = jevois.Parameter(self, 'intensors', 'str',
                         "Specification of input tensors",
                         '', pc)
-        
-        self.outtensors = jevois.Parameter(self, 'outtensors', 'str',
-                        "Specification of output tensors (optional)",
-                        '', pc)
-        
-        self.config = jevois.Parameter(self, 'config', 'str',
-                        "Path to a text file that contains network configuration. " +
-                        "Can have extension .prototxt (Caffe), .pbtxt (TensorFlow), or .cfg (Darknet). " +
-                        "If path is relative, it will be prefixed by dataroot.",
-                        '', pc);
-        
-        self.model = jevois.Parameter(self, 'model', 'str',
-                        "Path to a binary file of model contains trained weights. " +
-                        "Can have extension .caffemodel (Caffe), .pb (TensorFlow), .t7 or .net (Torch), " +
-                        ".tflite (TensorFlow Lite), or .weights (Darknet). If path is relative, it will be " +
-                        "prefixed by dataroot.",
-                        "", pc);
+
+        self.exposure = jevois.Parameter(self, 'exposure', 'float',
+                                         "Exposure ratio for URetinex-Net, with typical values 3 to 5",
+                                         5.0, pc)
         
     # ###################################################################################################
     ## [Optional] Freeze some parameters that should not be changed at runtime
     def freeze(self, doit):
         self.dataroot.freeze(doit)
-        self.intensors.freeze(doit)
-        self.outtensors.freeze(doit)
-        self.config.freeze(doit)
         self.model.freeze(doit)
+        self.intensors.freeze(doit)
 
     # ###################################################################################################
     ## [Required] Load the network from disk
     def load(self):
-        self.net = cv2.dnn.readNet(self.dataroot.get() + '/' + self.model.get(),
-                                   self.dataroot.get() + '/' + self.config.get())
-        self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-        self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+        self.session = rt.InferenceSession(self.dataroot.get() + '/' + self.model.get(),
+                                           providers = rt.get_available_providers())
+
+        # Get a list of input specs to be used during inference:
+        self.inputs = self.session.get_inputs()
         
     # ###################################################################################################
     ## [Required] Main processing function: process input blobs through network and return output blobs
@@ -79,20 +75,21 @@ class PyNetOpenCV:
     ## Should return a tuple with (list of output blobs, list of info strings), where the info strings
     ## could contain some information about the network
     def process(self, blobs):
-        if self.net is None: raise RuntimeError("Cannot process because no loaded network")
-        if len(blobs) != 1: raise ValueError("Only one input blob is supported")
+        if self.session is None: raise RuntimeError("Cannot process because no loaded network")
+        if len(blobs) != 1: raise ValueError(f"{len(blobs)} inputs received but network wants 1")
 
+        # Get exposure ratio parameter and create a tensor from it. Then create a dictionary to associate one blob to
+        # each network input:
+        expo = self.exposure.get()
+        
+        ins = { self.inputs[0].name: blobs[0],
+                self.inputs[1].name: np.asarray(expo, dtype=np.float32).reshape(self.inputs[1].shape) }
+        
         # Run the network:
-        self.net.setInput(blobs[0])
-        outs = self.net.forward()
-        
-        # Some simple info strings that will be shown along with preproc/postproc info:
-        if self.gflops is None: self.gflops = int(self.net.getFLOPS(blobs[0].shape) * 1.0e-9)
-        
-        info = [
-            "* Network",
-            "{}GFLOPS".format(self.gflops),
-        ]
+        outs = self.session.run(None, ins)
 
+        # Some simple info strings that will be shown along with preproc/postproc info:
+        info = [ "* Network", "Forward pass OK", f"Exposure ratio: {expo}" ]
+        
         # Return outs and info:
         return (outs, info)

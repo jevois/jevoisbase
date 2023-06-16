@@ -184,3 +184,13 @@ road-segmentation-adas-0001:
 ####################################################################################################
 # Other models
 ####################################################################################################
+
+# runs but need a post-processor...
+#CenterNet-384:
+#  comment: "Detect object centers and sizes"
+#  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/042_centernet"
+#  postproc: Python
+#  pypost: "pydnn/post/PyPostStub.py"
+#  model: "openvino/detection/ctdet_coco_dlav0_384.bin"
+#  config: "openvino/detection/ctdet_coco_dlav0_384.xml"
+#  intensors: "NCHW:8U:1x3x384x384"
