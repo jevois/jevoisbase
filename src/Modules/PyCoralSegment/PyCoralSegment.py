@@ -4,9 +4,9 @@ else: import libjevois as jevois
 import cv2 as cv
 import numpy as np
 from PIL import Image
+from pycoral.utils import edgetpu
 from pycoral.adapters import common
 from pycoral.adapters import segment
-from pycoral.utils.edgetpu import make_interpreter
 import time
 
 ## Semantic segmentation using Coral Edge TPU
@@ -50,8 +50,8 @@ class PyCoralSegment:
             
         # Load network:
         sdir = pyjevois.share + '/coral/segmentation/'
-        self.interpreter = make_interpreter(sdir + modelname)
-        #self.interpreter = make_interpreter(*modelname.split('@'))
+        self.interpreter = edgetpu.make_interpreter(sdir + modelname)
+        #self.interpreter = edgetpu.make_interpreter(*modelname.split('@'))
         self.interpreter.allocate_tensors()
         self.timer = jevois.Timer('Coral segmentation', 10, jevois.LOG_DEBUG)
         self.cmapRGB = self.create_pascal_label_colormap()

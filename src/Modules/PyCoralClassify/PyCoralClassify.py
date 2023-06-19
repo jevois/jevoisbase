@@ -4,10 +4,10 @@ else: import libjevois as jevois
 import cv2 as cv
 import numpy as np
 from PIL import Image
+from pycoral.utils import edgetpu
 from pycoral.adapters import classify
 from pycoral.adapters import common
 from pycoral.utils.dataset import read_label_file
-from pycoral.utils.edgetpu import make_interpreter
 import time
 
 ## Object recognition using Coral Edge TPU
@@ -70,8 +70,8 @@ class PyCoralClassify:
         self.labels = read_label_file(sdir + classnames)
         
         # Load network:
-        self.interpreter = make_interpreter(sdir + modelname)
-        #self.interpreter = make_interpreter(*modelname.split('@'))
+        self.interpreter = edgetpu.make_interpreter(sdir + modelname)
+        #self.interpreter = edgetpu.make_interpreter(*modelname.split('@'))
         self.interpreter.allocate_tensors()
         self.timer = jevois.Timer('Coral classification', 10, jevois.LOG_DEBUG)
         

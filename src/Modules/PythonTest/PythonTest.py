@@ -44,7 +44,6 @@ class PythonTest:
         self.cx = jevois.Parameter(self, 'cx', 'int', "Circle horizontal center, in pixels", 320, pc)
         self.cy = jevois.Parameter(self, 'cy', 'int', "Circle vertical center, in pixels", 240, pc)
         self.radius = jevois.Parameter(self, 'radius', 'byte', "Circle radius, in pixels", 50, pc)
-        self.thickness = jevois.Parameter(self, 'thickness', 'byte', "Circle thickness, in pixels", 2, pc)
         
     # ###################################################################################################
     ## Process function with no USB output
@@ -77,8 +76,7 @@ class PythonTest:
         # Inventor, or JeVois-Pro GUI):
         jevois.writeText(outimg, "Hi from Python!", 20, 20, jevois.YUYV.White, jevois.Font.Font10x20)
 
-        jevois.drawCircle(outimg, self.cx.get(), self.cy.get(), self.radius.get(), self.thickness.get(),
-                          jevois.YUYV.White)
+        jevois.drawCircle(outimg, self.cx.get(), self.cy.get(), self.radius.get(), 2, jevois.YUYV.White)
 
         # We are done with the output, ready to send it to host over USB:
         outframe.send()

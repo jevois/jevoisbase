@@ -90,7 +90,12 @@ class PyCoralDetect:
         inference_time = time.perf_counter() - start
         
         # Get detections with high enough scores:
-        objs = detect.get_objects(self.interpreter, self.threshold, scale)
+        # JEVOIS: this used to work but now fails with pycoral-2.0.0 / libedgetpu-1.6.0 / tflite 2.5.0 with error:
+        # AttributeError: 'Interpreter' object has no attribute '_get_full_signature_list'
+        #objs = detect.get_objects(self.interpreter, self.threshold, scale)
+
+        # Use modified function below instead:
+        objs = self.get_objects(self.interpreter, self.threshold, scale)
 
         # Draw the detections:
         image = image.convert('RGB')
@@ -143,7 +148,12 @@ class PyCoralDetect:
         inference_time = time.perf_counter() - start
         
         # Get detections with high enough scores:
-        objs = detect.get_objects(self.interpreter, self.threshold, scale)
+        # JEVOIS: this used to work but now fails with pycoral-2.0.0 / libedgetpu-1.6.0  / tflite 2.5.0 with error:
+        # AttributeError: 'Interpreter' object has no attribute '_get_full_signature_list'
+        #objs = detect.get_objects(self.interpreter, self.threshold, scale)
+
+        # Use modified function below instead:
+        objs = self.get_objects(self.interpreter, self.threshold, scale)
 
         # Draw the detections:
         for obj in objs:
@@ -168,3 +178,59 @@ class PyCoralDetect:
 
         # End of frame:
         helper.endFrame()
+
+    # ####################################################################################################
+    ## Modified from https://github.com/google-coral/pycoral/blob/master/pycoral/adapters/detect.py
+    # to avoid calling interpreter._get_full_signature_list() which does not seem to exist anymore...
+    def get_objects(self, interpreter, score_threshold = -float('inf'), image_scale = (1.0, 1.0)):
+        """Gets results from a detection model as a list of detected objects.
+        
+        Args:
+          interpreter: The ``tf.lite.Interpreter`` to query for results.
+          score_threshold (float): The score threshold for results. All returned
+          results have a score greater-than-or-equal-to this value.
+          image_scale (float, float): Scaling factor to apply to the bounding boxes as
+          (x-scale-factor, y-scale-factor), where each factor is from 0 to 1.0.
+
+        Returns:
+          A list of :obj:`Object` objects, which each contains the detected object's
+          id, score, and bounding box as :obj:`BBox`.
+        """
+        # If a model has signature, we use the signature output tensor names to parse
+        # the results. Otherwise, we parse the results based on some assumption of the
+        # output tensor order and size.
+        # pylint: disable=protected-access
+        # JEVOIS: this fails on pycoral 2.0.0/libedgetpu 1.6.0: signature_list = interpreter._get_full_signature_list()
+        # pylint: enable=protected-access
+        if False: ###signature_list:
+            if len(signature_list) > 1:
+                raise ValueError('Only support model with one signature.')
+            signature = signature_list[next(iter(signature_list))]
+            count = int(interpreter.tensor(signature['outputs']['output_0'])()[0])
+            scores = interpreter.tensor(signature['outputs']['output_1'])()[0]
+            class_ids = interpreter.tensor(signature['outputs']['output_2'])()[0]
+            boxes = interpreter.tensor(signature['outputs']['output_3'])()[0]
+        elif common.output_tensor(interpreter, 3).size == 1:
+            boxes = common.output_tensor(interpreter, 0)[0]
+            class_ids = common.output_tensor(interpreter, 1)[0]
+            scores = common.output_tensor(interpreter, 2)[0]
+            count = int(common.output_tensor(interpreter, 3)[0])
+        else:
+            scores = common.output_tensor(interpreter, 0)[0]
+            boxes = common.output_tensor(interpreter, 1)[0]
+            count = (int)(common.output_tensor(interpreter, 2)[0])
+            class_ids = common.output_tensor(interpreter, 3)[0]
+            
+        width, height = common.input_size(interpreter)
+        image_scale_x, image_scale_y = image_scale
+        sx, sy = width / image_scale_x, height / image_scale_y
+            
+        def make(i):
+            ymin, xmin, ymax, xmax = boxes[i]
+            return detect.Object(
+                id = int(class_ids[i]),
+                score = float(scores[i]),
+                bbox = detect.BBox(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax).scale(sx, sy).map(int))
+            
+        return [make(i) for i in range(count) if scores[i] >= score_threshold]
+        

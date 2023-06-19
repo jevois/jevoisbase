@@ -38,12 +38,12 @@ includedir: custom
 # Default model to run if there are no custom models above. On host, which has no NPU, this one will be skipped and
 # the first one from the next included file (opencv.yml) will be loaded instead:
 yolov7-tiny-NPU:
-  comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
   preproc: Blob
   mean: "0 0 0"
   scale: 0.0039215686
   nettype: NPU
   model: "npu/detection/yolov7-tiny-512x288.nb"
+  comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
   intensors: "NCHW:8U:1x3x288x512:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x36x64:AA:0.003916095942258835:0, NCHW:8U:1x255x18x32:AA:0.00392133416607976:0, NCHW:8U:1x255x9x16:AA:0.003921062219887972:0"
   postproc: Detect
