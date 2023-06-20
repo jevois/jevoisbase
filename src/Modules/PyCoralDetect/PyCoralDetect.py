@@ -33,6 +33,9 @@ class PyCoralDetect:
     # ####################################################################################################
     ## Constructor
     def __init__(self):
+        if jevois.getNumInstalledTPUs() == 0:
+            jevois.LFATAL("A Google Coral EdgeTPU is required for this module (PCIe M.2 2230 A+E or USB)")
+
         self.threshold = 0.4 # Confidence threshold (0..1), higher for stricter confidence.
         self.rgb = True      # True if model expects RGB inputs, otherwise it expects BGR
         

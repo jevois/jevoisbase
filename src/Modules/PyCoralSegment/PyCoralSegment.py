@@ -32,6 +32,9 @@ class PyCoralSegment:
     # ####################################################################################################
     ## Constructor
     def __init__(self):
+        if jevois.getNumInstalledTPUs() == 0:
+            jevois.LFATAL("A Google Coral EdgeTPU is required for this module (PCIe M.2 2230 A+E or USB)")
+            
         self.rgb = True        # True if model expects RGB inputs, otherwise it expects BGR
         self.keepaspect = True # Keep aspect ratio using zero padding
         alpha = 128            # Transparency alpha values for processGUI, higher is less transparent
