@@ -256,6 +256,6 @@ FastDepth:
   url: "https://hailo.ai/devzone-model-zoo/depth-estimation/"
   postproc: Python
   pypost: "pydnn/post/PyPostDepth.py"
-  model: "opencv-dnn/other/fastdepth.onnx"
-  intensors: "NCHW:8U:1x3x224x224"
+  model: "ort/other/fastdepth.onnx"
+  intensors: "NCHW:32F:1x3x224x224"
 
