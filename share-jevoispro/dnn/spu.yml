@@ -81,6 +81,7 @@ SqueezeNet:
   classes: "coral/classification/imagenet_labels.txt"
   classoffset: 1
 
+# works but sometimes fails to load (memory issue likely)...
 ViT-Base:
   model: "hailo/classification/vit_base.hef"
   classes: "coral/classification/imagenet_labels.txt"
@@ -160,16 +161,17 @@ YOLOv5xs:
 #  scalexy: 2.0
 #  sigmoid: false
 
-yolov7-640:
-  comment: "Converted by JeVois using Hailo SDK"
-  url: "https://github.com/WongKinYiu/yolov7"
-  scale: 0.0039215686
-  model: "hailo/detection/yolov7-640.hef"
-  detecttype: RAWYOLO
-  anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
-  classes: "npu/detection/coco-labels.txt"
-  sigmoid: true
-  scalexy: 2.0
+# works but same as YOLOv7 below
+#yolov7-640:
+#  comment: "Converted by JeVois using Hailo SDK"
+#  url: "https://github.com/WongKinYiu/yolov7"
+#  scale: 0.0039215686
+#  model: "hailo/detection/yolov7-640.hef"
+#  detecttype: RAWYOLO
+#  anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
+#  classes: "npu/detection/coco-labels.txt"
+#  sigmoid: true
+#  scalexy: 2.0
 
 YOLOv7:
   detecttype: RAWYOLO
@@ -179,13 +181,14 @@ YOLOv7:
   scalexy: 2.0
   sigmoid: false
 
-YOLOv7e6-1280:
-  detecttype: RAWYOLO
-  anchors: "19,27, 44,40, 38,94;   96,68, 86,152, 180,137;   140,301, 303,264, 238,542;  436,615, 739,380, 925,792"
-  model: "hailo/detection/yolov7e6.hef"
-  classes: "darknet/yolo/data/coco.names"
-  scalexy: 2.0
-  sigmoid: false
+# works but sometimes fails to load (memory issue likely)...
+#YOLOv7e6-1280:
+#  detecttype: RAWYOLO
+#  anchors: "19,27, 44,40, 38,94;   96,68, 86,152, 180,137;   140,301, 303,264, 238,542;  436,615, 739,380, 925,792"
+#  model: "hailo/detection/yolov7e6.hef"
+#  classes: "darknet/yolo/data/coco.names"
+#  scalexy: 2.0
+#  sigmoid: false
 
 YOLOv7-tiny:
   detecttype: RAWYOLO
