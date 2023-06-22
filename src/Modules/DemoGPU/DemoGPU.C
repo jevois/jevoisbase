@@ -150,7 +150,7 @@ class DemoGPU : public jevois::Module,
         cv::Mat tmpcv(inimg.height, inimg.width, CV_8UC2);
         itsFilter->process(inimgcv, tmpcv);
         cv::Mat tmpcvbgr; cv::cvtColor(tmpcv, tmpcvbgr, cv::COLOR_BGR5652BGR); // note: swap red/blue
-        jevois::rawimage::convertCvRGBtoRawImage(tmpcvbgr, outimg, 100); // note: swap red/blue
+        jevois::rawimage::convertCvBGRtoRawImage(tmpcvbgr, outimg, 100); // note: swap red/blue
         col = jevois::yuyv::White;
       }
       else LFATAL("output format must be RGB565 or YUYV");
