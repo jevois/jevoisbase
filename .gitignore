@@ -19,6 +19,9 @@ Contrib/tensorflow/
 Contrib/cpuinfo/
 /hbuild/
 /pbuild/
+/phbuild/
+/ppbuild/
+/ppdbuild/
 /jvpkg/
 /doc/
 /JeVois_jevoisbase.jvpkg
