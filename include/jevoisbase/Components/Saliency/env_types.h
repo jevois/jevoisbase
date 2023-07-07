@@ -37,7 +37,7 @@
 
 #pragma once
 
-#include <jevoisbase/src/Components/Saliency/env_config.h>
+#include <jevoisbase/Components/Saliency/env_config.h>
 
 //! 8-bit unsigned integer
 typedef unsigned char byte;

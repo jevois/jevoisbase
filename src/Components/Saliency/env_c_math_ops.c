@@ -35,10 +35,10 @@
 // $Id: env_c_math_ops.c 11331 2009-06-23 17:57:49Z itti $
 //
 
-#include <jevoisbase/src/Components/Saliency/env_c_math_ops.h>
+#include <jevoisbase/Components/Saliency/env_c_math_ops.h>
 
-#include <jevoisbase/src/Components/Saliency/env_log.h>
-#include <jevoisbase/src/Components/Saliency/env_types.h>
+#include <jevoisbase/Components/Saliency/env_log.h>
+#include <jevoisbase/Components/Saliency/env_types.h>
 
 // ######################################################################
 void env_c_lowpass_5_x_dec_x_fewbits_optim(const intg32* src, const env_size_t w, const env_size_t h,

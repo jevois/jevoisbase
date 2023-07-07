@@ -35,12 +35,12 @@
 // $Id: env_channel.c 9830 2008-06-18 18:50:22Z lior $
 //
 
-#include <jevoisbase/src/Components/Saliency/env_channel.h>
+#include <jevoisbase/Components/Saliency/env_channel.h>
 
-#include <jevoisbase/src/Components/Saliency/env_c_math_ops.h>
-#include <jevoisbase/src/Components/Saliency/env_image_ops.h>
-#include <jevoisbase/src/Components/Saliency/env_log.h>
-#include <jevoisbase/src/Components/Saliency/env_params.h>
+#include <jevoisbase/Components/Saliency/env_c_math_ops.h>
+#include <jevoisbase/Components/Saliency/env_image_ops.h>
+#include <jevoisbase/Components/Saliency/env_log.h>
+#include <jevoisbase/Components/Saliency/env_params.h>
 
 #ifndef ENV_NO_DEBUG
 

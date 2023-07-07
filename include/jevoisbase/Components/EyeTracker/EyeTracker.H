@@ -19,7 +19,7 @@
 
 #include <jevois/Component/Component.H>
 #include <opencv2/core/core.hpp>
-#include <jevoisbase/Contrib/cvEyeTracker-1.2.5/ransac_ellipse.h>
+#include <cvEyeTracker-1.2.5/ransac_ellipse.h>
 
 namespace eyetracker
 {

@@ -35,9 +35,9 @@
 // $Id: env_params.c 9830 2008-06-18 18:50:22Z lior $
 //
 
-#include <jevoisbase/src/Components/Saliency/env_params.h>
+#include <jevoisbase/Components/Saliency/env_params.h>
 
-#include <jevoisbase/src/Components/Saliency/env_log.h>
+#include <jevoisbase/Components/Saliency/env_log.h>
 
 // ######################################################################
 void env_params_set_defaults(struct env_params* envp)

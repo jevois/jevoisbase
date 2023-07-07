@@ -37,9 +37,9 @@
 
 #pragma once
 
-#include <jevoisbase/src/Components/Saliency/env_config.h>
-#include <jevoisbase/src/Components/Saliency/env_types.h>
-#include <jevoisbase/src/Components/Saliency/env_image.h>
+#include <jevoisbase/Components/Saliency/env_config.h>
+#include <jevoisbase/Components/Saliency/env_types.h>
+#include <jevoisbase/Components/Saliency/env_image.h>
 
 struct env_params
 {

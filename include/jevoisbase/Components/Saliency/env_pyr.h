@@ -37,8 +37,8 @@
 
 #pragma once
 
-#include <jevoisbase/src/Components/Saliency/env_image.h>
-#include <jevoisbase/src/Components/Saliency/env_log.h>
+#include <jevoisbase/Components/Saliency/env_image.h>
+#include <jevoisbase/Components/Saliency/env_log.h>
 
 // ######################################################################
 //! This class implements a set of images, often used as a dyadic pyramid.

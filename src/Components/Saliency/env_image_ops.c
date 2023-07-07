@@ -35,10 +35,10 @@
 // $Id: env_image_ops.c 11874 2009-10-21 01:03:31Z dparks $
 //
 
-#include <jevoisbase/src/Components/Saliency/env_image_ops.h>
+#include <jevoisbase/Components/Saliency/env_image_ops.h>
 
-#include <jevoisbase/src/Components/Saliency/env_c_math_ops.h>
-#include <jevoisbase/src/Components/Saliency/env_log.h>
+#include <jevoisbase/Components/Saliency/env_c_math_ops.h>
+#include <jevoisbase/Components/Saliency/env_log.h>
 
 
 // ######################################################################

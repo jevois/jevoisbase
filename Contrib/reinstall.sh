@@ -79,6 +79,7 @@ if [ "X$REPLY" = "Xy" ]; then
 
     # Fast optical flow:
     get_github tikroeger OF_DIS 2c9f2a674f3128d3a41c10e41cc9f3a35bb1b523
+    /bin/rm -rf OF_DIS/.git # we will install the whole tree, so skip git files
     
     # openEyes eye tracking: this code is small and a bit old so it needs some patching, but it's not on github so we
     # just added it to our codebase and we track the changes through our master svn:

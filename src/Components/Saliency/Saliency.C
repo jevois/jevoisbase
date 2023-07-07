@@ -17,12 +17,12 @@
 
 #include <jevoisbase/Components/Saliency/Saliency.H>
 
-#include <jevoisbase/src/Components/Saliency/env_config.h>
-#include <jevoisbase/src/Components/Saliency/env_c_math_ops.h>
-#include <jevoisbase/src/Components/Saliency/env_image.h>
-#include <jevoisbase/src/Components/Saliency/env_image_ops.h>
-#include <jevoisbase/src/Components/Saliency/env_log.h>
-#include <jevoisbase/src/Components/Saliency/env_params.h>
+#include <jevoisbase/Components/Saliency/env_config.h>
+#include <jevoisbase/Components/Saliency/env_c_math_ops.h>
+#include <jevoisbase/Components/Saliency/env_image.h>
+#include <jevoisbase/Components/Saliency/env_image_ops.h>
+#include <jevoisbase/Components/Saliency/env_log.h>
+#include <jevoisbase/Components/Saliency/env_params.h>
 
 #include <jevois/Core/VideoBuf.H>
 #include <jevois/Debug/Log.H>

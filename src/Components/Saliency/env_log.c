@@ -35,7 +35,7 @@
 // $Id: env_log.c 7629 2007-01-03 04:07:38Z rjpeters $
 //
 
-#include <jevoisbase/src/Components/Saliency/env_log.h>
+#include <jevoisbase/Components/Saliency/env_log.h>
 
 static env_assert_handler* g_assert_handler = 0;
 

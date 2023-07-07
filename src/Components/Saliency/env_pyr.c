@@ -35,7 +35,7 @@
 // $Id: env_pyr.c 7628 2007-01-03 04:07:21Z rjpeters $
 //
 
-#include <jevoisbase/src/Components/Saliency/env_pyr.h>
+#include <jevoisbase/Components/Saliency/env_pyr.h>
 
 // ######################################################################
 void env_pyr_init(struct env_pyr* pyr, const env_size_t n)

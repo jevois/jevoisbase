@@ -37,7 +37,7 @@
 
 #pragma once
 
-#include <jevoisbase/src/Components/Saliency/env_types.h>
+#include <jevoisbase/Components/Saliency/env_types.h>
 
 #ifdef __cplusplus
 extern "C"

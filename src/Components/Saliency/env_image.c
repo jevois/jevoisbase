@@ -35,7 +35,7 @@
 // $Id: env_image.c 7638 2007-01-03 21:23:18Z rjpeters $
 //
 
-#include <jevoisbase/src/Components/Saliency/env_image.h>
+#include <jevoisbase/Components/Saliency/env_image.h>
 
 // ######################################################################
 void env_img_init(struct env_image* img, const struct env_dims d)

@@ -29,25 +29,26 @@ else()
   set(JEVOIS_CONFIG "/jevois/config" CACHE STRING "Path to JeVois config to use")
 endif()
 
+# Before we get started, include a few contribs that conflict with the contribs of jevois that we will pull in: for
+# example, tensorflow contributed by jevois provides cpuinfo but that is not the version we need here to compile NNPACK:
+include_directories(Contrib/cpuinfo/include)
+include_directories(Contrib/cpuinfo/deps/clog/include)
+include_directories("include") # Allow #include <jevoibase/x/y> in our components and modules
+include_directories("..") # Allow #include <jevoibase/Contrib/x/y> in our components and modules
+
 # Include our helper functions, config, etc from the JeVois install:
 set(CMAKE_MODULE_PATH ${JEVOIS_CONFIG})
 include(jevois_config)
 include(JeVois)
 
-# Set project name, detects compiler (which has been set by our helper module). Then set some complation flags:
+# Set project name, detects compiler (which has been set by our helper module), include stuff installed by JeVois (e.g.,
+# imgui). Then set some complation flags:
 project(${JEVOIS}base CXX C ASM) # NNPACK has a few assembly sources, darknet and others are C
 jevois_project_set_flags()
-
 set(JVB "${CMAKE_CURRENT_SOURCE_DIR}")
 
-# Allow #include <jevoibase/x/y> in our components and modules:
-include_directories("include")
-
-# Allow #include <jevoibase/Contrib/x/y> in our components and modules:
-include_directories("..")
-
 # Setup our library using the source files in src/Components and call it jevoisbase with the current version number:
-set(JEVOISBASE_SOVERSION "1.19.0")
+set(JEVOISBASE_SOVERSION "1.20.0")
 jevois_setup_library(src/Components ${JEVOIS}base ${JEVOISBASE_SOVERSION})
 
 # Check that we are not trying to compile a newer jevoisbase against an older jevois-sdk, which would typically fail:
@@ -67,26 +68,6 @@ add_subdirectory(include)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 ########################################################################################################################
-# Find any include files installed by JeVois into /${JEVOIS}/include, e.g., imgui:
-if (JEVOIS_PLATFORM)
-  include_directories(${JEVOIS_BUILD_BASE}/${JEVOIS_MODULES_ROOT}/include)
-else ()
-  include_directories(${JEVOIS_MODULES_ROOT}/include)
-endif ()
-
-########################################################################################################################
-# OpenVX, ovxlib, onnxruntime support
-if (JEVOIS_PLATFORM)
-  include_directories(${JEVOIS_BUILD_BASE}/usr/include/ovxlib)
-  include_directories(${JEVOIS_BUILD_BASE}/usr/include/VX)
-  include_directories(${JEVOIS_BUILD_BASE}/usr/include/onnxruntime)
-else ()
-  include_directories(/usr/include/ovxlib)
-  include_directories(/usr/include/VX)
-  include_directories(/usr/include/onnxruntime)
-endif ()
-
-########################################################################################################################
 # OpenGL-ES libraries on platform (and they also exist on host):
 target_link_libraries(${JEVOIS}base GLESv2 EGL)
 
@@ -95,11 +76,17 @@ target_link_libraries(${JEVOIS}base GLESv2 EGL)
 target_link_libraries(${JEVOIS}base boost_regex)
 
 ########################################################################################################################
+# Shortcut for where to install includes and libs that are in our Contribs here
+set(INCDEST "${JEVOIS_MODULES_ROOT}/include")
+set(LIBDEST "${JEVOIS_MODULES_ROOT}/lib")
+
+########################################################################################################################
 # tiny-dnn support:
 include_directories(Contrib)
 include_directories(Contrib/tiny-dnn)
 
 include_directories(Contrib/pthreadpool/include)
+install(DIRECTORY Contrib/pthreadpool/include/ DESTINATION ${INCDEST} COMPONENT bin)
 
 target_sources(${JEVOIS}base PRIVATE Contrib/pthreadpool/src/threadpool-pthreads.c)
 add_definitions(-DTBB_SUPPRESS_DEPRECATED_MESSAGES) # avoid message about deprecated code in tbb.h
@@ -113,14 +100,26 @@ endif ()
 # darknet with NNPACK support: (on top of things already pulled in by tiny-dnn)
 
 include_directories(Contrib/NNPACK/include)
+install(DIRECTORY Contrib/NNPACK/include/ DESTINATION ${INCDEST}/NNPACK COMPONENT bin)
+
 include_directories(Contrib/NNPACK/src)
+
 include_directories(Contrib/FP16/include)
+install(DIRECTORY Contrib/FP16/include/ DESTINATION ${INCDEST}/FP16 COMPONENT bin)
+
 include_directories(Contrib/FXdiv/include)
+install(DIRECTORY Contrib/FXdiv/include/ DESTINATION ${INCDEST}/FXdiv COMPONENT bin)
+
 include_directories(Contrib/psimd/include)
+install(DIRECTORY Contrib/psimd/include/ DESTINATION ${INCDEST}/psimd COMPONENT bin)
 
 # Library cpuinfo (dependency for NNPACK):
-include_directories(Contrib/cpuinfo/include)
-include_directories(Contrib/cpuinfo/deps/clog/include)
+#include_directories(Contrib/cpuinfo/include) # included early above
+install(DIRECTORY Contrib/cpuinfo/include/ DESTINATION ${INCDEST}/cpuinfo COMPONENT bin)
+
+#include_directories(Contrib/cpuinfo/deps/clog/include) # included early above
+install(DIRECTORY Contrib/cpuinfo/deps/clog/include/ DESTINATION ${INCDEST}/clog COMPONENT bin)
+
 include_directories(Contrib/cpuinfo/src)
 
 set(CPUI "${JVB}/Contrib/cpuinfo/src")
@@ -238,7 +237,11 @@ add_definitions(-DNNPACK)
 
 # Now darknet-nnpack proper:
 include_directories(Contrib/darknet-nnpack/include)
+install(DIRECTORY Contrib/darknet-nnpack/include/ DESTINATION ${INCDEST}/darknet-nnpack COMPONENT bin)
+
 include_directories(Contrib/darknet-nnpack/3rdparty/stb/include)
+install(DIRECTORY Contrib/darknet-nnpack/3rdparty/stb/include/ DESTINATION ${INCDEST}/stb COMPONENT bin)
+
 set(DKNS "${JVB}/Contrib/darknet-nnpack/src")
 add_definitions(-DDARKNET_NNPACK)
 
@@ -267,9 +270,12 @@ target_sources(${JEVOIS}base PRIVATE ${DKNS}/go.c ${DKNS}/swag.c ${DKNS}/maxpool
   ${DKNS}/rnn_vid.c)
 
 ########################################################################################################################
-# ZZBar barcode / QR-code source files:
+# ZBar barcode / QR-code source files:
 
 include_directories(Contrib/ZBar/include Contrib/ZBar/zbar)
+install(DIRECTORY Contrib/ZBar/include/ DESTINATION ${INCDEST}/ZBar COMPONENT bin)
+install(FILES Contrib/zbar-config.h DESTINATION ${INCDEST}/ZBar/ COMPONENT bin)
+
 set(ZBS "${JVB}/Contrib/ZBar/zbar")
 target_sources(${JEVOIS}base PRIVATE ${ZBS}/processor.c ${ZBS}/scanner.c ${ZBS}/symbol.c ${ZBS}/img_scanner.c
   ${ZBS}/qrcode/rs.c ${ZBS}/qrcode/isaac.c ${ZBS}/qrcode/util.c ${ZBS}/qrcode/qrdectxt.c ${ZBS}/qrcode/bch15_5.c
@@ -294,6 +300,7 @@ add_definitions(-Wparentheses -w)
 # Neon-accelerated Ne10 support. NOTE: as of JeVois 1.13.0, Ne10 is also installed on platform by default as a library,
 # may want to use that in new code:
 include_directories(Contrib/Ne10/inc)
+install(DIRECTORY Contrib/Ne10/inc/ DESTINATION "${INCDEST}/Ne10" COMPONENT bin)
 
 target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/Ne10/modules/imgproc/NE10_boxfilter.c)
 if (JEVOIS_PLATFORM)
@@ -303,6 +310,7 @@ endif (JEVOIS_PLATFORM)
 ########################################################################################################################
 # VLfeat support:
 include_directories(Contrib/vlfeat/vl)
+install(DIRECTORY Contrib/vlfeat/vl DESTINATION ${INCDEST} COMPONENT bin)
 
 # Add VLfeat sources shared among various algorithms:
 target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/vlfeat/vl/host.c ${JVB}/Contrib/vlfeat/vl/generic.c
@@ -320,6 +328,9 @@ target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/vlfeat/vl/dsift.c ${JVB}/Con
 ########################################################################################################################
 # Fast optical flow
 include_directories(Contrib/OF_DIS)
+install(DIRECTORY Contrib/OF_DIS DESTINATION ${INCDEST} COMPONENT bin)
+install(FILES Contrib/intrinsics.h DESTINATION ${INCDEST}/OF_DIS/ COMPONENT bin)
+
 target_sources(${JEVOIS}base PRIVATE ${JVB}/Contrib/OF_DIS/oflow.cpp ${JVB}/Contrib/OF_DIS/refine_variational.cpp
   ${JVB}/Contrib/OF_DIS/patchgrid.cpp ${JVB}/Contrib/OF_DIS/patch.cpp ${JVB}/Contrib/OF_DIS/FDF1.0.1/image.c
   ${JVB}/Contrib/OF_DIS/FDF1.0.1/opticalflow_aux.c ${JVB}/Contrib/OF_DIS/FDF1.0.1/solver.c)
@@ -416,47 +427,21 @@ target_sources(${JEVOIS}base PRIVATE ${ARTK}/ARMulti/arMultiGetTransMatStereo.c 
   ${ARTK}/ARICP/icpCore.c ${ARTK}/ARICP/icpPointRobust.c)
 
 include_directories(Contrib/ARToolKit5arm/include)
-
-########################################################################################################################
-# Tensorflow-lite - it is now in jevois/Contrib. libtensorflowlite.so gets installed to the system, but we need to point
-# to the includes, which do not get installed:
-
-include_directories(../jevois/Contrib/tensorflow)
-include_directories(../jevois/Contrib/tensorflow/tensorflow/lite/tools/make/downloads/flatbuffers/include)
-
-target_link_libraries(${JEVOIS}base tensorflowlite)
-if (JEVOIS_PRO)
-
-else()
-  if (JEVOIS_PLATFORM)
-    # Need to specify path for libtensorflowlite.so; not sure why it is not found in the target buildroot tree:
-    target_link_libraries(${JEVOIS}base -L${JEVOIS_PLATFORM_MODULES_ROOT}/lib)
-  endif()
-endif()
-
-########################################################################################################################
-# ovxlib: locate it on jevois-platform (on others, it is in /usr/lib):
-if (JEVOIS_PRO)
-else()
-  if (JEVOIS_PLATFORM)
-    include_directories(${JEVOIS_PLATFORM_INSTALL_PREFIX}/include/ovxlib)
-  endif()
-endif()
+install(DIRECTORY Contrib/ARToolKit5arm DESTINATION ${INCDEST} COMPONENT bin)
 
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others:
 # From this: ls /usr/share/jevois-opencv-4.*/lib/|grep ".so$"|sed -e s/.so//|sed -e s/^lib//|xargs
 message(STATUS "opencv libs: ${JEVOIS_OPENCV_LIBS}")
 
-target_link_libraries(${JEVOIS}base ${JEVOIS_OPENCV_LIBS} opencv_alphamat opencv_aruco opencv_barcode opencv_bgsegm
-opencv_bioinspired opencv_calib3d opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn
-opencv_dnn_superres opencv_dpm opencv_face opencv_features2d opencv_flann opencv_fuzzy opencv_gapi opencv_hfs
-opencv_imgcodecs opencv_img_hash opencv_imgproc opencv_intensity_transform opencv_line_descriptor opencv_mcc opencv_ml
-opencv_objdetect opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot opencv_quality opencv_rapid opencv_reg
-opencv_saliency opencv_shape opencv_stereo opencv_stitching opencv_structured_light opencv_superres
-opencv_surface_matching opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_wechat_qrcode
-opencv_xfeatures2d opencv_ximgproc opencv_xobjdetect opencv_xphoto)
-
+target_link_libraries(${JEVOIS}base ${JEVOIS_OPENCV_LIBS} opencv_alphamat opencv_aruco opencv_bgsegm opencv_bioinspired
+  opencv_calib3d opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dnn_superres
+  opencv_dpm opencv_face opencv_features2d opencv_flann opencv_fuzzy opencv_gapi opencv_hfs opencv_imgcodecs
+  opencv_img_hash opencv_imgproc opencv_intensity_transform opencv_line_descriptor opencv_mcc opencv_ml opencv_objdetect
+  opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot opencv_quality opencv_rapid opencv_reg opencv_saliency
+  opencv_shape opencv_stereo opencv_stitching opencv_structured_light opencv_superres opencv_surface_matching
+  opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_wechat_qrcode opencv_xfeatures2d
+  opencv_ximgproc opencv_xobjdetect opencv_xphoto)
 # removed: opencv_freetype (not available on platform), opencv_highgui (not needed), opencv_rgbd (not needed)
 
 ########################################################################################################################

@@ -35,10 +35,10 @@
 // $Id: env_math.c 15495 2014-01-23 02:32:14Z itti $
 //
 
-#include <jevoisbase/src/Components/Saliency/env_math.h>
+#include <jevoisbase/Components/Saliency/env_math.h>
 
-#include <jevoisbase/src/Components/Saliency/env_c_math_ops.h>
-#include <jevoisbase/src/Components/Saliency/env_params.h>
+#include <jevoisbase/Components/Saliency/env_c_math_ops.h>
+#include <jevoisbase/Components/Saliency/env_params.h>
 
 // ######################################################################
 void env_init_integer_math(struct env_math* imath, const struct env_params* envp)

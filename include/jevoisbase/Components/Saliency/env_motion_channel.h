@@ -37,10 +37,10 @@
 
 #pragma once
 
-#include <jevoisbase/src/Components/Saliency/env_channel.h>
-#include <jevoisbase/src/Components/Saliency/env_config.h>
-#include <jevoisbase/src/Components/Saliency/env_pyr.h>
-#include <jevoisbase/src/Components/Saliency/env_types.h>
+#include <jevoisbase/Components/Saliency/env_channel.h>
+#include <jevoisbase/Components/Saliency/env_config.h>
+#include <jevoisbase/Components/Saliency/env_pyr.h>
+#include <jevoisbase/Components/Saliency/env_types.h>
 
 struct env_dims;
 struct env_image;

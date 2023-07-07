@@ -21,15 +21,12 @@
 #include <jevois/Types/Enum.H>
 #include <jevois/GPU/GUIhelper.H>
 
-#include "opencv2/objdetect.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-
 #include <AR/ar.h>
 #include <AR/video.h>
 #include <AR/config.h>
 #include <AR/param.h>
-#include "ARMarkerSquare.h"
+#include <jevoisbase/Components/ARtoolkit/ARMarkerSquare.h>
+
 // I need to define diferent camera_para.dat according to different camera size because of the limitation of the
 // original ARtoolkit library or change the original ARtoolkit library and I think its not a good way to go, makes the
 // package hard to distribute and update

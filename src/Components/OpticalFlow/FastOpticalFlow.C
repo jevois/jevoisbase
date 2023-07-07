@@ -23,7 +23,7 @@
 // See jevoisbase/Contrib for full information including copyright and for the other source files.
 
 #include <opencv2/imgproc/imgproc.hpp>
-#include <jevoisbase/Contrib/OF_DIS/oflow.h>
+#include <OF_DIS/oflow.h>
 
 // ##############################################################################################################
 FastOpticalFlow::FastOpticalFlow(std::string const & instance) :

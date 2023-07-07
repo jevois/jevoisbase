@@ -23,11 +23,11 @@
 
 #include <opencv2/core/core.hpp>
 
-#include <jevoisbase/src/Components/Saliency/env_image.h>
-#include <jevoisbase/src/Components/Saliency/env_params.h>
-#include <jevoisbase/src/Components/Saliency/env_math.h>
-#include <jevoisbase/src/Components/Saliency/env_pyr.h>
-#include <jevoisbase/src/Components/Saliency/env_motion_channel.h>
+#include <jevoisbase/Components/Saliency/env_image.h>
+#include <jevoisbase/Components/Saliency/env_params.h>
+#include <jevoisbase/Components/Saliency/env_math.h>
+#include <jevoisbase/Components/Saliency/env_pyr.h>
+#include <jevoisbase/Components/Saliency/env_motion_channel.h>
 
 #include <mutex>
 #include <condition_variable>
