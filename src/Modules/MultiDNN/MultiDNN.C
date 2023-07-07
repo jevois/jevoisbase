@@ -83,18 +83,18 @@ class MultiDNN : public jevois::StdModule,
     // ####################################################################################################
     //! Processing function, no video output
     // ####################################################################################################
-    virtual void process(jevois::InputFrame && inframe) override
-    {
-      LFATAL("todo");
-    }
+    //virtual void process(jevois::InputFrame && inframe) override
+    //{
+    //  LFATAL("todo");
+    //}
     
     // ####################################################################################################
     //! Processing function with video output to USB
     // ####################################################################################################
-    virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
-    {
-      LFATAL("todo");
-    }
+    //virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
+    //{
+    //  LFATAL("todo");
+    //}
 
 #ifdef JEVOIS_PRO
     // ####################################################################################################
@@ -134,7 +134,7 @@ class MultiDNN : public jevois::StdModule,
         doprocess(pipe, inframe, nullptr, &helper, idle);
         
         // Get ready for the next pipe:
-        ++n; x += iw; if (x > totw - iw/2) { x = xoff; y += ih; }
+        ++n; x += iw; if (x > int(totw) - iw/2) { x = xoff; y += ih; }
       }
 
       // Show overall frame rate and camera and display info:

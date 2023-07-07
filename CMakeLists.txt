@@ -286,7 +286,7 @@ target_sources(${JEVOIS}base PRIVATE ${ZBS}/processor.c ${ZBS}/scanner.c ${ZBS}/
 # ${ZBS}/decoder/pdf417.c
 
 # FIXME need to debug zbar as it gives some warnings
-add_definitions(-Wparentheses -w)
+add_definitions(-Wno-parentheses -w)
 
 ########################################################################################################################
 # cvEyeTracker eye-tracking

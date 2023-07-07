@@ -141,9 +141,9 @@ class DemoCPUGPU : public jevois::StdModule
           unsigned int const dmx = (mx << smlev) + smadj;
           unsigned int const dmy = (my << smlev) + smadj;
           unsigned int const mapw = itsSaliency->salmap.dims.w, maph = itsSaliency->salmap.dims.h;
-          unsigned int const gistsize = itsSaliency->gist_size;
+          //unsigned int const gistsize = itsSaliency->gist_size;
           unsigned int const gistw = w - 6 * mapw; // width for gist block
-          unsigned int const gisth = (gistsize + gistw - 1) / gistw; // divide gist_size by w and round up
+          //unsigned int const gisth = (gistsize + gistw - 1) / gistw; // divide gist_size by w and round up
           
           // Filter over time the salient location coordinates:
           itsKF->set(dmx, dmy, w, h);
@@ -167,7 +167,7 @@ class DemoCPUGPU : public jevois::StdModule
           // Paste gist. Note: at 160x120 we will only end up pasting the first 600 gist entries. This code may fail at
           // different resolutions, beware:
           unsigned char * d = outimg.pixelsw<unsigned char>() + 4*w*h + 6*mapw;
-          for (int i = 0; i < maph; ++i) memcpy(d + i*w, itsSaliency->gist + i*gistw, gistw);
+          for (unsigned int i = 0; i < maph; ++i) memcpy(d + i*w, itsSaliency->gist + i*gistw, gistw);
         });
 
       // Convert input image to grayscale:

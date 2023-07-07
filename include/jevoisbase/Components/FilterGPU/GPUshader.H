@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <jevoisbase/Components/FilterGPU/OpenGL.H>
+#include <jevois/GPU/OpenGL.H>
 
 //! Simple class to load and compile some OpenGL-ES shader code
 class GPUshader

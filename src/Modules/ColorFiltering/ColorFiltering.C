@@ -195,7 +195,7 @@ class ColorFiltering : public jevois::Module,
       
       // Start the GUI frame:
       unsigned short winw, winh;
-      bool idle = helper.startFrame(winw, winh);
+      helper.startFrame(winw, winh);
 
       // Draw the camera frame:
       int x = 0, y = 0; unsigned short iw = 0, ih = 0;
@@ -281,7 +281,7 @@ class ColorFiltering : public jevois::Module,
     // ####################################################################################################
   protected:
     //! Parameter callback: set the selected filter algo
-    void onParamChange(effect const & param, Effect const & val) override
+    void onParamChange(effect const & /*param*/, Effect const & val) override
     {
       if (itsFilter) { removeSubComponent(itsFilter); itsFilter.reset(); }
       

@@ -286,7 +286,7 @@ class SaveVideo : public jevois::Module,
 
       // Start the GUI frame:
       unsigned short winw, winh;
-      bool idle = helper.startFrame(winw, winh);
+      helper.startFrame(winw, winh);
 
       // Draw the camera frame:
       int x = 0, y = 0; unsigned short iw = 0, ih = 0;
@@ -294,7 +294,6 @@ class SaveVideo : public jevois::Module,
 
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.getp();
-      unsigned int const w = inimg.width, h = inimg.height;
       helper.itext(std::string("JeVois-Pro Save Video: ") + (itsSaving.load() ? "RECORDING" : "not recording"));
       if (itsFilename.empty() == false) helper.itext("Saving to " + itsFilename);
       size_t const n = itsBuf.filled_size();
@@ -342,7 +341,7 @@ class SaveVideo : public jevois::Module,
     // ####################################################################################################
     //! Receive a string from a serial port which contains a user command
     // ####################################################################################################
-    void parseSerial(std::string const & str, std::shared_ptr<jevois::UserInterface> s) override
+    void parseSerial(std::string const & str, std::shared_ptr<jevois::UserInterface> /*s*/) override
     {
       if (str == "start")
       {

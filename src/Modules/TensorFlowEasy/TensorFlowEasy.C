@@ -176,7 +176,7 @@ class TensorFlowEasy : public jevois::StdModule,
     {
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
-      unsigned int const w = inimg.width, h = inimg.height;
+      int const w = inimg.width, h = inimg.height;
 
       // Adjust foa size if needed so it fits within the input frame:
       cv::Size foasiz = foa::get(); int foaw = foasiz.width, foah = foasiz.height;
@@ -224,87 +224,87 @@ class TensorFlowEasy : public jevois::StdModule,
 
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
-
+      
       timer.start();
       
       // We only handle one specific pixel format, but any image size in this module:
-      unsigned int const w = inimg.width, h = inimg.height;
+      int const w = inimg.width, h = inimg.height;
       inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
-
+      
       // Compute central crop window size from foa parameter:
       cv::Size foasiz = foa::get(); int foaw = foasiz.width, foah = foasiz.height;
       if (foaw > w) { foaw = w; foah = std::min(foah, foaw); }
       if (foah > h) { foah = h; foaw = std::min(foaw, foah); }
       int const offx = ((w - foaw) / 2) & (~1);
       int const offy = ((h - foah) / 2) & (~1);
-
+      
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
       auto paste_fut = jevois::async([&]() {
           outimg = outframe.get();
           outimg.require("output", outimg.width, h + 68, V4L2_PIX_FMT_YUYV);
-
+          
           // Paste the current input image:
           jevois::rawimage::paste(inimg, outimg, 0, 0);
           jevois::rawimage::writeText(outimg, "JeVois TensorFlow Easy - input", 3, 3, jevois::yuyv::White);
-
-	  // Draw a grey rectangle for the FOA:
-	  jevois::rawimage::drawRect(outimg, offx, offy, foaw, foah, 2, jevois::yuyv::MedGrey);
-
-	  // Blank out the bottom of the frame:
-	  jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height - h, jevois::yuyv::Black);
+          
+          // Draw a grey rectangle for the FOA:
+          jevois::rawimage::drawRect(outimg, offx, offy, foaw, foah, 2, jevois::yuyv::MedGrey);
+          
+          // Blank out the bottom of the frame:
+          jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height - h, jevois::yuyv::Black);
         });
 
       // Take a central crop of the input, with size given by foa parameter:
       cv::Mat cvimg = jevois::rawimage::cvImage(inimg);
       cv::Mat crop = cvimg(cv::Rect(offx, offy, foaw, foah));
-        
+      
       // Convert crop to RGB for predictions:
       cv::Mat rgbroi; cv::cvtColor(crop, rgbroi, cv::COLOR_YUV2RGB_YUYV);
       
       // Let camera know we are done processing the input image:
       paste_fut.get(); inframe.done();
-
+      
       // Launch the predictions, will throw if network is not ready:
       itsResults.clear();
       try
       {
-	int netinw, netinh, netinc; itsTensorFlow->getInDims(netinw, netinh, netinc);
-
-	// Scale the ROI if needed:
-	cv::Mat scaledroi = jevois::rescaleCv(rgbroi, cv::Size(netinw, netinh));
-
-	// Predict:
-	float const ptime = itsTensorFlow->predict(scaledroi, itsResults);
-
-	// Draw some text messages:
-	jevois::rawimage::writeText(outimg, "Predict",
-				    w - 7 * 6 - 2, h + 16, jevois::yuyv::White);
-	jevois::rawimage::writeText(outimg, "time:",
-				    w - 7 * 6 - 2, h + 28, jevois::yuyv::White);
-	jevois::rawimage::writeText(outimg, std::to_string(int(ptime)) + "ms",
-				    w - 7 * 6 - 2, h + 40, jevois::yuyv::White);
- 
-	// Send serial results:
-	sendSerialObjReco(itsResults);
+        int netinw, netinh, netinc; itsTensorFlow->getInDims(netinw, netinh, netinc);
+        
+        // Scale the ROI if needed:
+        cv::Mat scaledroi = jevois::rescaleCv(rgbroi, cv::Size(netinw, netinh));
+        
+        // Predict:
+        float const ptime = itsTensorFlow->predict(scaledroi, itsResults);
+        
+        // Draw some text messages:
+        jevois::rawimage::writeText(outimg, "Predict",
+                                    w - 7 * 6 - 2, h + 16, jevois::yuyv::White);
+        jevois::rawimage::writeText(outimg, "time:",
+                                    w - 7 * 6 - 2, h + 28, jevois::yuyv::White);
+        jevois::rawimage::writeText(outimg, std::to_string(int(ptime)) + "ms",
+                                    w - 7 * 6 - 2, h + 40, jevois::yuyv::White);
+        
+        // Send serial results:
+        sendSerialObjReco(itsResults);
       }
       catch (std::logic_error const & e)
       {
-	// network still loading:
-	jevois::rawimage::writeText(outimg, "Loading network -", 3, h + 4, jevois::yuyv::White);
-	jevois::rawimage::writeText(outimg, "please wait...", 3, h + 16, jevois::yuyv::White);
+        // network still loading:
+        jevois::rawimage::writeText(outimg, "Loading network -", 3, h + 4, jevois::yuyv::White);
+        jevois::rawimage::writeText(outimg, "please wait...", 3, h + 16, jevois::yuyv::White);
       }
-
+      
       // Then write the names and scores of the detections:
       int y = h + 4; if (y + itsTensorFlow->top::get() * 12 > outimg.height - 2) y = 16;
-
+      
       for (auto const & p : itsResults)
       {
-	jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.category.c_str(), p.score),
-				    3, y, jevois::yuyv::White);
-	y += 12;
+        jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.category.c_str(), p.score),
+                                    3, y, jevois::yuyv::White);
+        y += 12;
       }
-
+      
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
@@ -312,7 +312,7 @@ class TensorFlowEasy : public jevois::StdModule,
       // Send the output image with our processing results to the host over USB:
       outframe.send();
     }
-
+    
     // ####################################################################################################
   protected:
     std::shared_ptr<TensorFlow> itsTensorFlow;

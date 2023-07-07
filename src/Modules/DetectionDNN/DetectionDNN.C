@@ -192,7 +192,7 @@ class DetectionDNN : public jevois::StdModule,
     // ####################################################################################################
     //! Parameter callback: set the selected model
     // ####################################################################################################
-    void onParamChange(model const & param, Model const & val) override
+    void onParamChange(model const & /*param*/, Model const & val) override
     {
       // Un-freeze the dependent parameters:
       classnames::unFreeze();
@@ -402,7 +402,7 @@ class DetectionDNN : public jevois::StdModule,
         std::vector<jevois::ObjReco> data;
         float const conf = confidences[idx] * 100.0F;
         std::string name;
-        if (classIds[idx] < itsClasses.size()) name = itsClasses[classIds[idx]]; else name = "Oooops";
+        if (classIds[idx] < int(itsClasses.size())) name = itsClasses[classIds[idx]]; else name = "Oooops";
         data.push_back({ conf, name });
         
         std::string label = jevois::sformat("%s: %.2f", name.c_str(), conf);
@@ -425,7 +425,6 @@ class DetectionDNN : public jevois::StdModule,
     {
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
-      unsigned int const w = inimg.width, h = inimg.height;
 
       // Convert input image to BGR for predictions:
       cv::Mat cvimg = jevois::rawimage::convertToCvBGR(inimg);

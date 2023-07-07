@@ -148,19 +148,19 @@ JEVOIS_DECLARE_PARAMETER(numtrack, size_t, "Number of parallel blob trackers to 
     @restrictions None
     \ingroup modules */
 class ArUcoBlob : public jevois::StdModule,
-		  public jevois::Parameter<numtrack>
+                  public jevois::Parameter<numtrack>
 {
   public:
     // ####################################################################################################
     //! Constructor
     // ####################################################################################################
     ArUcoBlob(std::string const & instance) :
-	jevois::StdModule(instance)
+        jevois::StdModule(instance)
     {
       itsArUco = addSubComponent<ArUco>("aruco");
       // We instantiate the blob detectors in postInit() once their number is finalized
     }
-
+    
     // ####################################################################################################
     //! Post-init: instantiate the blob detectors
     // ####################################################################################################
@@ -168,10 +168,10 @@ class ArUcoBlob : public jevois::StdModule,
     {
       numtrack::freeze();
       
-      for (int i = 0; i < numtrack::get(); ++i)
-	itsBlobs.push_back(addSubComponent<BlobDetector>("blob" + std::to_string(i)));
+      for (size_t i = 0; i < numtrack::get(); ++i)
+        itsBlobs.push_back(addSubComponent<BlobDetector>("blob" + std::to_string(i)));
     }
-
+    
     // ####################################################################################################
     // Pre-unInit: release the blob detectors
     // ####################################################################################################
@@ -185,11 +185,11 @@ class ArUcoBlob : public jevois::StdModule,
     //! Virtual destructor for safe inheritance
     // ####################################################################################################
     virtual ~ArUcoBlob() { }
-
+    
     // ####################################################################################################
     //! Detect blobs in parallel threads
     // ####################################################################################################
-    void detectBlobs(jevois::RawImage * outimg = nullptr)
+    void detectBlobs()
     {
       itsContours.clear();
       
@@ -202,11 +202,11 @@ class ArUcoBlob : public jevois::StdModule,
                                               itsContours[b->instanceName()] = std::move(c);
                                             }, b));
     }
-
+    
     // ####################################################################################################
     //! Gather our blob threads and send/draw the results
     // ####################################################################################################
-    void sendBlobs(unsigned int w, unsigned int h, jevois::RawImage * outimg = nullptr)
+    void sendBlobs(unsigned int w, unsigned int h)
     {
       for (auto & f : itsBlobFuts)
         try { f.get(); } catch (...) { LERROR("Ooops, some blob detector threw -- IGNORED"); }
@@ -222,8 +222,8 @@ class ArUcoBlob : public jevois::StdModule,
     //! Detect ArUcos
     // ####################################################################################################
     void detectArUco(cv::Mat cvimg, std::vector<int> & ids, std::vector<std::vector<cv::Point2f>> & corners,
-		     std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs,
-		     unsigned int h, jevois::RawImage * outimg = nullptr)
+                     std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs,
+                     unsigned int h, jevois::RawImage * outimg = nullptr)
     {
       itsArUco->detectMarkers(cvimg, ids, corners);
       
@@ -287,31 +287,31 @@ class ArUcoBlob : public jevois::StdModule,
           jevois::rawimage::paste(inimg, outimg, 0, 0);
           jevois::rawimage::writeText(outimg, "JeVois ArUco + Color Blobs", 3, 3, jevois::yuyv::White);
           jevois::rawimage::drawFilledRect(outimg, 0, h, w, outimg.height-h, 0x8000);
-        });
-
+                                     });
+      
       // Convert input image to BGR24, then to HSV:
       cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
       cv::cvtColor(imgbgr, itsImgHsv, cv::COLOR_BGR2HSV);
-
+      
       // Detect blobs in parallel threads:
-      detectBlobs(&outimg);
-			    
+      detectBlobs();
+      
       // In our thread, detect ArUcos; first convert to gray:
       cv::Mat cvimg = jevois::rawimage::convertToCvGray(inimg);
 
       // Let camera know we are done processing the input image:
       inframe.done();
-
+      
       // Wait for paste to finish up:
       paste_fut.get();
-
+      
       // Detect ArUcos:
       std::vector<int> ids; std::vector<std::vector<cv::Point2f> > corners; std::vector<cv::Vec3d> rvecs, tvecs;
       detectArUco(cvimg, ids, corners, rvecs, tvecs, h, &outimg);
-
+      
       // Send ArUco serial output:
       itsArUco->sendSerial(this, ids, corners, w, h, rvecs, tvecs);
-
+      
       // Done with ArUco, gather the blobs and send the serial messages:
       sendBlobs(w, h);
 
@@ -342,14 +342,14 @@ class ArUcoBlob : public jevois::StdModule,
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
-
+      
       // Wait until all contours are drawn, if they had been requested:
       draw_fut.get();
       
       // Send the output image with our processing results to the host over USB:
       outframe.send();
     }
-
+    
     // ####################################################################################################
   protected:
     std::shared_ptr<ArUco> itsArUco;

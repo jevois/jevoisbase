@@ -143,7 +143,7 @@ class DemoBackgroundSubtract : public jevois::Module
 
       // Start the GUI frame:
       unsigned short winw, winh;
-      bool idle = helper.startFrame(winw, winh);
+      helper.startFrame(winw, winh);
 
       // Draw the camera frame:
       int x = 0, y = 0; unsigned short iw = 0, ih = 0;

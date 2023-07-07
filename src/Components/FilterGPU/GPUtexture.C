@@ -69,9 +69,9 @@ void GPUtexture::setPixels(void const * data)
   // alignment since opengl will pad each row to that alignment:
   int const rowlen = Width * (Format == GL_RGBA ? 4 : 1);
   int align;
-  if (rowlen & 7 == 0) align = 8;
-  else if (rowlen & 3 == 0) align = 4;
-  else if (rowlen & 1 == 0) align = 2;
+  if ((rowlen & 7) == 0) align = 8;
+  else if ((rowlen & 3) == 0) align = 4;
+  else if ((rowlen & 1) == 0) align = 2;
   else align = 1;
   
   glPixelStorei(GL_UNPACK_ALIGNMENT, align);

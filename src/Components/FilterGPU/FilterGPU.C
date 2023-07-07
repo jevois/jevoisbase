@@ -16,7 +16,6 @@
 /*! \file */
 
 #include <jevoisbase/Components/FilterGPU/FilterGPU.H>
-#include <jevoisbase/Components/FilterGPU/OpenGL.H>
 
 // ####################################################################################################
 FilterGPU::FilterGPU(std::string const & instance) :
@@ -144,7 +143,7 @@ void FilterGPU::process(cv::Mat const & src, cv::Mat & dst)
   }
   
   // Create our framebuffer and renderbuffer if needed:
-  if (itsRenderbufferId == 0 || itsRenderWidth != dst.cols || itsRenderHeight != dst.rows ||
+  if (itsRenderbufferId == 0 || int(itsRenderWidth) != dst.cols || int(itsRenderHeight) != dst.rows ||
       itsRenderType != dst.type())
   {
     if (itsRenderbufferId) glDeleteRenderbuffers(1, &itsRenderbufferId);

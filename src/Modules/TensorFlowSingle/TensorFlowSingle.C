@@ -160,13 +160,13 @@ class TensorFlowSingle : public jevois::StdModule
     {
       itsTensorFlow = addSubComponent<TensorFlow>("tf");
     }
-
+    
     // ####################################################################################################
     //! Virtual destructor for safe inheritance
     // ####################################################################################################
     virtual ~TensorFlowSingle()
     { }
-
+    
     // ####################################################################################################
     //! Un-initialization
     // ####################################################################################################
@@ -182,29 +182,29 @@ class TensorFlowSingle : public jevois::StdModule
     {
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
-      unsigned int const w = inimg.width, h = inimg.height;
-
+      int const w = inimg.width, h = inimg.height;
+      
       // Check input vs network dims, will throw if network not ready:
       int netw, neth, netc;
       try { itsTensorFlow->getInDims(netw, neth, netc); }
       catch (std::logic_error const & e) { inframe.done(); return; }
 
       if (netw > w || neth > h)
-	LFATAL("Network wants " << netw << 'x' << neth << " input, larger than camera " << w << 'x' << h);
-        
+        LFATAL("Network wants " << netw << 'x' << neth << " input, larger than camera " << w << 'x' << h);
+      
       // Take a central crop of the input, with size given by network input:
       int const offx = ((w - netw) / 2) & (~1);
       int const offy = ((h - neth) / 2) & (~1);
       
       cv::Mat cvimg = jevois::rawimage::cvImage(inimg);
       cv::Mat crop = cvimg(cv::Rect(offx, offy, netw, neth));
-        
+      
       // Convert crop to RGB for predictions:
       cv::cvtColor(crop, itsCvImg, cv::COLOR_YUV2RGB_YUYV);
-        
+      
       // Let camera know we are done processing the input image:
       inframe.done();
-
+      
       // Launch the predictions (do not catch exceptions, we already tested for network ready in this block):
       float const ptime = itsTensorFlow->predict(itsCvImg, itsResults);
       LINFO("Predicted in " << ptime << "ms");
@@ -212,23 +212,23 @@ class TensorFlowSingle : public jevois::StdModule
       // Send serial results:
       sendSerialObjReco(itsResults);
     }
-
+    
     // ####################################################################################################
     //! Processing function with video output to USB
     // ####################################################################################################
     virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
     {
       static jevois::Timer timer("processing", 30, LOG_DEBUG);
-
+      
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
-
+      
       timer.start();
       
       // We only handle one specific pixel format, but any image size in this module:
-      unsigned int const w = inimg.width, h = inimg.height;
+      int const w = inimg.width, h = inimg.height;
       inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
-
+      
       // While we process it, start a thread to wait for out frame and paste the input into it:
       jevois::RawImage outimg;
       auto paste_fut = jevois::async([&]() {
@@ -238,10 +238,10 @@ class TensorFlowSingle : public jevois::StdModule
           // Paste the current input image:
           jevois::rawimage::paste(inimg, outimg, 0, 0);
           jevois::rawimage::writeText(outimg, "JeVois TensorFlow - input", 3, 3, jevois::yuyv::White);
-
-	  // Draw a 16-pixel wide rectangle:
-	  jevois::rawimage::drawFilledRect(outimg, w, 0, 16, h, jevois::yuyv::MedGrey);
-	  
+          
+          // Draw a 16-pixel wide rectangle:
+          jevois::rawimage::drawFilledRect(outimg, w, 0, 16, h, jevois::yuyv::MedGrey);
+          
           // Paste the latest prediction results, if any, otherwise a wait message:
           cv::Mat outimgcv = jevois::rawimage::cvImage(outimg);
           if (itsRawPrevOutputCv.empty() == false)
@@ -265,10 +265,10 @@ class TensorFlowSingle : public jevois::StdModule
           // particular, it will throw a logic_error if we are still loading the network:
           bool success = true; float ptime = 0.0F;
           try { ptime = itsPredictFut.get(); } catch (std::logic_error const & e) { success = false; }
-
+          
           // Wait for paste to finish up and let camera know we are done processing the input image:
           paste_fut.get(); inframe.done();
-
+          
           if (success)
           {
             int const cropw = itsRawInputCv.cols, croph = itsRawInputCv.rows;
@@ -277,31 +277,31 @@ class TensorFlowSingle : public jevois::StdModule
             // Update our output image: First paste the image we have been making predictions on:
             itsRawInputCv.copyTo(outimgcv(cv::Rect(w + 16, 0, cropw, croph)));
             jevois::rawimage::drawFilledRect(outimg, w + 16, croph, cropw, h - croph, jevois::yuyv::Black);
-	    jevois::rawimage::drawFilledRect(outimg, w, 0, 16, h, jevois::yuyv::MedGrey);
-
+            jevois::rawimage::drawFilledRect(outimg, w, 0, 16, h, jevois::yuyv::MedGrey);
+            
             // Then draw the detections: either below the detection crop if there is room, or on top of it if not enough
             // room below:
-	    int y = croph + 3; if (y + itsTensorFlow->top::get() * 12 > h - 21) y = 3;
-
+            int y = croph + 3; if (y + int(itsTensorFlow->top::get()) * 12 > h - 21) y = 3;
+            
             for (auto const & p : itsResults)
             {
               jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.category.c_str(), p.score),
                                           w + 19, y, jevois::yuyv::White);
               y += 12;
             }
-
+            
             // Send serial results:
             sendSerialObjReco(itsResults);
-
+            
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
                                         w + 19, h - 11, jevois::yuyv::White);
-
+            
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
             itsRawPrevOutputCv = cv::Mat(h, cropw, CV_8UC2);
             outimgcv(cv::Rect(w + 16, 0, cropw, h)).copyTo(itsRawPrevOutputCv);
-
-	  } else { itsRawPrevOutputCv.release(); } // network is not ready yet
+            
+          } else { itsRawPrevOutputCv.release(); } // network is not ready yet
         }
         else
         {
@@ -314,7 +314,7 @@ class TensorFlowSingle : public jevois::StdModule
       {
         // Wait for paste to finish up:
         paste_fut.get();
-
+        
         // In this module, we use square crops for the network, with size given by USB width - camera width:
         if (outimg.width < inimg.width + 16) LFATAL("USB output image must be larger than camera input");
         int const cropw = outimg.width - inimg.width - 16; // 16 pix separator to distinguish darknet vs tensorflow
@@ -322,11 +322,11 @@ class TensorFlowSingle : public jevois::StdModule
         
         // Check input vs network dims:
         if (cropw <= 0 || croph <= 0 || cropw > w || croph > h)
-	  LFATAL("Network crop window must fit within camera frame");
-
+          LFATAL("Network crop window must fit within camera frame");
+        
         // Take a central crop of the input:
         int const offx = ((w - cropw) / 2) & (~1);
-	int const offy = ((h - croph) / 2) & (~1);
+        int const offy = ((h - croph) / 2) & (~1);
         cv::Mat cvimg = jevois::rawimage::cvImage(inimg);
         cv::Mat crop = cvimg(cv::Rect(offx, offy, cropw, croph));
         
@@ -335,23 +335,23 @@ class TensorFlowSingle : public jevois::StdModule
         
         // Also make a raw YUYV copy of the crop for later displays:
         crop.copyTo(itsRawInputCv);
-
+        
         // Let camera know we are done processing the input image:
         inframe.done();
-
-	// Rescale the cropped image to network dims if needed:
-	try
-	{
-	  int netinw, netinh, netinc; itsTensorFlow->getInDims(netinw, netinh, netinc);
-	  itsCvImg = jevois::rescaleCv(itsCvImg, cv::Size(netinw, netinh));
-
-	  // Launch the predictions:
-	  itsPredictFut = jevois::async([&]()
-				     { return itsTensorFlow->predict(itsCvImg, itsResults); });
-	}
-	catch (std::logic_error const & e) { itsRawPrevOutputCv.release(); } // network is not ready yet
+        
+        // Rescale the cropped image to network dims if needed:
+        try
+        {
+          int netinw, netinh, netinc; itsTensorFlow->getInDims(netinw, netinh, netinc);
+          itsCvImg = jevois::rescaleCv(itsCvImg, cv::Size(netinw, netinh));
+          
+          // Launch the predictions:
+          itsPredictFut = jevois::async([&]()
+                                        { return itsTensorFlow->predict(itsCvImg, itsResults); });
+        }
+        catch (std::logic_error const & e) { itsRawPrevOutputCv.release(); } // network is not ready yet
       }
-
+      
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
@@ -359,7 +359,7 @@ class TensorFlowSingle : public jevois::StdModule
       // Send the output image with our processing results to the host over USB:
       outframe.send();
     }
-
+    
     // ####################################################################################################
   protected:
     std::shared_ptr<TensorFlow> itsTensorFlow;
@@ -368,7 +368,7 @@ class TensorFlowSingle : public jevois::StdModule
     cv::Mat itsRawInputCv;
     cv::Mat itsCvImg;
     cv::Mat itsRawPrevOutputCv;
- };
+};
 
 // Allow the module to be loaded as a shared object (.so) file:
 JEVOIS_REGISTER_MODULE(TensorFlowSingle);

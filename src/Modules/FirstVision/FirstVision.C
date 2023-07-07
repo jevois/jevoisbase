@@ -290,18 +290,18 @@ JEVOIS_DECLARE_PARAMETER(margin, size_t, "Margin from from frame borders (pixels
     @restrictions None
     \ingroup modules */
 class FirstVision : public jevois::StdModule,
-		    public jevois::Parameter<hcue, scue, vcue, maxnumobj, hullarea, hullfill, erodesize,
-					     dilatesize, epsilon, debug, threads, showthread, ethresh,
-					     dopose, camparams, iou, objsize, margin>
+                    public jevois::Parameter<hcue, scue, vcue, maxnumobj, hullarea, hullfill, erodesize,
+                                             dilatesize, epsilon, debug, threads, showthread, ethresh,
+                                             dopose, camparams, iou, objsize, margin>
 {
   protected:
     cv::Mat itsCamMatrix; //!< Our camera matrix
     cv::Mat itsDistCoeffs; //!< Our camera distortion coefficients
     bool itsCueChanged = true; //!< True when users change ranges
-
-    void onParamChange(hcue const & param, unsigned char const & newval) override { itsCueChanged = true; }
-    void onParamChange(scue const & param, unsigned char const & newval) override { itsCueChanged = true; }
-    void onParamChange(vcue const & param, unsigned char const & newval) override { itsCueChanged = true; }
+    
+    void onParamChange(hcue const & /*param*/, unsigned char const & /*newval*/) override { itsCueChanged = true; }
+    void onParamChange(scue const & /*param*/, unsigned char const & /*newval*/) override { itsCueChanged = true; }
+    void onParamChange(vcue const & /*param*/, unsigned char const & /*newval*/) override { itsCueChanged = true; }
     
     // ####################################################################################################
     //! Helper struct for an HSV range triplet, where each range is specified as a mean and sigma:
@@ -310,34 +310,34 @@ class FirstVision : public jevois::StdModule,
         rmax() for details. */
     struct hsvcue
     {
-	//! Constructor
-	hsvcue(unsigned char h, unsigned char s, unsigned char v) : muh(h), sih(30), mus(s), sis(20), muv(v), siv(20)
-	{ fix(); }
-	
-	//! Constructor
-	hsvcue(unsigned char h, unsigned char hsig, unsigned char s, unsigned char ssig,
-	       unsigned char v, unsigned char vsig) : muh(h), sih(hsig), mus(s), sis(ssig), muv(v), siv(vsig)
-	{ fix(); }
-	
-	//! Fix ranges so they don't go out of bounds
-	void fix()
-	{
-	  muh = std::min(179.0F, std::max(1.0F, muh)); sih = std::max(1.0F, std::min(sih, 360.0F));
-	  mus = std::min(254.0F, std::max(1.0F, mus)); sis = std::max(1.0F, std::min(sis, 512.0F));
-	  muv = std::min(254.0F, std::max(1.0F, muv)); siv = std::max(1.0F, std::min(siv, 512.0F));
-	}
-	
-	//! Get minimum triplet for use by cv::inRange()
-	cv::Scalar rmin() const
-	{ return cv::Scalar(std::max(0.0F, muh - sih), std::max(0.0F, mus - sis), std::max(0.0F, muv - siv)); }
-
-	//! Get maximum triplet for use by cv::inRange()
-	cv::Scalar rmax() const
-	{ return cv::Scalar(std::min(179.0F, muh + sih), 255, 255); }
-	
-	float muh, sih; //!< Mean and sigma for H
-	float mus, sis; //!< Mean and sigma for S
-	float muv, siv; //!< Mean and sigma for V
+        //! Constructor
+        hsvcue(unsigned char h, unsigned char s, unsigned char v) : muh(h), sih(30), mus(s), sis(20), muv(v), siv(20)
+        { fix(); }
+        
+        //! Constructor
+        hsvcue(unsigned char h, unsigned char hsig, unsigned char s, unsigned char ssig,
+               unsigned char v, unsigned char vsig) : muh(h), sih(hsig), mus(s), sis(ssig), muv(v), siv(vsig)
+        { fix(); }
+        
+        //! Fix ranges so they don't go out of bounds
+        void fix()
+        {
+          muh = std::min(179.0F, std::max(1.0F, muh)); sih = std::max(1.0F, std::min(sih, 360.0F));
+          mus = std::min(254.0F, std::max(1.0F, mus)); sis = std::max(1.0F, std::min(sis, 512.0F));
+          muv = std::min(254.0F, std::max(1.0F, muv)); siv = std::max(1.0F, std::min(siv, 512.0F));
+        }
+        
+        //! Get minimum triplet for use by cv::inRange()
+        cv::Scalar rmin() const
+        { return cv::Scalar(std::max(0.0F, muh - sih), std::max(0.0F, mus - sis), std::max(0.0F, muv - siv)); }
+        
+        //! Get maximum triplet for use by cv::inRange()
+        cv::Scalar rmax() const
+        { return cv::Scalar(std::min(179.0F, muh + sih), 255, 255); }
+        
+        float muh, sih; //!< Mean and sigma for H
+        float mus, sis; //!< Mean and sigma for S
+        float muv, siv; //!< Mean and sigma for V
     };
     
     std::vector<hsvcue> itsHSV;
@@ -346,20 +346,20 @@ class FirstVision : public jevois::StdModule,
     //! Helper struct for a detected object
     struct detection
     {
-	std::vector<cv::Point> contour; //!< The full detailed contour
-	std::vector<cv::Point> approx;  //!< Smoothed approximation of the contour
-	std::vector<cv::Point> hull;    //!< Convex hull of the contour
-	size_t threadnum;               //!< Thread number that detected this object
-	float serr;                     //!< Shape error score (higher for rougher contours with defects)
+        std::vector<cv::Point> contour; //!< The full detailed contour
+        std::vector<cv::Point> approx;  //!< Smoothed approximation of the contour
+        std::vector<cv::Point> hull;    //!< Convex hull of the contour
+        size_t threadnum;               //!< Thread number that detected this object
+        float serr;                     //!< Shape error score (higher for rougher contours with defects)
     };
-
+    
     //! Our detections, combined across all threads
     std::vector<detection> itsDetections;
     std::mutex itsDetMtx;
 
     //! Kalman filters to learn and adapt HSV windows over time
     std::shared_ptr<Kalman1D> itsKalH, itsKalS, itsKalV;
-
+    
     //! Erosion and dilation kernels shared across all detect threads
     cv::Mat itsErodeElement, itsDilateElement;
     
@@ -369,34 +369,34 @@ class FirstVision : public jevois::StdModule,
     class SinglePoseEstimationParallel : public cv::ParallelLoopBody
     {
       public:
-	SinglePoseEstimationParallel(cv::Mat & _objPoints, cv::InputArrayOfArrays _corners,
-				     cv::InputArray _cameraMatrix, cv::InputArray _distCoeffs,
-				     cv::Mat & _rvecs, cv::Mat & _tvecs) :
-	    objPoints(_objPoints), corners(_corners), cameraMatrix(_cameraMatrix),
-	    distCoeffs(_distCoeffs), rvecs(_rvecs), tvecs(_tvecs)
-	{ }
-	
-	void operator()(cv::Range const & range) const
-	{
-	  int const begin = range.start;
-	  int const end = range.end;
-	  
-	  for (int i = begin; i < end; ++i)
-	    cv::solvePnP(objPoints, corners.getMat(i), cameraMatrix, distCoeffs,
-			 rvecs.at<cv::Vec3d>(i), tvecs.at<cv::Vec3d>(i));
-	}
-	
+        SinglePoseEstimationParallel(cv::Mat & _objPoints, cv::InputArrayOfArrays _corners,
+                                     cv::InputArray _cameraMatrix, cv::InputArray _distCoeffs,
+                                     cv::Mat & _rvecs, cv::Mat & _tvecs) :
+            objPoints(_objPoints), corners(_corners), cameraMatrix(_cameraMatrix),
+            distCoeffs(_distCoeffs), rvecs(_rvecs), tvecs(_tvecs)
+        { }
+        
+        void operator()(cv::Range const & range) const
+        {
+          int const begin = range.start;
+          int const end = range.end;
+          
+          for (int i = begin; i < end; ++i)
+            cv::solvePnP(objPoints, corners.getMat(i), cameraMatrix, distCoeffs,
+                         rvecs.at<cv::Vec3d>(i), tvecs.at<cv::Vec3d>(i));
+        }
+        
       private:
-	cv::Mat & objPoints;
-	cv::InputArrayOfArrays corners;
-	cv::InputArray cameraMatrix, distCoeffs;
-	cv::Mat & rvecs, tvecs;
+        cv::Mat & objPoints;
+        cv::InputArrayOfArrays corners;
+        cv::InputArray cameraMatrix, distCoeffs;
+        cv::Mat & rvecs, tvecs;
     };
 
     // ####################################################################################################
     // ####################################################################################################
     // ####################################################################################################
-
+    
   public:
     // ####################################################################################################
     //! Constructor
@@ -410,13 +410,13 @@ class FirstVision : public jevois::StdModule,
     // ####################################################################################################
     //! Virtual destructor for safe inheritance
     virtual ~FirstVision() { }
-
+    
     // ####################################################################################################
     //! Estimate 6D pose of detected objects, if dopose parameter is true, otherwise just 2D corners
     /*! Inspired from the ArUco module of opencv_contrib
-      The corners array is always filled, but rvecs and tvecs only are if dopose is true */
+        The corners array is always filled, but rvecs and tvecs only are if dopose is true */
     void estimatePose(std::vector<std::vector<cv::Point2f> > & corners, cv::OutputArray _rvecs,
-		      cv::OutputArray _tvecs)
+                      cv::OutputArray _tvecs)
     {
       auto const osiz = objsize::get();
       
@@ -445,7 +445,7 @@ class FirstVision : public jevois::StdModule,
                                                                            itsDistCoeffs, rvecs, tvecs));
       }
     }
-
+    
     // ####################################################################################################
     //! Load camera calibration parameters
     void loadCameraCalibration(unsigned int w, unsigned int h)
@@ -489,7 +489,7 @@ class FirstVision : public jevois::StdModule,
       // Detect objects by finding contours:
       std::vector<std::vector<cv::Point> > contours; std::vector<cv::Vec4i> hierarchy;
       cv::findContours(imgth, contours, hierarchy, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
-      str += jevois::sformat("N=%03d ", hierarchy.size());
+      str += jevois::sformat("N=%03zu ", hierarchy.size());
       
       double const epsi = epsilon::get();
       int const m = margin::get();
@@ -544,7 +544,7 @@ class FirstVision : public jevois::StdModule,
           // getting grossly incorrect 6D pose estimates as the shape starts getting truncated as it partially exits the
           // camera field of view:
           bool reject = false;
-          for (int i = 0; i < c.size(); ++i)
+          for (size_t i = 0; i < c.size(); ++i)
             if (c[i].x < m || c[i].x >= imghsv.cols - m || c[i].y < m || c[i].y >= imghsv.rows - m)
             { reject = true; break; }
           if (reject) continue;
@@ -597,7 +597,7 @@ class FirstVision : public jevois::StdModule,
       // Display any results requested by the users:
       if (outimg && outimg->valid())
       {
-        if (tnum == showthread::get() && outimg->width == 2 * imgth.cols)
+        if (tnum == showthread::get() && int(outimg->width) == 2 * imgth.cols)
           jevois::rawimage::pasteGreyToYUYV(imgth, *outimg, imgth.cols, 0);
         jevois::rawimage::writeText(*outimg, str + beststr2, dispx, dispy + 12*tnum, jevois::yuyv::White);
       }
@@ -654,7 +654,7 @@ class FirstVision : public jevois::StdModule,
     {
       bool keepgoing = true;
       double const iouth = iou::get();
-
+      
       while (keepgoing)
       {
         // We will stop if we do not eliminate any more objects:
@@ -757,7 +757,6 @@ class FirstVision : public jevois::StdModule,
         auto const osiz = objsize::get();
         for (size_t i = 0; i < corners.size(); ++i)
         {
-          std::vector<cv::Point2f> const & curr = corners[i];
           cv::Vec3d const & rv = rvecs[i];
           cv::Vec3d const & tv = tvecs[i];
           

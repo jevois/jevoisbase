@@ -82,18 +82,18 @@ class MultiDNN2 : public jevois::StdModule,
     // ####################################################################################################
     //! Processing function, no video output
     // ####################################################################################################
-    virtual void process(jevois::InputFrame && inframe) override
-    {
-      LFATAL("todo");
-    }
+    //virtual void process(jevois::InputFrame && inframe) override
+    //{
+    //  LFATAL("todo");
+    //}
     
     // ####################################################################################################
     //! Processing function with video output to USB
     // ####################################################################################################
-    virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
-    {
-      LFATAL("todo");
-    }
+    //virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
+    //{
+    //  LFATAL("todo");
+    //}
 
 #ifdef JEVOIS_PRO
     // ####################################################################################################

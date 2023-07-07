@@ -124,7 +124,7 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac, mfac
     {
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get(true);
-      int const w = inimg.width, h = inimg.height;
+      unsigned int const w = inimg.width, h = inimg.height;
       
       // Wait for an image from our gadget driver into which we will put our results:
       jevois::RawImage outimg = outframe.get();
@@ -160,7 +160,7 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac, mfac
       while (itsIMUdata.size() > w/2) itsIMUdata.pop_back();
 
       // Plot the IMU data:
-      float const hh = h * 0.5F; int const sz = itsIMUdata.size(); int x = w - 1;
+      float const hh = h * 0.5F; int x = w - 1;
       // Plot so that positive values go up (so, negate all values):
       float const a = -afac::get(); float const g = -gfac::get(); float const m = -mfac::get();
       jevois::IMUdata const * pd = nullptr;
@@ -207,7 +207,7 @@ class DemoIMU : public jevois::Module, public jevois::Parameter<afac, gfac, mfac
 
       // Start the GUI frame:
       unsigned short winw, winh;
-      bool idle = helper.startFrame(winw, winh);
+      helper.startFrame(winw, winh);
 
       // Draw the camera frame:
       int x = 0, y = 0; unsigned short iw = 0, ih = 0;

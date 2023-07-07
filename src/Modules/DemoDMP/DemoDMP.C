@@ -339,7 +339,7 @@ class DemoDMP : public jevois::Module
       }
       
       // ---------- Step detection:
-      jevois::rawimage::writeText(outimg, jevois::sformat("Steps: %6u (last at %010u)", steps, step_ts),
+      jevois::rawimage::writeText(outimg, jevois::sformat("Steps: %6zu (last at %010zu)", steps, step_ts),
                                   3, h + 15, jevois::yuyv::White);
 
       // ---------- FSYNC detection:

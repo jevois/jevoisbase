@@ -42,10 +42,10 @@ void GPUshader::load(char const * filename, GLuint type)
   // Cheeky bit of code to read the whole file into memory:
   FILE * f = fopen(filename, "rb"); if (f == nullptr) PLFATAL("Failed to read file " << filename);
   fseek(f, 0, SEEK_END);
-  int sz = ftell(f);
+  size_t sz = ftell(f);
   fseek(f, 0, SEEK_SET);
   Src = new GLchar[sz+1];
-  fread(Src, 1, sz, f);
+  size_t got = fread(Src, 1, sz, f); if (got != sz) PLFATAL("Failed to read file " << filename);
   Src[sz] = 0; // null terminate it
   fclose(f);
 

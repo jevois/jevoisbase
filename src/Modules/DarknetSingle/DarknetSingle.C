@@ -151,7 +151,7 @@ class DarknetSingle : public jevois::StdModule
     {
       // Wait for next available camera image:
       jevois::RawImage const inimg = inframe.get();
-      unsigned int const w = inimg.width, h = inimg.height;
+      int const w = inimg.width, h = inimg.height;
 
       // Check input vs network dims, will throw if network not ready:
       int netw, neth, netc;
@@ -195,7 +195,7 @@ class DarknetSingle : public jevois::StdModule
       timer.start();
       
       // We only handle one specific pixel format, but any image size in this module:
-      unsigned int const w = inimg.width, h = inimg.height;
+      int const w = inimg.width, h = inimg.height;
       inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
 
       // While we process it, start a thread to wait for out frame and paste the input into it:
@@ -219,7 +219,7 @@ class DarknetSingle : public jevois::StdModule
             jevois::rawimage::writeText(outimg, "please wait...", w + 3, 15, jevois::yuyv::White);
           }
         });
-
+      
       // Decide on what to do based on itsPredictFut: if it is valid, we are still predicting, so check whether we are
       // done and if so draw the results. Otherwise, start predicting using the current input frame:
       if (itsPredictFut.valid())
@@ -231,10 +231,10 @@ class DarknetSingle : public jevois::StdModule
           // particular, it will throw a logic_error if we are still loading the network:
           bool success = true; float ptime = 0.0F;
           try { ptime = itsPredictFut.get(); } catch (std::logic_error const & e) { success = false; }
-
+          
           // Wait for paste to finish up and let camera know we are done processing the input image:
           paste_fut.get(); inframe.done();
-
+          
           if (success)
           {
             int const netw = itsRawInputCv.cols, neth = itsRawInputCv.rows;
@@ -243,29 +243,29 @@ class DarknetSingle : public jevois::StdModule
             // Update our output image: First paste the image we have been making predictions on:
             itsRawInputCv.copyTo(outimgcv(cv::Rect(w, 0, netw, neth)));
             jevois::rawimage::drawFilledRect(outimg, w, neth, netw, h - neth, jevois::yuyv::Black);
-
+            
             // Then draw the detections: either below the detection crop if there is room, or on top of it if not enough
             // room below:
-	    int y = neth + 3; if (y + itsDarknet->top::get() * 12 > h - 21) y = 3;
-
+            int y = neth + 3; if (y + int(itsDarknet->top::get()) * 12 > h - 21) y = 3;
+            
             for (auto const & p : itsResults)
             {
               jevois::rawimage::writeText(outimg, jevois::sformat("%s: %.2F", p.category.c_str(), p.score),
                                           w + 3, y, jevois::yuyv::White);
               y += 12;
             }
-
+            
             // Send serial results:
-	    sendSerialObjReco(itsResults);
-
+            sendSerialObjReco(itsResults);
+            
             // Draw some text messages:
             jevois::rawimage::writeText(outimg, "Predict time: " + std::to_string(int(ptime)) + "ms",
                                         w + 3, h - 11, jevois::yuyv::White);
-
+            
             // Finally make a copy of these new results so we can display them again while we wait for the next round:
-	    itsRawPrevOutputCv = cv::Mat(h, netw, CV_8UC2);
-	    outimgcv(cv::Rect(w, 0, netw, h)).copyTo(itsRawPrevOutputCv);
-	    
+            itsRawPrevOutputCv = cv::Mat(h, netw, CV_8UC2);
+            outimgcv(cv::Rect(w, 0, netw, h)).copyTo(itsRawPrevOutputCv);
+            
           } else { itsRawPrevOutputCv.release(); } // network is not ready yet
         }
         else
@@ -279,7 +279,7 @@ class DarknetSingle : public jevois::StdModule
       {
         // Wait for paste to finish up:
         paste_fut.get();
-
+        
         // In this module, we use square crops for the network, with size given by USB width - camera width:
         if (outimg.width < inimg.width) LFATAL("USB output image must be larger than camera input");
         int const netw = outimg.width - inimg.width;
@@ -287,7 +287,7 @@ class DarknetSingle : public jevois::StdModule
         
         // Check input vs network dims:
         if (netw > w || neth > h) LFATAL("Network input window must fit within camera frame");
-
+        
         // Take a central crop of the input:
         int const offx = ((w - netw) / 2) & (~1);
         int const offy = ((h - neth) / 2) & (~1);
@@ -299,19 +299,19 @@ class DarknetSingle : public jevois::StdModule
         
         // Also make a raw YUYV copy of the crop for later displays:
         crop.copyTo(itsRawInputCv);
-
+        
         // Let camera know we are done processing the input image:
         inframe.done();
-
+        
         // Launch the predictions; will throw if network is not ready:
-	try
-	{
-	  int netinw, netinh, netinc; itsDarknet->getInDims(netinw, netinh, netinc); // will throw if not ready
-	  itsPredictFut = jevois::async([&]() { return itsDarknet->predict(itsCvImg, itsResults); });
-	}
-	catch (std::logic_error const & e) { itsRawPrevOutputCv.release(); } // network is not ready yet
+        try
+        {
+          int netinw, netinh, netinc; itsDarknet->getInDims(netinw, netinh, netinc); // will throw if not ready
+          itsPredictFut = jevois::async([&]() { return itsDarknet->predict(itsCvImg, itsResults); });
+        }
+        catch (std::logic_error const & e) { itsRawPrevOutputCv.release(); } // network is not ready yet
       }
-
+      
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       jevois::rawimage::writeText(outimg, fpscpu, 3, h - 13, jevois::yuyv::White);
@@ -319,7 +319,7 @@ class DarknetSingle : public jevois::StdModule
       // Send the output image with our processing results to the host over USB:
       outframe.send();
     }
-
+    
     // ####################################################################################################
   protected:
     std::shared_ptr<Darknet> itsDarknet;
@@ -328,7 +328,7 @@ class DarknetSingle : public jevois::StdModule
     cv::Mat itsRawInputCv;
     cv::Mat itsCvImg;
     cv::Mat itsRawPrevOutputCv;
- };
+};
 
 // Allow the module to be loaded as a shared object (.so) file:
 JEVOIS_REGISTER_MODULE(DarknetSingle);

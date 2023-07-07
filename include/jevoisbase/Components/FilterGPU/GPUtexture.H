@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <jevoisbase/Components/FilterGPU/OpenGL.H>
+#include <jevois/GPU/OpenGL.H>
 
 //! Simple class to hold an OpenGL texture
 /*! OpenGL textures are used to transfer image data from CPU to GPU and then allow the GPU to perform some processing on
