@@ -27,7 +27,7 @@
 #include <string.h>
 
 // Neon-related:
-#include <Ne10/inc/NE10_imgproc.h>
+#include <NE10_imgproc.h>
 
 // icon by by Madebyoliver in technology at flaticon
 

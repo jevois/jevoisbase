@@ -32,7 +32,7 @@
 #include <stdlib.h>
 
 // Neon-related:
-#include <Ne10/inc/NE10_imgproc.h>
+#include <NE10_imgproc.h>
 
 // GPU-related:
 #include <jevoisbase/Components/FilterGPU/FilterGPU.H>

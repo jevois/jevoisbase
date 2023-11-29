@@ -57,7 +57,8 @@ class PyObjectron:
 
         # Draw full-resolution input frame from camera:
         x, y, w, h = helper.drawInputFrame("c", inframe, False, False)
-        
+        helper.itext('JeVois-Pro 3D Object Detection', 0, -1)
+
         # Get the next camera image at processing resolution (may block until it is captured):
         image = inframe.getCvRGBp()
         iw, ih = image.shape[1], image.shape[0]

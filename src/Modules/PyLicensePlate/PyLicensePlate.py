@@ -66,7 +66,8 @@ class PyLicensePlate:
 
         # Draw full-resolution input frame from camera:
         dx, dy, dw, dh = helper.drawInputFrame("c", inframe, False, False)
-        
+        helper.itext('JeVois-Pro License Plate Detection', 0, -1)
+
         # Get the next camera image at processing resolution (may block until it is captured):
         frame = inframe.getCvBGRp()
         h, w, _ = frame.shape
