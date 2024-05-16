@@ -1,3 +1,15 @@
+diff --git a/src/linux/current.c b/src/linux/current.c
+index 1fcd7de..1b46620 100644
+--- a/src/linux/current.c
++++ b/src/linux/current.c
+@@ -4,6 +4,7 @@
+ #include <string.h>
+ #include <errno.h>
+ 
++#define __USE_GNU
+ #include <sched.h>
+ 
+ #include <cpuinfo.h>
 diff --git a/src/linux/processors.c b/src/linux/processors.c
 index 8df06f5..9c7e0a2 100644
 --- a/src/linux/processors.c

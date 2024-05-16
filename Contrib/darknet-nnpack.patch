@@ -1,8 +1,14 @@
 diff --git a/src/network.c b/src/network.c
-index d56bed5..a599902 100644
+index d56bed5..3763cec 100644
 --- a/src/network.c
 +++ b/src/network.c
-@@ -256,6 +256,9 @@ void forward_network(network net, network_state state)
+@@ -1,4 +1,5 @@
+ #include "darknet.h"
++#include <jevoisbase/Components/ObjectDetection/darknet_profiler.h>
+ 
+ #include <stdio.h>
+ #include <time.h>
+@@ -256,6 +257,9 @@ void forward_network(network net, network_state state)
  {
      state.workspace = net.workspace;
      int i;
@@ -12,7 +18,7 @@ index d56bed5..a599902 100644
      for(i = 0; i < net.n; ++i){
          state.index = i;
          layer l = net.layers[i];
-@@ -265,8 +268,13 @@ void forward_network(network net, network_state state)
+@@ -265,8 +269,13 @@ void forward_network(network net, network_state state)
          //double time = get_time_point();
          l.forward(l, state);
          //printf("%d - Predicted in %lf milli-seconds.\n", i, ((double)get_time_point() - time) / 1000);
@@ -26,7 +32,7 @@ index d56bed5..a599902 100644
  }
  
  void update_network(network net)
-@@ -580,7 +588,7 @@ int resize_network(network *net, int w, int h)
+@@ -580,7 +589,7 @@ int resize_network(network *net, int w, int h)
              w = l.out_w;
              h = l.out_h;
          }

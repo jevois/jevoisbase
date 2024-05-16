@@ -19,7 +19,7 @@
 # You may provide the installed JeVois config root and version as:
 #   cmake -DJEVOIS_CONFIG=/jevois/config ..
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.6)
 
 # Set vendor name, our modules will be placed in a directory by that name under /jevois/modules:
 set(JEVOIS_VENDOR "JeVois")
@@ -48,7 +48,7 @@ jevois_project_set_flags()
 set(JVB "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with the current version number:
-set(JEVOISBASE_SOVERSION "1.20.0")
+set(JEVOISBASE_SOVERSION "1.21.0")
 jevois_setup_library(src/Components ${JEVOIS}base ${JEVOISBASE_SOVERSION})
 
 # Check that we are not trying to compile a newer jevoisbase against an older jevois-sdk, which would typically fail:
@@ -432,17 +432,23 @@ install(DIRECTORY Contrib/ARToolKit5arm DESTINATION ${INCDEST} COMPONENT bin)
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others:
 # From this: ls /usr/share/jevois-opencv-4.*/lib/|grep ".so$"|sed -e s/.so//|sed -e s/^lib//|xargs
-message(STATUS "opencv libs: ${JEVOIS_OPENCV_LIBS}")
+#
+# Note: with 4.9.0 compiled for platform, we are missing the plain .so links somehow... They were created on compile
+# but included by our checkinstall...
 
-target_link_libraries(${JEVOIS}base ${JEVOIS_OPENCV_LIBS} opencv_alphamat opencv_aruco opencv_bgsegm opencv_bioinspired
-  opencv_calib3d opencv_ccalib opencv_core opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dnn_superres
-  opencv_dpm opencv_face opencv_features2d opencv_flann opencv_fuzzy opencv_gapi opencv_hfs opencv_imgcodecs
-  opencv_img_hash opencv_imgproc opencv_intensity_transform opencv_line_descriptor opencv_mcc opencv_ml opencv_objdetect
-  opencv_optflow opencv_phase_unwrapping opencv_photo opencv_plot opencv_quality opencv_rapid opencv_reg opencv_saliency
-  opencv_shape opencv_stereo opencv_stitching opencv_structured_light opencv_superres opencv_surface_matching
-  opencv_text opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_wechat_qrcode opencv_xfeatures2d
-  opencv_ximgproc opencv_xobjdetect opencv_xphoto)
-# removed: opencv_freetype (not available on platform), opencv_highgui (not needed), opencv_rgbd (not needed)
+set(JVBOCVLIBS opencv_alphamat opencv_aruco opencv_bgsegm opencv_bioinspired opencv_calib3d opencv_ccalib opencv_core
+  opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dnn_superres opencv_dpm opencv_face opencv_features2d
+  opencv_flann opencv_freetype opencv_fuzzy opencv_gapi opencv_hfs opencv_imgcodecs opencv_img_hash opencv_imgproc
+  opencv_intensity_transform opencv_line_descriptor opencv_mcc opencv_ml opencv_objdetect opencv_optflow
+  opencv_phase_unwrapping opencv_photo opencv_plot opencv_quality opencv_rapid opencv_reg opencv_saliency opencv_shape
+  opencv_stereo opencv_stitching opencv_structured_light opencv_superres opencv_surface_matching opencv_text
+  opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_wechat_qrcode opencv_xfeatures2d opencv_ximgproc
+  opencv_xobjdetect opencv_xphoto)
+# removed: opencv_highgui (not needed), opencv_rgbd (not needed)
+
+jevois_versioned_libs(JVBOCVLIBS ".so.${JEVOIS_OPENCV_VERSION}" OPENCV_LIBS_FOR_JEVOISBASE)
+target_link_libraries(${JEVOIS}base ${JEVOIS_OPENCV_LIBS} ${OPENCV_LIBS_FOR_JEVOISBASE})
+#message(STATUS "OpenCV libs: ${OPENCV_LIBS_FOR_JEVOISBASE}")
 
 ########################################################################################################################
 # Install shared resources (cascade classifiers, neural network weights, etc):

@@ -1,3 +1,21 @@
+diff --git a/tiny_dnn/util/parallel_for.h b/tiny_dnn/util/parallel_for.h
+index b05d673..f18e22a 100644
+--- a/tiny_dnn/util/parallel_for.h
++++ b/tiny_dnn/util/parallel_for.h
+@@ -40,9 +40,12 @@ namespace tiny_dnn {
+ 
+ #ifdef CNN_USE_TBB
+ 
++// JeVois: remove scheduler init when compiling on noble (gcc >= 14)
++#if defined(__GNUC__) && __GNUC__ < 14
+ static tbb::task_scheduler_init tbbScheduler(
+   tbb::task_scheduler_init::automatic);  // tbb::task_scheduler_init::deferred);
+-
++#endif
++  
+ typedef tbb::blocked_range<size_t> blocked_range;
+ 
+ template <typename Func>
 diff --git a/tiny_dnn/xtensor/xstorage.hpp b/tiny_dnn/xtensor/xstorage.hpp
 index d49ca75..4700365 100644
 --- a/tiny_dnn/xtensor/xstorage.hpp
