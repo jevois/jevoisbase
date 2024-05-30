@@ -117,10 +117,10 @@ class PySceneText:
         # Write frames/s info from our timer:
         fps = self.timer.stop()
         helper.iinfo(inframe, fps, winw, winh);
-        helper.itext("JeVois-Pro - Scene text detection and decoding", 0, -1)
-        helper.itext("Detection:   " + self.tdname, 0, -1)
-        helper.itext("Charset:     " + self.charset, 0, -1)
-        helper.itext("Recognition: " + self.modelname, 0, -1)
+        helper.itext("JeVois-Pro - Scene text detection and decoding")
+        helper.itext("Detection:   " + self.tdname)
+        helper.itext("Charset:     " + self.charset)
+        helper.itext("Recognition: " + self.modelname)
 
         # End of frame:
         helper.endFrame()

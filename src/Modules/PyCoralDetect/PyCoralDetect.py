@@ -177,7 +177,7 @@ class PyCoralDetect:
         fps = self.timer.stop()
         helper.iinfo(inframe, fps, winw, winh);
         helper.itext('JeVois-Pro Python Coral Detection - %s - %dms/inference' %
-                     (self.model, inference_time * 1000.0), 0, -1)
+                     (self.model, inference_time * 1000.0))
 
         # End of frame:
         helper.endFrame()

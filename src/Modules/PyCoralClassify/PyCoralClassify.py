@@ -151,12 +151,12 @@ class PyCoralClassify:
 
         # Put efficiency information:
         helper.itext('JeVois-Pro Python Coral Classification - %s - %dms/inference' %
-                     (self.model, inference_time * 1000.0), 0, -1)
+                     (self.model, inference_time * 1000.0))
 
         # Report top-scoring classes:
         for c in classes:
             rlabel = '%s: %.2f' % (self.labels.get(c.id, c.id), c.score)
-            helper.itext(rlabel, 0, -1)
+            helper.itext(rlabel)
 
         # Write frames/s info from our timer:
         fps = self.timer.stop()

@@ -66,7 +66,7 @@ class PyLicensePlate:
 
         # Draw full-resolution input frame from camera:
         dx, dy, dw, dh = helper.drawInputFrame("c", inframe, False, False)
-        helper.itext('JeVois-Pro License Plate Detection', 0, -1)
+        helper.itext('JeVois-Pro License Plate Detection')
 
         # Get the next camera image at processing resolution (may block until it is captured):
         frame = inframe.getCvBGRp()
@@ -98,7 +98,7 @@ class PyLicensePlate:
         # Write frames/s info from our timer:
         fps = self.timer.stop()
         helper.iinfo(inframe, fps, winw, winh);
-        helper.itext("JeVois-Pro - " + self.modelname, 0, -1)
+        helper.itext("JeVois-Pro - " + self.modelname)
 
         # End of frame:
         helper.endFrame()

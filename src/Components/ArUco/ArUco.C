@@ -112,6 +112,7 @@ void ArUco::detectMarkers(cv::InputArray image, cv::OutputArray ids, cv::OutputA
   if (itsCamMatrix.empty())
   {
     std::string const cpf = std::string(JEVOIS_SHARE_PATH) + "/camera/" + aruco::camparams::get() +
+      '-' + engine()->camerasens::strget() + '-' +
       std::to_string(image.cols()) + 'x' + std::to_string(image.rows()) + ".yaml";
 
     cv::FileStorage fs(cpf, cv::FileStorage::READ);

@@ -148,71 +148,82 @@ class CustomDNN : public jevois::StdModule
       // Get a handle to the post-processor and check whether it is of derived type MyPostProc:
       std::shared_ptr<MyPostProc> mpp = std::dynamic_pointer_cast<MyPostProc>(itsPipeline->getPostProcessor());
 
-      // If the dynamic cast succeeded, current pipeline is indeed using a post processor of type MyPostProc:
-      if (mpp)
+      // If the dynamic cast succeeded, current pipeline is indeed using a post processor of type MyPostProc. Otherwise,
+      // just run the standard processing as in the regular DNN module, and return:
+      if ( ! mpp)
       {
-        // In a parallel thread, convert full HD input frame to RGB while the net runs:
-        auto fut = jevois::async([&]() { return inframe.getCvRGB(); });  // could also use getCvBGR(), getCvGray(), etc
-        
-        // Meanwhile, run the network:
+        // Selected post-processor not of type MyPostProc, run regular processing:
         itsPipeline->process(inimg, this, outimg, helper, idle);
 
-        // Get the converted frame (may block until ready):
-        cv::Mat inhd = fut.get();
-        if (jevois::frameNum() % 30 == 0) LINFO("Input frame is " << inhd.cols << 'x' << inhd.rows);
-
-        // Get the latest detections:
-        std::vector<jevois::ObjDetect> const & detections = mpp->getDetections();
-        if (jevois::frameNum() % 30 == 0) LINFO("Got " << detections.size() << " detections");
-        
-        // As noted above, beware of thread safety. If you need to keep the detections across multiple video frames,
-        // make a deep copy of that "detections" vector. Here, it's just a zero-copy reference to the vector internally
-        // stored in the post processor
-        
-        // add your code here....
-        // full HD input image is in cv::Mat "inhd"
-        // object detection boxes are in "detections"
-        
-        
-        // If you need access to the PreProcessor, which will allow you to do coordinate transforms from full HD image
-        // to blob that was sent to the deep net, use itsPipeline->getPreProcessor()
-
-        // Here for example, we compute edge maps within each detected object and display them as overlays:
-        for (int i = 0; jevois::ObjDetect const & d : detections)
-        {
-          // Get a crop from the full HD image:
-          cv::Rect r(d.tlx * inhd.cols / inimg.width,
-                     d.tly * inhd.rows / inimg.height,
-                     (d.brx - d.tlx) * inhd.cols / inimg.width,
-                     (d.bry - d.tly) * inhd.rows / inimg.height);
-          cv::Mat roi = inhd(r); // no need to clone() here, cvtColor() below can handle it; but you may have to clone
-          // if you want to store the roi across multiple video frames.
-
-          // For demo, compute Canny edges and create an RGBA image that is all transparent except for the edges:
-          cv::Mat gray_roi; cv::cvtColor(roi, gray_roi, cv::COLOR_BGR2GRAY);
-          cv::Mat edges; cv::Canny(gray_roi, edges, 50, 100, 3);
-          cv::Mat chans[4] { edges, edges, edges, edges };
-          cv::Mat mask; cv::merge(chans, 4, mask);
-
-          // Give a name to each edge ROI and display it:
-          std::string roi_name = "roi" + std::to_string(i++);
-          unsigned short rw = mask.cols, rh = mask.rows;
-          if (helper) // need this test to support headless mode too (no display, no helper)
-            helper->drawImage(roi_name.c_str(), mask, true, r.x, r.y, rw, rh, false /*noalias*/, true /*is_overlay*/);
-
-          // Also draw a circle over each ROI to test that drawing works:
-          if (helper)
-            helper->drawCircle(r.x + r.width/2, r.y + r.height/2, std::min(r.width, r.height)/2);
-
-          // Test serial: if you want to send modified messages, perhaps the easiest is to modify the contents of the
-          // ObjDetect object (make a copy first as here d is just a const ref):
-          sendSerialObjDetImg2D(inhd.cols, inhd.rows, d);
-        }
+        return;
       }
-      else
+
+      // If we make it here, the selected pipeline is using MyPostProc:
+
+      // In a parallel thread, convert full HD input frame to RGB while the net runs:
+      auto fut = jevois::async([&]() { return inframe.getCvRGB(); });  // could also use getCvBGR(), getCvGray(), etc
+      
+      // Meanwhile, run the network:
+      itsPipeline->process(inimg, this, outimg, helper, idle);
+      
+      // Get the converted frame (may block until ready):
+      cv::Mat inhd = fut.get();
+      if (jevois::frameNum() % 30 == 0) LINFO("Input frame is " << inhd.cols << 'x' << inhd.rows);
+      
+      // Get the latest detections:
+      std::vector<jevois::ObjDetect> const & detections = mpp->getDetections();
+      if (jevois::frameNum() % 30 == 0) LINFO("Got " << detections.size() << " detections");
+      
+      // As noted above, beware of thread safety. If you need to keep the detections across multiple video frames,
+      // make a deep copy of that "detections" vector. Here, it's just a zero-copy reference to the vector internally
+      // stored in the post processor. That vector will be overwritten on the next video frame.
+      
+      // add your code here....
+      // full HD input image is in cv::Mat "inhd"
+      // object detection boxes are in "detections"
+      
+      // If you need access to the PreProcessor, which will allow you to do coordinate transforms from full HD image
+      // to blob that was sent to the deep net, use itsPipeline->getPreProcessor()
+      
+      // Here for example, we compute edge maps within each detected object and display them as overlays:
+      for (int i = 0; jevois::ObjDetect const & d : detections)
       {
-        // Standard processing as in the regular DNN module:
-        itsPipeline->process(inimg, this, outimg, helper, idle);
+        // Get a crop from the full HD image:
+        cv::Rect r(d.tlx * inhd.cols / inimg.width,
+                   d.tly * inhd.rows / inimg.height,
+                   (d.brx - d.tlx) * inhd.cols / inimg.width,
+                   (d.bry - d.tly) * inhd.rows / inimg.height);
+        cv::Mat roi = inhd(r); // no need to clone() here, cvtColor() below can handle this zero-copy cropping;
+        // but you may have to clone if you want to store the roi across multiple video frames.
+
+        // Some ROIs may be empty and openCV does not like that, so skip those:
+        if (roi.empty()) continue;
+        
+        // For demo, compute Canny edges and create an RGBA image that is all transparent except for the edges:
+        cv::Mat gray_roi; cv::cvtColor(roi, gray_roi, cv::COLOR_BGR2GRAY);
+        cv::Mat edges; cv::Canny(gray_roi, edges, 50, 100, 3);
+        cv::Mat chans[4] { edges, edges, edges, edges };
+        cv::Mat mask; cv::merge(chans, 4, mask);
+        
+        // Give a unique name to each edge ROI and display it. Note: if is_overlay is true in the call to drawImage()
+        // below, then coordinates for subsequent drawings will remain relative to the origin of the full frame drawn
+        // above using drawInputFrame(). If false, then coordinates will shift to be relative to the origin of the last
+        // drawn image. Here, we want is_overlay=true because we will be drawing several ROIs (one per detection) and we
+        // do not want the origin of the next ROI to be relative to the previous ROI; we want all ROIs to be drawn at
+        // specific locations relative to the input frame:
+        std::string roi_name = "roi" + std::to_string(i);
+        unsigned short rw = mask.cols, rh = mask.rows;
+        if (helper) // need this test to support headless mode (no display, no helper)
+          helper->drawImage(roi_name.c_str(), mask, true, r.x, r.y, rw, rh, false /*noalias*/, true /*is_overlay*/);
+        
+        // Also draw a circle over each ROI to test that drawing works. Because is_overlay was true in drawImage, we
+        // need to shift the center of the circle by (r.x, r.y) which is the top-left corner of the last drawn ROI:
+        if (helper)
+          helper->drawCircle(r.x + r.width/2, r.y + r.height/2, std::min(r.width, r.height)/2);
+        
+        // Test serial: if you want to send modified messages, perhaps the easiest is to modify the contents of the
+        // ObjDetect object (make a copy first as here d is just a const ref):
+        sendSerialObjDetImg2D(inhd.cols, inhd.rows, d);
       }
     }
     

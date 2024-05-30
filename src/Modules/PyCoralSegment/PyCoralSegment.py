@@ -192,7 +192,7 @@ class PyCoralSegment:
 
         # Put efficiency information:
         helper.itext('JeVois-Pro Python Coral Segmentation - %s - %dms/inference' %
-                     (self.model, inference_time * 1000.0), 0, -1)
+                     (self.model, inference_time * 1000.0))
         
         # Write frames/s info from our timer:
         fps = self.timer.stop()

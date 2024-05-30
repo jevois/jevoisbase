@@ -30,11 +30,12 @@ namespace aruco
   static jevois::ParameterCategory const ParamCateg("ArUco Options");
 
   //! Parameter \relates ArUco
-  JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera resolution "
-                           "will be appended, as well as a .yaml extension. For example, specifying 'calibration' "
-                           "here and running the camera sensor at 320x240 will attempt to load "
-                           "calibration320x240.yaml from within directory " JEVOIS_SHARE_PATH "/camera/ - Note that "
-                           "this parameter cannot be changed at runtime (must be set in the module's params.cfg).",
+  JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera sensor name "
+                           "and resolution will be appended, as well as a .yaml extension. For example, specifying "
+                           "'calibration' here and running an ov9650 camera sensor at 320x240 will attempt to load "
+                           "calibration-ov9650-320x240.yaml from within directory " JEVOIS_SHARE_PATH
+                           "/camera/ - Note that this parameter cannot be changed at runtime (must be set in "
+                           "the module's params.cfg).",
                            "calibration", ParamCateg);
 
   //! Parameter \relates ArUco
