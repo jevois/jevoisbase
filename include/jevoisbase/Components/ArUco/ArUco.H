@@ -20,6 +20,7 @@
 #include <jevois/Component/Component.H>
 #include <jevois/Types/Enum.H>
 #include <jevois/GPU/GUIhelper.H>
+#include <jevois/Core/CameraCalibration.H>
 
 #include <opencv2/aruco.hpp>
 

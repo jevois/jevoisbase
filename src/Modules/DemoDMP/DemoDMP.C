@@ -16,6 +16,8 @@
 /*! \file */
 
 #include <jevois/Core/Module.H>
+#include <jevois/Core/Engine.H>
+#include <jevois/Core/CameraCalibration.H>
 #include <jevois/Core/ICM20948.H>
 
 #include <jevois/Image/RawImageOps.H>

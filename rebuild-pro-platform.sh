@@ -17,7 +17,7 @@ sudo rm -f /var/lib/jevoispro-build/usr/lib/libjevoisprobase*
 sudo /bin/rm -rf ppbuild \
     && mkdir ppbuild \
     && cd ppbuild \
-    && cmake "${extra} $@" -DJEVOIS_HARDWARE=PRO -DJEVOIS_PLATFORM=ON .. \
+    && cmake $extra "$@" -DJEVOIS_HARDWARE=PRO -DJEVOIS_PLATFORM=ON .. \
     && make -j \
     && sudo make install
 

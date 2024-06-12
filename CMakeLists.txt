@@ -507,7 +507,3 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${JEVOIS_DEPEND}, libgles2-mesa-dev, curl, lib
 # Use helper from JeVois.cmake for all other settings:
 jevois_setup_cpack(${JEVOIS}base)
 
-
-########################################################################################################################
-# Wrapping up:
-jevois_project_finalize()  # call this last in your CMakeLists.txt, will un-mount the live microSD if applicable

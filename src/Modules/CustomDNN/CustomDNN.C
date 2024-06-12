@@ -186,7 +186,8 @@ class CustomDNN : public jevois::StdModule
       // to blob that was sent to the deep net, use itsPipeline->getPreProcessor()
       
       // Here for example, we compute edge maps within each detected object and display them as overlays:
-      for (int i = 0; jevois::ObjDetect const & d : detections)
+      int i = 0;
+      for (jevois::ObjDetect const & d : detections)
       {
         // Get a crop from the full HD image:
         cv::Rect r(d.tlx * inhd.cols / inimg.width,
@@ -204,22 +205,27 @@ class CustomDNN : public jevois::StdModule
         cv::Mat edges; cv::Canny(gray_roi, edges, 50, 100, 3);
         cv::Mat chans[4] { edges, edges, edges, edges };
         cv::Mat mask; cv::merge(chans, 4, mask);
-        
-        // Give a unique name to each edge ROI and display it. Note: if is_overlay is true in the call to drawImage()
-        // below, then coordinates for subsequent drawings will remain relative to the origin of the full frame drawn
-        // above using drawInputFrame(). If false, then coordinates will shift to be relative to the origin of the last
-        // drawn image. Here, we want is_overlay=true because we will be drawing several ROIs (one per detection) and we
-        // do not want the origin of the next ROI to be relative to the previous ROI; we want all ROIs to be drawn at
-        // specific locations relative to the input frame:
-        std::string roi_name = "roi" + std::to_string(i);
-        unsigned short rw = mask.cols, rh = mask.rows;
+
+        // Anything that is using the helper should be marked as for JEVOIS_PRO only:
+#ifdef JEVOIS_PRO
         if (helper) // need this test to support headless mode (no display, no helper)
+        {
+          // Give a unique name to each edge ROI and display it. Note: if is_overlay is true in the call to drawImage()
+          // below, then coordinates for subsequent drawings will remain relative to the origin of the full frame drawn
+          // above using drawInputFrame(). If false, then coordinates will shift to be relative to the origin of the
+          // last drawn image. Here, we want is_overlay=true because we will be drawing several ROIs (one per detection)
+          // and we do not want the origin of the next ROI to be relative to the previous ROI; we want all ROIs to be
+          // drawn at specific locations relative to the input frame:
+          std::string roi_name = "roi" + std::to_string(i);
+          unsigned short rw = mask.cols, rh = mask.rows;
+          
           helper->drawImage(roi_name.c_str(), mask, true, r.x, r.y, rw, rh, false /*noalias*/, true /*is_overlay*/);
-        
-        // Also draw a circle over each ROI to test that drawing works. Because is_overlay was true in drawImage, we
-        // need to shift the center of the circle by (r.x, r.y) which is the top-left corner of the last drawn ROI:
-        if (helper)
+          
+          // Also draw a circle over each ROI to test that drawing works. Because is_overlay was true in drawImage, we
+          // need to shift the center of the circle by (r.x, r.y) which is the top-left corner of the last drawn ROI:
           helper->drawCircle(r.x + r.width/2, r.y + r.height/2, std::min(r.width, r.height)/2);
+        }
+#endif
         
         // Test serial: if you want to send modified messages, perhaps the easiest is to modify the contents of the
         // ObjDetect object (make a copy first as here d is just a const ref):

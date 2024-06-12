@@ -18,6 +18,7 @@
 // icon by flaticon
 
 #include <jevois/Core/Module.H>
+#include <jevois/Core/Engine.H>
 #include <jevois/Debug/Timer.H>
 #include <jevois/Image/RawImageOps.H>
 #include <jevoisbase/Components/ArUco/ArUco.H> // for dictionary enum
