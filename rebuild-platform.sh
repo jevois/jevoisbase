@@ -26,4 +26,4 @@ make -j
 sudo make install
 cd ..
 
-if [ $jvpkg = "yes" ]; then jevois-jvpkg `cat pbuild/jvpkg-args`; fi
+if [ $create_jvpkg = "yes" ]; then jevois-jvpkg `cat pbuild/jvpkg-args`; fi
