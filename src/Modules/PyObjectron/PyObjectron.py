@@ -35,7 +35,7 @@ class PyObjectron:
         max_num_objects = 5
         min_detection_confidence = 0.5
         min_tracking_confidence = 0.99
-        model_name = 'Shoe' # 'Shoe', 'Chair', 'Cup', 'Camera'
+        self.model_name = 'Shoe' # 'Shoe', 'Chair', 'Cup', 'Camera'
 
         # Instantiate a JeVois Timer to measure our processing framerate:
         self.timer = jevois.Timer("objectron", 30, jevois.LOG_DEBUG)
@@ -47,7 +47,7 @@ class PyObjectron:
             max_num_objects = max_num_objects,
             min_detection_confidence = min_detection_confidence,
             min_tracking_confidence = min_tracking_confidence,
-            model_name = model_name)
+            model_name = self.model_name)
 
     # ###################################################################################################
     ## Process function with GUI output
@@ -57,8 +57,9 @@ class PyObjectron:
 
         # Draw full-resolution input frame from camera:
         x, y, w, h = helper.drawInputFrame("c", inframe, False, False)
-        helper.itext('JeVois-Pro 3D Object Detection')
-
+        helper.itext('JeVois-Pro 3D Object Detection', 0, -1)
+        helper.itext('Detecting: ' + self.model_name + ' - edit source code to change')
+        
         # Get the next camera image at processing resolution (may block until it is captured):
         image = inframe.getCvRGBp()
         iw, ih = image.shape[1], image.shape[0]

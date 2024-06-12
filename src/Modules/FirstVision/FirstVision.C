@@ -102,13 +102,6 @@ JEVOIS_DECLARE_PARAMETER(dopose, bool, "Compute (and show) 6D object pose, requi
 			 true, ParamCateg);
 
 //! Parameter \relates FirstVision
-JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera resolution "
-			 "will be appended, as well as a .yaml extension. For example, specifying 'calibration' "
-			 "here and running the camera sensor at 320x240 will attempt to load "
-			 "calibration320x240.yaml from within directory " JEVOIS_SHARE_PATH "/camera/",
-			 "calibration", ParamCateg);
-
-//! Parameter \relates FirstVision
 JEVOIS_DECLARE_PARAMETER(iou, double, "Intersection-over-union ratio over which duplicates are eliminated",
                          0.3, jevois::Range<double>(0.01, 0.99), ParamCateg);
 
@@ -292,11 +285,10 @@ JEVOIS_DECLARE_PARAMETER(margin, size_t, "Margin from from frame borders (pixels
 class FirstVision : public jevois::StdModule,
                     public jevois::Parameter<hcue, scue, vcue, maxnumobj, hullarea, hullfill, erodesize,
                                              dilatesize, epsilon, debug, threads, showthread, ethresh,
-                                             dopose, camparams, iou, objsize, margin>
+                                             dopose, iou, objsize, margin>
 {
   protected:
-    cv::Mat itsCamMatrix; //!< Our camera matrix
-    cv::Mat itsDistCoeffs; //!< Our camera distortion coefficients
+    jevois::CameraCalibration itsCalib; //!< Camera calibration parameters
     bool itsCueChanged = true; //!< True when users change ranges
     
     void onParamChange(hcue const & /*param*/, unsigned char const & /*newval*/) override { itsCueChanged = true; }
@@ -406,6 +398,12 @@ class FirstVision : public jevois::StdModule,
       itsKalS = addSubComponent<Kalman1D>("kalS");
       itsKalV = addSubComponent<Kalman1D>("kalV");
     }
+
+    //! Load camera calibration on init
+    void postInit()
+    {
+      itsCalib = engine()->loadCameraCalibration();
+    }
     
     // ####################################################################################################
     //! Virtual destructor for safe inheritance
@@ -441,32 +439,8 @@ class FirstVision : public jevois::StdModule,
         int nobj = (int)corners.size();
         _rvecs.create(nobj, 1, CV_64FC3); _tvecs.create(nobj, 1, CV_64FC3);
         cv::Mat rvecs = _rvecs.getMat(), tvecs = _tvecs.getMat();
-        cv::parallel_for_(cv::Range(0, nobj), SinglePoseEstimationParallel(objPoints, corners, itsCamMatrix,
-                                                                           itsDistCoeffs, rvecs, tvecs));
-      }
-    }
-    
-    // ####################################################################################################
-    //! Load camera calibration parameters
-    void loadCameraCalibration(unsigned int w, unsigned int h)
-    {
-      camparams::freeze();
-      
-      std::string const cpf = std::string(JEVOIS_SHARE_PATH) + "/camera/" + camparams::get() +
-        std::to_string(w) + 'x' + std::to_string(h) + ".yaml";
-      
-      cv::FileStorage fs(cpf, cv::FileStorage::READ);
-      if (fs.isOpened())
-      {
-        fs["camera_matrix"] >> itsCamMatrix;
-        fs["distortion_coefficients"] >> itsDistCoeffs;
-        LINFO("Loaded camera calibration from " << cpf);
-      }
-      else
-      {
-        LERROR("Failed to read camera parameters from file [" << cpf << "] -- IGNORED");
-        itsCamMatrix = cv::Mat::eye(3, 3, CV_64F);
-        itsDistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
+        cv::parallel_for_(cv::Range(0, nobj), SinglePoseEstimationParallel(objPoints, corners, itsCalib.camMatrix,
+                                                                           itsCalib.distCoeffs, rvecs, tvecs));
       }
     }
     
@@ -809,9 +783,6 @@ class FirstVision : public jevois::StdModule,
       
       timer.start();
 
-      // Load camera calibration if needed:
-      if (itsCamMatrix.empty()) loadCameraCalibration(w, h);
-
       // Convert input image to BGR24, then to HSV:
       cv::Mat imgbgr = jevois::rawimage::convertToCvBGR(inimg);
       cv::Mat imghsv; cv::cvtColor(imgbgr, imghsv, cv::COLOR_BGR2HSV);
@@ -867,9 +838,6 @@ class FirstVision : public jevois::StdModule,
       inimg.require("input", w, h, V4L2_PIX_FMT_YUYV);
       
       timer.start();
-
-      // Load camera calibration if needed:
-      if (itsCamMatrix.empty()) loadCameraCalibration(w, h);
 
       // While we process it, start a thread to wait for output frame and paste the input image into it:
       jevois::RawImage outimg; // main thread should not use outimg until paste thread is complete
@@ -982,7 +950,7 @@ class FirstVision : public jevois::StdModule,
           axisPoints.push_back(cv::Point3f(0.0F, 0.0F, dd));
           
           std::vector<cv::Point2f> imagePoints;
-          cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, imagePoints);
+          cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsCalib.camMatrix, itsCalib.distCoeffs, imagePoints);
           
           // Draw axis lines:
           jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
@@ -1007,7 +975,7 @@ class FirstVision : public jevois::StdModule,
           cubePoints.push_back(cv::Point3f(-hw, hh, dd));
           
           std::vector<cv::Point2f> cuf;
-          cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, cuf);
+          cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsCalib.camMatrix, itsCalib.distCoeffs, cuf);
           
           // Round all the coordinates:
           std::vector<cv::Point> cu;

@@ -147,8 +147,16 @@ class DemoDMP : public jevois::Module
   public:
     //! Constructor
     DemoDMP(std::string const & instance) : jevois::Module(instance)
-    { itsIMU = addSubComponent<jevois::ICM20948>("imu"); }
+    {
+      itsIMU = addSubComponent<jevois::ICM20948>("imu");
+    }
 
+    //! Load camera calibration on init
+    void postInit()
+    {
+      itsCalib = engine()->loadCameraCalibration();
+    }
+    
     //! Virtual destructor for safe inheritance
     virtual ~DemoDMP() { }
     
@@ -162,24 +170,6 @@ class DemoDMP : public jevois::Module
       // Wait for an image from our gadget driver into which we will put our results:
       jevois::RawImage outimg = outframe.get();
 
-      // Load camera calibration params if needed (for 3D cube displays):
-      static cv::Mat itsCamMatrix = cv::Mat();
-      static cv::Mat itsDistCoeffs = cv::Mat();
-      if (itsCamMatrix.empty())
-      {
-        std::string const cpf = std::string(JEVOIS_SHARE_PATH) + "/camera/calibration" +
-          std::to_string(w) + 'x' + std::to_string(h) + ".yaml";
-        
-        cv::FileStorage fs(cpf, cv::FileStorage::READ);
-        if (fs.isOpened())
-        {
-          fs["camera_matrix"] >> itsCamMatrix;
-          fs["distortion_coefficients"] >> itsDistCoeffs;
-          LINFO("Loaded camera calibration from " << cpf);
-        }
-        else LERROR("Failed to read camera parameters from file [" << cpf << "] -- IGNORED");
-      }
-      
       // Enforce that the input and output formats and image sizes match:
       outimg.require("output", w, h + 40, inimg.fmt);
       
@@ -284,7 +274,7 @@ class DemoDMP : public jevois::Module
         axisPoints.push_back(cv::Point3f(0.0F, 0.0F, hsz * 1.55F));
         
         std::vector<cv::Point2f> imagePoints;
-        cv::projectPoints(axisPoints, rvec, tvec, itsCamMatrix, itsDistCoeffs, imagePoints);
+        cv::projectPoints(axisPoints, rvec, tvec, itsCalib.camMatrix, itsCalib.distCoeffs, imagePoints);
         
         // Draw axis lines
         jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
@@ -317,7 +307,7 @@ class DemoDMP : public jevois::Module
         cubePoints.push_back(cv::Point3f(-hsz, hsz, hsz));
         
         std::vector<cv::Point2f> cuf;
-        cv::projectPoints(cubePoints, rvec, tvec, itsCamMatrix, itsDistCoeffs, cuf);
+        cv::projectPoints(cubePoints, rvec, tvec, itsCalib.camMatrix, itsCalib.distCoeffs, cuf);
         
         // Round all the coordinates:
         std::vector<cv::Point> cu;
@@ -388,6 +378,7 @@ class DemoDMP : public jevois::Module
 
   private:
     std::shared_ptr<jevois::ICM20948> itsIMU;
+    jevois::CameraCalibration itsCalib;
 };
 
 // Allow the module to be loaded as a shared object (.so) file:

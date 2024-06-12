@@ -24,14 +24,43 @@
 #include <Eigen/Geometry> // for AngleAxis and Quaternion
 
 // ##############################################################################################################
+cv::aruco::Dictionary ArUco::getDictionary(aruco::Dict d)
+{
+  switch (d)
+  {
+  case aruco::Dict::Original:   return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
+  case aruco::Dict::D4X4_50:    return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
+  case aruco::Dict::D4X4_100:   return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100);
+  case aruco::Dict::D4X4_250:   return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+  case aruco::Dict::D4X4_1000:  return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_1000);
+  case aruco::Dict::D5X5_50:    return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_50);
+  case aruco::Dict::D5X5_100:   return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_100);
+  case aruco::Dict::D5X5_250:   return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_250);
+  case aruco::Dict::D5X5_1000:  return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_1000);
+  case aruco::Dict::D6X6_50:    return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_50);
+  case aruco::Dict::D6X6_100:   return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_100);
+  case aruco::Dict::D6X6_250:   return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+  case aruco::Dict::D6X6_1000:  return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
+  case aruco::Dict::D7X7_50:    return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_50);
+  case aruco::Dict::D7X7_100:   return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_100);
+  case aruco::Dict::D7X7_250:   return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_250);
+  case aruco::Dict::D7X7_1000:  return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_1000);
+  case aruco::Dict::ATAG_16h5:  return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_16h5);
+  case aruco::Dict::ATAG_25h9:  return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_25h9);
+  case aruco::Dict::ATAG_36h10: return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h10);
+  case aruco::Dict::ATAG_36h11: return cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h11);
+  }
+}
+
+// ##############################################################################################################
 ArUco::~ArUco()
 { }
 
 // ##############################################################################################################
 void ArUco::postInit()
 {
-  // Defer reading camera parameters to first processed frame, so we know the resolution:
-  aruco::camparams::freeze();
+  //! Load camera calibration:
+  itsCalib = engine()->loadCameraCalibration();
 
   // Init detector parameters:
   aruco::dictionary::freeze();
@@ -65,31 +94,7 @@ void ArUco::postInit()
   }
   
   // Instantiate the dictionary:
-  cv::aruco::Dictionary dico;
-  switch (aruco::dictionary::get())
-  {
-  case aruco::Dict::Original: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);break;
-  case aruco::Dict::D4X4_50: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50); break;
-  case aruco::Dict::D4X4_100: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100); break;
-  case aruco::Dict::D4X4_250: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250); break;
-  case aruco::Dict::D4X4_1000: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_1000); break;
-  case aruco::Dict::D5X5_50: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_50); break;
-  case aruco::Dict::D5X5_100: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_100); break;
-  case aruco::Dict::D5X5_250: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_250); break;
-  case aruco::Dict::D5X5_1000: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_1000); break;
-  case aruco::Dict::D6X6_50: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_50); break;
-  case aruco::Dict::D6X6_100: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_100); break;
-  case aruco::Dict::D6X6_250: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250); break;
-  case aruco::Dict::D6X6_1000: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000); break;
-  case aruco::Dict::D7X7_50: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_50); break;
-  case aruco::Dict::D7X7_100: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_100); break;
-  case aruco::Dict::D7X7_250: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_250); break;
-  case aruco::Dict::D7X7_1000: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_1000); break;
-  case aruco::Dict::ATAG_16h5: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_16h5); break;
-  case aruco::Dict::ATAG_25h9: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_25h9); break;
-  case aruco::Dict::ATAG_36h10: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h10); break;
-  case aruco::Dict::ATAG_36h11: dico = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h11); break;
-  }
+  cv::aruco::Dictionary dico = getDictionary(aruco::dictionary::get());
 
   // Instantiate the detector (we use default refinement parameters):
   itsDetector = cv::Ptr<cv::aruco::ArucoDetector>(new cv::aruco::ArucoDetector(dico, dparams));
@@ -99,9 +104,7 @@ void ArUco::postInit()
 void ArUco::postUninit()
 {
   itsDetector.release();
-  itsCamMatrix = cv::Mat();
-  itsDistCoeffs = cv::Mat();
-  aruco::camparams::unFreeze();
+  itsCalib = jevois::CameraCalibration();
   aruco::detparams::unFreeze();
   aruco::dictionary::unFreeze();
 }
@@ -109,34 +112,14 @@ void ArUco::postUninit()
 // ##############################################################################################################
 void ArUco::detectMarkers(cv::InputArray image, cv::OutputArray ids, cv::OutputArrayOfArrays corners)
 {
-  if (itsCamMatrix.empty())
-  {
-    std::string const cpf = std::string(JEVOIS_SHARE_PATH) + "/camera/" + aruco::camparams::get() +
-      '-' + engine()->camerasens::strget() + '-' +
-      std::to_string(image.cols()) + 'x' + std::to_string(image.rows()) + ".yaml";
-
-    cv::FileStorage fs(cpf, cv::FileStorage::READ);
-    if (fs.isOpened())
-    {
-      fs["camera_matrix"] >> itsCamMatrix;
-      fs["distortion_coefficients"] >> itsDistCoeffs;
-      LINFO("Loaded camera calibration from " << cpf);
-    }
-    else
-    {
-      LERROR("Failed to read camera parameters from file [" << cpf << "] -- IGNORED");
-      itsCamMatrix = cv::Mat::eye(3, 3, CV_64F);
-      itsDistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
-    }
-  }
-
   itsDetector->detectMarkers(image, corners, ids);
 }
 
 // ##############################################################################################################
 void ArUco::estimatePoseSingleMarkers(cv::InputArrayOfArrays corners, cv::OutputArray rvecs, cv::OutputArray tvecs)
 {
-  cv::aruco::estimatePoseSingleMarkers(corners, markerlen::get(), itsCamMatrix, itsDistCoeffs, rvecs, tvecs);
+  cv::aruco::estimatePoseSingleMarkers(corners, markerlen::get(),
+                                       itsCalib.camMatrix, itsCalib.distCoeffs, rvecs, tvecs);
 }
 
 // ##############################################################################################################
@@ -224,7 +207,7 @@ void ArUco::drawDetections(jevois::RawImage & outimg, int txtx, int txty, std::v
       axisPoints.push_back(cv::Point3f(0.0F, 0.0F, length));
       
       std::vector<cv::Point2f> imagePoints;
-      cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, imagePoints);
+      cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsCalib.camMatrix, itsCalib.distCoeffs, imagePoints);
       
       // Draw axis lines
       jevois::rawimage::drawLine(outimg, int(imagePoints[0].x + 0.5F), int(imagePoints[0].y + 0.5F),
@@ -253,7 +236,7 @@ void ArUco::drawDetections(jevois::RawImage & outimg, int txtx, int txty, std::v
         cubePoints.push_back(cv::Point3f(-len, len, len * 2.0F));
         
         std::vector<cv::Point2f> cuf;
-        cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, cuf);
+        cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsCalib.camMatrix, itsCalib.distCoeffs, cuf);
         
         // Round all the coordinates:
         std::vector<cv::Point> cu;
@@ -325,7 +308,7 @@ void ArUco::drawDetections(jevois::GUIhelper & helper, std::vector<int> ids,
       axisPoints.push_back(cv::Point3f(0.0F, 0.0F, length));
       
       std::vector<cv::Point2f> imagePoints;
-      cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, imagePoints);
+      cv::projectPoints(axisPoints, rvecs[i], tvecs[i], itsCalib.camMatrix, itsCalib.distCoeffs, imagePoints);
       
       // Draw axis lines
       helper.drawLine(imagePoints[0].x, imagePoints[0].y, imagePoints[1].x, imagePoints[1].y, 0xff0000ff);
@@ -348,7 +331,7 @@ void ArUco::drawDetections(jevois::GUIhelper & helper, std::vector<int> ids,
         cubePoints.push_back(cv::Point3f(-len, len, len * 2.0F));
         
         std::vector<cv::Point2f> cuf;
-        cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsCamMatrix, itsDistCoeffs, cuf);
+        cv::projectPoints(cubePoints, rvecs[i], tvecs[i], itsCalib.camMatrix, itsCalib.distCoeffs, cuf);
 
         auto drawface =
           [&](int a, int b, int c, int d)

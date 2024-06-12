@@ -21,11 +21,9 @@ nettype: SPU
 
 postproc: Classify
 comment: "Demo model from Hailo"
-url: "https://hailo.ai/devzone-model-zoo/segmentation/"
+url: "https://hailo.ai/devzone-model-zoo/clasification/"
 
 ResNext-50-32x4d:
-  comment: "Demo model from Hailo"
-  url: "https://hailo.ai/devzone-model-zoo/segmentation/"
   model: "hailo/classification/resnext50_32x4d.hef"
   classes: "coral/classification/imagenet_labels.txt"
   classoffset: 1
@@ -75,6 +73,12 @@ ResNet-V2-34:
   classes: "coral/classification/imagenet_labels.txt"
   classoffset: 1
   softmax: true
+
+ResNext50-32x4d:
+  model: "hailo/classification/resnext50_32x4d.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  classoffset: 1
+  softmax: true
   
 SqueezeNet:
   model: "hailo/classification/squeezenet_v1.1.hef"
@@ -84,6 +88,14 @@ SqueezeNet:
 # works but sometimes fails to load (memory issue likely)...
 ViT-Base:
   model: "hailo/classification/vit_base.hef"
+  classes: "coral/classification/imagenet_labels.txt"
+  mean: "128 128 128"
+  scale: 0.007874
+  classoffset: 1
+  softmax: true
+
+ViT-Small:
+  model: "hailo/classification/vit_small_bn.hef"
   classes: "coral/classification/imagenet_labels.txt"
   mean: "128 128 128"
   scale: 0.007874

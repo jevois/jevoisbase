@@ -30,15 +30,6 @@ namespace aruco
   static jevois::ParameterCategory const ParamCateg("ArUco Options");
 
   //! Parameter \relates ArUco
-  JEVOIS_DECLARE_PARAMETER(camparams, std::string, "File stem of camera parameters, or empty. Camera sensor name "
-                           "and resolution will be appended, as well as a .yaml extension. For example, specifying "
-                           "'calibration' here and running an ov9650 camera sensor at 320x240 will attempt to load "
-                           "calibration-ov9650-320x240.yaml from within directory " JEVOIS_SHARE_PATH
-                           "/camera/ - Note that this parameter cannot be changed at runtime (must be set in "
-                           "the module's params.cfg).",
-                           "calibration", ParamCateg);
-
-  //! Parameter \relates ArUco
   JEVOIS_DECLARE_PARAMETER(detparams, std::string, "Filename of detector parameters, or empty - Note that "
                            "this parameter cannot be changed at runtime (must be set in the module's params.cfg).",
                            "", ParamCateg);
@@ -136,10 +127,13 @@ namespace aruco
 
     \ingroup components */
 class ArUco : public jevois::Component,
-              public jevois::Parameter<aruco::camparams, aruco::detparams, aruco::dictionary,
+              public jevois::Parameter<aruco::detparams, aruco::dictionary,
                                        aruco::dopose, aruco::markerlen, aruco::showcube>
 {
   public:
+    //! Static method to allow anyone to get the ArUco dictionary for a given value of our dictionary parameter
+    static cv::aruco::Dictionary getDictionary(aruco::Dict d);
+    
     //! Constructor
     using jevois::Component::Component;
     
@@ -177,14 +171,9 @@ class ArUco : public jevois::Component,
     void sendSerial(jevois::StdModule * mod, std::vector<int> ids, std::vector<std::vector<cv::Point2f> > corners,
                     unsigned int w, unsigned int h, std::vector<cv::Vec3d> const & rvecs,
                     std::vector<cv::Vec3d> const & tvecs);
-    
-    //! Our current camera matrix
-    cv::Mat itsCamMatrix;
-
-    //! Our current distortion coefficients
-    cv::Mat itsDistCoeffs;
 
   protected:
     cv::Ptr<cv::aruco::ArucoDetector> itsDetector;
+    jevois::CameraCalibration itsCalib;
 };
 

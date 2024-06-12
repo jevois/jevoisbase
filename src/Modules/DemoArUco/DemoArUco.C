@@ -21,30 +21,31 @@
 #include <jevoisbase/Components/ArUco/ArUco.H>
 #include <opencv2/core/core.hpp>
 
-//! Simple demo of ArUco augmented reality markers detection and decoding
+//! Simple demo of ArUco and AprilTag augmented reality markers detection and decoding
 /*! Detect and decode patterns known as ArUco markers, which are small 2D barcodes often used in augmented
     reality and robotics.
 
-    ArUco markers are small 2D barcodes. Each ArUco marker corresponds to a number, encoded into a small grid of black
-    and white pixels. The ArUco decoding algorithm is capable of locating, decoding, and of estimating the pose
-    (location and orientation in space) of any ArUco markers in the camera's field of view.
+    ArUco and AprilTag markers are small 2D barcodes. Each marker corresponds to a number, encoded into a small grid of
+    black and white pixels. The marker decoding algorithm is capable of locating, decoding, and of estimating the pose
+    (location and orientation in space) of any compatible markers in the camera's field of view.
 
-    ArUco markers are very useful as tags for many robotics and augmented reality applications. For example, one may
-    place an ArUco next to a robot's charging station, an elevator button, or an object that a robot should manipulate.
+    ArUco and AprilTag markers are very useful as tags for many robotics and augmented reality applications. For
+    example, one may place an ArUco next to a robot's charging station, an elevator button, or an object that a robot
+    should manipulate.
 
     The implementation of ArUco used by JeVois is the one of OpenCV-Contrib, documented here:
     https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html
 
-    ArUco markers can be created with several standard dictionaries. Different dictionaries give rise to different
-    numbers of pixels in the markers, and to different numbers of possible symbols that can be created using the
-    dictionary. The default dictionary used by JeVois is 4x4 with 50 symbols. Other dictionaries are also supported by
-    setting the parameter \p dictionary over serial port or in a config file, up to 7x7 with 1000 symbols.
+    ArUco and AprilTag markers can be created with several standard dictionaries. Different dictionaries give rise to
+    different numbers of pixels in the markers, and to different numbers of possible symbols that can be created using
+    the dictionary. The default dictionary used by JeVois is ArUco 4x4 with 50 symbols. Other dictionaries are also
+    supported by setting the parameter \p dictionary over serial port or in a config file, up to 7x7 with 1000 symbols.
 
     Creating and printing markers
     -----------------------------
 
-    We have created the 50 markers available in the default dictionary (4x4_50) as PNG images that you can download and
-    print, at http://jevois.org/data/ArUco.zip
+    We have created the 50 markers available in the default ArUco dictionary (4x4_50) as PNG images that you can
+    download and print, at http://jevois.org/data/ArUco.zip
 
     To make your own, for example, using another dictionary, see the documentation of the \ref ArUco component of
     JeVoisBase. Some utilities are provided with the component.

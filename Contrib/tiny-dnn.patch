@@ -6,8 +6,8 @@ index b05d673..f18e22a 100644
  
  #ifdef CNN_USE_TBB
  
-+// JeVois: remove scheduler init when compiling on noble (gcc >= 14)
-+#if defined(__GNUC__) && __GNUC__ < 14
++// JeVois: remove scheduler init as it is now obsolete
++#if defined(__GNUC__) && 0
  static tbb::task_scheduler_init tbbScheduler(
    tbb::task_scheduler_init::automatic);  // tbb::task_scheduler_init::deferred);
 -
