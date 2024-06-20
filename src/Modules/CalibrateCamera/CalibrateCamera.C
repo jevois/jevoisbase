@@ -39,8 +39,8 @@ JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(pattern, Pattern, "Type of calibration bo
                          Pattern::ChArUcoBoard, Pattern_Values, ParamCateg);
 
 //! Parameter \relates CameraCalibration
-JEVOIS_DECLARE_PARAMETER(dictionary, aruco::Dict, "ArUco dictionary to use",
-                         aruco::Dict::D4X4_50, aruco::Dict_Values, ParamCateg);
+JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(dictionary, aruco::Dict, "ArUco dictionary to use",
+                                       aruco::Dict::D4X4_50, aruco::Dict_Values, ParamCateg);
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER(squareSize, float, "Checkboard square size in user-chosen units (e.g., mm, inch, etc). The "
@@ -111,7 +111,7 @@ JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed board
 
 //! Helper module to calibrate a given sensor+lens combo, which allows ArUco and other modules to do 3D post estimation
 /*! Just follow the on-screen prompts to calibrate your camera. The calibration results will be saved into
-    /jevois[pro]/share/camera/ on microSD and will be automatically loading when using a machine vision module that uses
+    /jevois[pro]/share/camera/ on microSD and will be automatically loaded when using a machine vision module that uses
     camera calibration, for example DemoArUco.
 
     The default settings are for a 7x5 ChArUco board that was created using the online generator at https://calib.io and
@@ -126,8 +126,22 @@ JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed board
     An alternate board with more checks is at http://jevois.org/data/calib.io_charuco_260x200_7x11_23_17_DICT_4X4.pdf -
     if you use it, you need to set the board size, marker size, and square size parameters to match it.
 
-    \ingroup modules */
 
+    @author Laurent Itti
+
+    @displayname Calibrate Camera
+    @videomapping YUYV 320 495 30.0 YUYV 320 240 30.0 JeVois DemoArUco
+    @videomapping YUYV 640 975 20.0 YUYV 640 480 20.0 JeVois DemoArUco
+    @email itti\@usc.edu
+    @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
+    @copyright Copyright (C) 2024 by Laurent Itti, iLab and the University of Southern California
+    @mainurl http://jevois.org
+    @supporturl http://jevois.org/doc
+    @otherurl http://iLab.usc.edu
+    @license GPL v3
+    @distribution Unrestricted
+    @restrictions None
+    \ingroup modules */
 class CalibrateCamera : public jevois::Module,
                         public jevois::Parameter<pattern, dictionary, squareSize, markerSize, boardSize,
                                                  aspectRatio, zeroTangentDist, fixPrincipalPoint, winSize,
@@ -195,7 +209,6 @@ class CalibrateCamera : public jevois::Module,
           if (! itsChArUcoDetector)
           {
             // Instantiate the dictionary:
-            dictionary::freeze(true);
             cv::aruco::Dictionary dico = ArUco::getDictionary(dictionary::get());
             cv::aruco::CharucoBoard ch_board({boardSize::get().width, boardSize::get().height}, squareSize::get(),
                                              markerSize::get(), dico);
@@ -499,7 +512,7 @@ class CalibrateCamera : public jevois::Module,
       inframe.done();
 
       // Draw and guide the user:
-      int y = 13;
+      int y = 15, y2 = h + 3; // we use y to print on top image, y2 on bottom image
 
       // Draw our results if any:
       if (itsLastGoodView.empty() == false)
@@ -508,32 +521,33 @@ class CalibrateCamera : public jevois::Module,
       // If we are now calibrated, show live view, possibly undistorted:
       if (itsCalibrated)
       {
-        jevois::rawimage::writeText(outimg, "Calibrated - avg err " + std::to_string(itsAvgErr),
-                                    3, 2*h + 3, jevois::yuyv::White);
+        y2 = jevois::rawimage::itext(outimg, "Calibrated - avg err " + std::to_string(itsAvgErr), y2);
         if (showUndistorted::get())
-          jevois::rawimage::writeText(outimg, "Undistorted view (see showUndistorted parameter)",
-                                      3, h + 3, jevois::yuyv::White);
+          y2 = jevois::rawimage::itext(outimg, "Undistorted view (see showUndistorted parameter)", y2);
         else
-          jevois::rawimage::writeText(outimg, "Normal view (see showUndistorted parameter)",
-                                      3, h + 3, jevois::yuyv::White);
+          y2 = jevois::rawimage::itext(outimg, "Normal view (see showUndistorted parameter)", y2);
       }
       else
       {
         // Show some guiding messages:
-        jevois::rawimage::writeText(outimg, "Good views: " + std::to_string(itsImagePoints.size()),
-                                    3, y + 3, jevois::yuyv::White); y += 10;
-
+        y = jevois::rawimage::itext(outimg, "Set parameters then point to board", y);
+        y = jevois::rawimage::itext(outimg, "Click 'grab' param to grab a board", y);
+        y = jevois::rawimage::itext(outimg, "Vary viewpoints between grabs", y);
+        y = jevois::rawimage::itext(outimg, "Good views so far: " + std::to_string(itsImagePoints.size()), y);
 
         if (itsImagePoints.size() >= 5)
         {
-          jevois::rawimage::writeText(outimg, "Ok to calibrate", 3, 2*h + 3, jevois::yuyv::White);
+          y = jevois::rawimage::itext(outimg, "Ok to calibrate", y);
+          jevois::rawimage::itext(outimg, "Ok to calibrate", outimg.height - 13);
           calibrate::freeze(false);
         }
         else
         {
-          jevois::rawimage::writeText(outimg, "Grab 5+ good views", 3, 2*h + 3, jevois::yuyv::White);
+          y = jevois::rawimage::itext(outimg, "Need to grab 5+ good views", y);
+          jevois::rawimage::itext(outimg, "Need to grab 5+ good views", outimg.height - 13);
           calibrate::freeze(true);
         }
+        y2 = jevois::rawimage::itext(outimg, "Last grabbed board", y2);
       }
       
       // Show processing fps:
@@ -694,7 +708,6 @@ class CalibrateCamera : public jevois::Module,
             itsCalibrated = false;
             itsImagePoints.clear();
             calibrate::freeze(true);
-            dictionary::freeze(false);
           }
         }
         
@@ -718,6 +731,12 @@ class CalibrateCamera : public jevois::Module,
     {
       itsChArUcoDetector.reset();
       dictionary::freeze( (val != Pattern::ChArUcoBoard) );
+    }
+
+    //! Nuke our charuco detector whenever dictionary changes:
+    virtual void onParamChange(dictionary const & par, aruco::Dict const & val)
+    {
+      itsChArUcoDetector.reset();
     }
 
   private:

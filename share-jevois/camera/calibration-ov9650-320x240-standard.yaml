@@ -1,0 +1,20 @@
+%YAML:1.0
+---
+calibration_time: "Thu Jan  1 00:51:11 1970"
+sensor: ov9650
+lens: standard
+image_width: 320
+image_height: 240
+camera_matrix: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 230.50135659185071, 0., 56.847626119982614, 0.,
+       239.25717473877467, 18.222840694245701, 0., 0., 1. ]
+distortion_coefficients: !!opencv-matrix
+   rows: 5
+   cols: 1
+   dt: d
+   data: [ 0.043699138685635922, -0.086171673652583783, 0., 0.,
+       0.039226508294714649 ]
+avg_reprojection_error: 1.1174014701832762
