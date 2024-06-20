@@ -37,8 +37,6 @@ includedir: custom
 
 # If we have a hailo board installed, run a hailo model by default. Will be skipped if no Hailo is present:
 YOLOv5m:
-  comment: "Demo model from Hailo"
-  url: "https://hailo.ai/devzone-model-zoo/object-detection/"
   preproc: Blob
   scale: 1.0
   mean: "0 0 0"
@@ -48,6 +46,8 @@ YOLOv5m:
   anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
   scale: 1.0
   model: "hailo/detection/yolov5m_wo_spp_60p.hef"
+  comment: "Demo model from Hailo"
+  url: "https://hailo.ai/devzone-model-zoo/object-detection/"
   classes: "darknet/yolo/data/coco.names"
   scalexy: 2.0
   sigmoid: false

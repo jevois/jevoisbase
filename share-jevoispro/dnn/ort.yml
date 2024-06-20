@@ -24,6 +24,16 @@ postproc: Classify
 
 postproc: Detect
 
+YOLOv10n:
+  comment: "Resized 512x288 ONNX model, COCO classes, includes all post-processing"
+  mean: "0.0 0.0 0.0"
+  scale: 0.003921
+  model: "ort/detection/yolov10n-512x288.onnx"
+  detecttype: YOLOv10pp
+  dthresh: 10.0
+  cthresh: 10.0
+  classes: "darknet/yolo/data/coco.names"
+
 YOLOv7-Tiny:
   comment: "Resized 480x256 ONNX model, COCO classes"
   url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/307_YOLOv7"

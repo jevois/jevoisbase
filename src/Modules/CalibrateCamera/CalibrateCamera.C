@@ -571,6 +571,14 @@ class CalibrateCamera : public jevois::Module,
       }
 
       // Draw a user interface:
+
+      // Set window size applied only on first use ever, otherwise from imgui.ini:
+      ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
+      ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+
+      // Light blue window background:
+      ImGui::PushStyleColor(ImGuiCol_WindowBg, 0xf0ffe0e0);
+
       static bool ready = false;
       if (ImGui::Begin("Calibrate Camera Controls"))
       {
@@ -652,6 +660,7 @@ class CalibrateCamera : public jevois::Module,
         ImGui::PopTextWrapPos();
         ImGui::End();
       }
+      ImGui::PopStyleColor();
 
       // Show processing fps:
       std::string const & fpscpu = timer.stop();

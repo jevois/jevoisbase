@@ -13,6 +13,8 @@ import apriltag
 #
 # On host, make sure the apriltag library is installed with 'pip3 install apriltag'; it is pre-installed on platform.
 #
+# If you need full 3D pose revovery, see our other module DemoArUco which also supports AprilTag.
+#
 # @author Laurent Itti
 # 
 # @displayname AprilTag
@@ -46,25 +48,13 @@ class AprilTag:
                                     ', '.join(self.families), 'tag36h11', self.pc)
         self.dic.setCallback(self.setDic);
         
-        self.calib = jevois.Parameter(self, 'calibrate', 'bool',
-                                      'Calibration mode (you need a calibration chessboard)', False, self.pc)
-        self.calib.setCallback(self.calibChanged)
-
-        self.crows = jevois.Parameter(self, 'calibration_rows', 'uint',
-                                          'Number of chessboard inner corners in the vertical direction', 6, self.pc)
-
-        self.ccols = jevois.Parameter(self, 'calibration_cols', 'uint',
-                                          'Number of chessboard inner corners in the horizontal direction', 8, self.pc)
-
-        self.csiz = jevois.Parameter(self, 'calibration_checksize', 'float',
-                                        'Check size in user-chosen units', 50.0, self.pc)
-        self.ipoints = []
-        self.calibration_msg = None
-        self.iter = 0 # to get a variety of viewpoints, we will skip some frames
-
     # ###################################################################################################
     # Instantiate a detector each time dictionary is changed:
     def setDic(self, dicname):
+        # Nuke any current detector instance:
+        self.detector = None
+        self.options = None
+        
         # Check that family supported, see https://github.com/swatbotics/apriltag/blob/master/core/apriltag_family.c
         if dicname in self.families:
             self.options = apriltag.DetectorOptions(families = dicname)
@@ -73,25 +63,18 @@ class AprilTag:
             jevois.LFATAL('Unsupported AprilTag family. Must be one of: ' + ', '.join(self.families))
 
     # ###################################################################################################
-    # Reset calibration data each time some calibration param is changed
-    def calibChanged(self, val):
-        if val:
-            self.crows.freeze(True)
-            self.ccols.freeze(True)
-            self.csiz.freeze(True)
-        else:
-            self.crows.freeze(False)
-            self.ccols.freeze(False)
-            self.csiz.freeze(False)
-            
-        self.ipoints = []
-        self.calibration_msg = None
-        self.iter = 0 # to get a variety of viewpoints, we will skip some frames
-        
-    # ###################################################################################################
     ## Process function with no USB output
-    #def processNoUSB(self, inframe):
-    #    jevois.LFATAL("process with no USB output not implemented yet in this module")
+    def processNoUSB(self, inframe):
+        # Get the next camera image as grayscale and lower resolution for processing (may block until it is captured):
+        ingray = inframe.getCvGRAYp()
+
+        # Detect AprilTag markers:
+        if self.detector:
+            results = self.detector.detect(ingray)
+
+            # Loop over the AprilTag detection results and send serial messages:
+            for r in results:
+                jevois.sendSerial('ATAG' + r.tag_id + ' ' + str(r.center[0]) + ' ' + str(r.center[1]))
 
     # ###################################################################################################
     ## Process function with GUI output on JeVois-Pro
@@ -109,12 +92,8 @@ class AprilTag:
         # Start measuring image processing time (NOTE: does not account for input conversion time):
         self.timer.start()
 
-        # Run calibration or detection?
-        if self.calib.get():
-            self.runCalibration(ingray, helper)
-            
         # Detect AprilTag markers:
-        elif self.detector:
+        if self.detector:
             results = self.detector.detect(ingray)
             col = 0xffffff7f # ARGB color for our drawings
 
@@ -142,64 +121,3 @@ class AprilTag:
 
         # End of frame:
         helper.endFrame()
-    
-    # ###################################################################################################
-    # Run chessboard calibration
-    # Code from https://github.com/swatbotics/apriltag/blob/master/python/calibrate_camera.py
-    # Here, we will grab 20 good checkerboards, giving a few seconds in between to move it, then run the calib.
-    def runCalibration(self, gray, helper):
-        # If calibration was complete, just show results:
-        if self.calibration_msg is not None:
-            helper.itext(self.calibration_msg)
-            return
-        
-        col = 0xffff7f7f # ARGB color for our drawings
-
-        if self.crows.get() < self.ccols.get(): patternsize = (int(self.ccols.get()), int(self.crows.get()))
-        else: patternsize = (int(self.crows.get()), int(self.ccols.get()))
-        sz = self.csiz.get()
-
-        x = np.arange(patternsize[0])*sz
-        y = np.arange(patternsize[1])*sz
-
-        xgrid, ygrid = np.meshgrid(x, y)
-        zgrid = np.zeros_like(xgrid)
-        opoints = np.dstack((xgrid, ygrid, zgrid)).reshape((-1, 1, 3)).astype(np.float32)
-        imagesize = (gray.shape[1], gray.shape[0])
-
-        helper.itext('Found {} / 20 chessboards so far...'.format(len(self.ipoints)))
-        
-        self.iter += 1
-        if self.iter >= 100:
-            self.iter = 0
-            helper.itext('Detecting corners...')
-            retval, corners = cv2.findChessboardCorners(gray, patternsize)
-
-            if not retval:
-                helper.itext('No chessboard found...')
-                return
-
-            for c in corners:
-                helper.drawCircle(float(c[0][0]), float(c[0][1]), 5, col, True)
-
-            self.ipoints.append(corners)
-            
-        helper.itext('Next snapshot in {}...'.format(100-self.iter))
-
-        if len(self.ipoints) < 20: return
-
-        flags = (cv2.CALIB_ZERO_TANGENT_DIST | cv2.CALIB_FIX_K1 | cv2.CALIB_FIX_K2 |
-                 cv2.CALIB_FIX_K3 | cv2.CALIB_FIX_K4 | cv2.CALIB_FIX_K5 | cv2.CALIB_FIX_K6)
-
-        opoints = [opoints] * len(self.ipoints)
-
-        retval, K, dcoeffs, rvecs, tvecs = cv2.calibrateCamera(opoints, self.ipoints, imagesize, cameraMatrix=None,
-                                                               distCoeffs = np.zeros(5), flags = flags)
-        #if np.all(dcoeffs == 0):
-    
-        fx = K[0,0]
-        fy = K[1,1]
-        cx = K[0,2]
-        cy = K[1,2]
-        params = (fx, fy, cx, cy)
-        self.calibration_msg = 'Calibrated fx, fy, cx, cy = {}'.format(repr(params))

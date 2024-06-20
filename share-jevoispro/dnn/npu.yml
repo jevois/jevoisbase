@@ -39,7 +39,7 @@ ResNet-50-int8:
   url: "https://github.com/opencv/opencv_zoo/blob/master/README.md"
   mean: "123.675 116.280 103.530"
   stdev: "0.229 0.224 0.225"
-  scale: 0.0039215686
+  scale: 0.003921568393707275
   rgb: false
   nettype: OpenCV
   backend: TimVX
@@ -49,6 +49,7 @@ ResNet-50-int8:
   classes: "coral/classification/imagenet_labels.txt"
   classoffset: 1
   softmax: true
+
 
 ####################################################################################################
 # Object detection models.
@@ -101,7 +102,7 @@ YoloV2-DFP:
 
 YoloV7-Tiny-AA:
   comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
-  scale: 0.0039215686
+  scale: 0.003921568393707275
   model: "npu/detection/YOLOv7-Tiny-AA.nb"
   intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
   outtensors: "8U:1x255x52x52:AA:0.0038335032295435667:0, 8U:1x255x26x26:AA:0.0038371747359633446:0, 8U:1x255x13x13:AA:0.003918845672160387:0"
@@ -122,7 +123,7 @@ YoloV7-Tiny-DFP:
 
 yolov7-tiny-512x288:
   comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
-  scale: 0.0039215686
+  scale: 0.003921568393707275
   model: "npu/detection/yolov7-tiny-512x288.nb"
   intensors: "NCHW:8U:1x3x288x512:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x36x64:AA:0.003916095942258835:0, NCHW:8U:1x255x18x32:AA:0.00392133416607976:0, NCHW:8U:1x255x9x16:AA:0.003921062219887972:0"
@@ -133,7 +134,7 @@ yolov7-tiny-512x288:
 
 yolov7-tiny-1024x576:
   comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
-  scale: 0.0039215686
+  scale: 0.003921568393707275
   model: "npu/detection/yolov7-tiny-1024x576.nb"
   intensors: "NCHW:8U:1x3x576x1024:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x72x128:AA:0.003911261446774006:0, NCHW:8U:1x255x36x64:AA:0.003920680843293667:0, NCHW:8U:1x255x18x32:AA:0.003921556286513805:0"
@@ -145,7 +146,7 @@ yolov7-tiny-1024x576:
 yolov2-coco:
   comment: "Converted by USC/iLab model converter"
   url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.0039215686
+  scale: 0.003921568393707275
   model: "npu/detection/yolov2-coco.nb"
   intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x425x13x13:AA:0.14820359647274017:147"
@@ -155,7 +156,7 @@ yolov2-coco:
 yolov2-voc:
   comment: "Converted by USC/iLab model converter"
   url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.0039215686
+  scale: 0.003921568393707275
   model: "npu/detection/yolov2-voc.nb"
   intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x125x13x13:AA:0.11101983487606049:134"
@@ -165,7 +166,7 @@ yolov2-voc:
 yolov3-tiny:
   comment: "Converted by USC/iLab model converter"
   url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.0039215686
+  scale: 0.003921568393707275
   model: "npu/detection/yolov3-tiny.nb"
   intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x13x13:AA:0.0827922374010086:214,NCHW:8U:1x255x26x26:AA:0.1048106923699379:202"
@@ -175,7 +176,7 @@ yolov3-tiny:
 yolov4-tiny:
   comment: "Converted by USC/iLab model converter"
   url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.0039215686
+  scale: 0.003921568393707275
   model: "npu/detection/yolov4-tiny.nb"
   intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x13x13:AA:0.10826179385185242:192, NCHW:8U:1x255x26x26:AA:0.10561909526586533:185"
@@ -185,7 +186,7 @@ yolov4-tiny:
 yolov3-spp:
   comment: "Converted by USC/iLab model converter"
   url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: "0.0039215686"
+  scale: 0.003921568393707275
   model: "npu/detection/yolov3-spp.nb"
   intensors: "NCHW:8U:1x3x608x608:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x19x19:AA:0.09413968771696091:199, NCHW:8U:1x255x38x38:AA:0.12566116452217102:180, NCHW:8U:1x255x76x76:AA:0.12598100304603577:196"
@@ -195,7 +196,7 @@ yolov3-spp:
 yolov4-csp-x-swish:
   comment: "Converted by USC/iLab model converter"
   url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: "0.0039215686"
+  scale: 0.003921568393707275
   model: "npu/detection/yolov4-csp-x-swish.nb"
   intensors: "NCHW:8U:1x3x640x640:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x80x80:AA:0.003918692469596863:0, NCHW:8U:1x255x40x40:AA:0.003918323200196028:0, NCHW:8U:1x255x20x20:AA:0.003918614238500595:0"
@@ -204,8 +205,20 @@ yolov4-csp-x-swish:
   sigmoid: false
   classes: "npu/detection/coco-labels.txt"
 
+
+# Networks with post other than RAWYOLO:
 unset: detecttype
-unset: mean
+
+yolov10n-512x288-int16:
+  comment: "JeVois converted using NPU SDK and 16-bit Dynamic Fixed Point"
+  scale: 0.003921568393707275
+  model: "npu/detection/yolov10n-512x288.nb"
+  intensors: "NCHW:16S:1x3x288x512:DFP:15"
+  outtensors: "16S:1x3024x84:DFP:5"
+  detecttype: YOLOv10
+  classes: "npu/detection/coco-labels.txt"
+  cthresh: 10.0
+  dthresh: 0.0 # not used by YOLOv10
 
 # need a post-processor...
 #FaceNet:
@@ -214,14 +227,12 @@ unset: mean
 #  mean: "0 0 0"
 #  outtensors: "8S:1x128:DFP:5"
 
-
 # Yolov7 on NPU with Python post-processing
 yolov7-tiny-512x288-PyPost:
   comment: "Like yolov7-tiny-512x288 but with Python post-processing"
   postproc: Python
   pypost: "pydnn/post/PyPostYolo.py"
-  mean: "0 0 0"
-  scale: 0.0039215686
+  scale: 0.003921568393707275
   model: "npu/detection/yolov7-tiny-512x288.nb"
   intensors: "NCHW:8U:1x3x288x512:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x36x64:AA:0.003916095942258835:0, NCHW:8U:1x255x18x32:AA:0.00392133416607976:0, NCHW:8U:1x255x9x16:AA:0.003921062219887972:0"
@@ -229,6 +240,8 @@ yolov7-tiny-512x288-PyPost:
   scalexy: 2.0
   sigmoid: false
   classes: "npu/detection/coco-labels.txt"
+
+unset: mean
 
 ####################################################################################################
 # Semantic segmentation models
