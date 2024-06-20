@@ -36,7 +36,7 @@ JEVOIS_DEFINE_ENUM_CLASS(Pattern, (ChessBoard) (ChArUcoBoard) (CirclesGrid) (Asy
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(pattern, Pattern, "Type of calibration board pattern to use",
-                         Pattern::ChessBoard, Pattern_Values, ParamCateg);
+                         Pattern::ChArUcoBoard, Pattern_Values, ParamCateg);
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER(dictionary, aruco::Dict, "ArUco dictionary to use",
@@ -46,17 +46,18 @@ JEVOIS_DECLARE_PARAMETER(dictionary, aruco::Dict, "ArUco dictionary to use",
 JEVOIS_DECLARE_PARAMETER(squareSize, float, "Checkboard square size in user-chosen units (e.g., mm, inch, etc). The "
                          "unit used here is the one that will be used once calibrated to report 3D coordinates "
                          "of objects relative to the camera",
-                         10.0f, ParamCateg);
+                         36.0f, ParamCateg);
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER(markerSize, float, "ChArUco marker size in user-chosen units (e.g., mm, inch, "
                          "etc). The unit used here is the one that will be used once calibrated to report 3D "
                          "coordinates of objects relative to the camera",
-                         10.0f, ParamCateg);
+                         27.0f, ParamCateg);
 
 //! Parameter \relates CameraCalibration
-JEVOIS_DECLARE_PARAMETER(boardSize, cv::Size, "Board size (number of inner corners in x and y)",
-                         { 8, 6 }, ParamCateg);
+JEVOIS_DECLARE_PARAMETER(boardSize, cv::Size, "Board size (for chessboards, number of inner corners in x and y); "
+                         "for ChArUco boards, number of columns and rows)",
+                         { 7, 5 }, ParamCateg);
   
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER(aspectRatio, float, "Fixed aspect ratio value to use when non-zero, or auto when 0.0",
@@ -108,9 +109,24 @@ JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed board
                          "enough good views of your calibration board before you can calibrate.",
                          false, ParamCateg);
 
-//! Helper module to calibrate a give sensor+lens combo, which allows ArUco and other modules to do 3D post estimation
-/*!
-   \ingroup modules */
+//! Helper module to calibrate a given sensor+lens combo, which allows ArUco and other modules to do 3D post estimation
+/*! Just follow the on-screen prompts to calibrate your camera. The calibration results will be saved into
+    /jevois[pro]/share/camera/ on microSD and will be automatically loading when using a machine vision module that uses
+    camera calibration, for example DemoArUco.
+
+    The default settings are for a 7x5 ChArUco board that was created using the online generator at https://calib.io and
+    which you can get from http://jevois.org/data/calib.io_charuco_260x200_5x7_36_27_DICT_4X4.pdf
+   
+    When you print the board, make sure you print at 100% scale. You should confirm that the checks in the printout are
+    36mm x 36mm, and the ArUco patterns within the white checks are 27mm x 27mm.
+
+    If you are using a wide-angle fish-eye lens with a lot of distortion, you may be better off using a chess board, and
+    turn on the fishEye parameter.
+    
+    An alternate board with more checks is at http://jevois.org/data/calib.io_charuco_260x200_7x11_23_17_DICT_4X4.pdf -
+    if you use it, you need to set the board size, marker size, and square size parameters to match it.
+
+    \ingroup modules */
 
 class CalibrateCamera : public jevois::Module,
                         public jevois::Parameter<pattern, dictionary, squareSize, markerSize, boardSize,
@@ -183,16 +199,42 @@ class CalibrateCamera : public jevois::Module,
             cv::aruco::Dictionary dico = ArUco::getDictionary(dictionary::get());
             cv::aruco::CharucoBoard ch_board({boardSize::get().width, boardSize::get().height}, squareSize::get(),
                                              markerSize::get(), dico);
-            itsChArUcoDetector.reset(new cv::aruco::CharucoDetector(ch_board));
+            cv::aruco::DetectorParameters detector_params;
+            detector_params.cornerRefinementMethod = int(cv::aruco::CORNER_REFINE_SUBPIX);
+            
+            cv::aruco::CharucoParameters charuco_params;
+            charuco_params.tryRefineMarkers = true;
+            charuco_params.cameraMatrix = itsCameraMatrix;
+            charuco_params.distCoeffs = itsDistCoeffs;
+            itsChArUcoDetector.reset(new cv::aruco::CharucoDetector(ch_board, charuco_params, detector_params));
           }
 
-          // Detect the board"
-          std::vector<int> markerIds;
-          itsChArUcoDetector->detectBoard(view, pointBuf, markerIds);
-          found = (pointBuf.size() == (size_t)((bs.height - 1)*(bs.width - 1)));
+          // Detect the board:
+          std::vector<int> markerIds, charucoIds;
+          std::vector<std::vector<cv::Point2f> > markerCorners;
+          itsChArUcoDetector->detectBoard(view, pointBuf, charucoIds, markerCorners, markerIds);
+          size_t needed_num = (size_t)((bs.height - 1)*(bs.width - 1));
+          LINFO("ChArUco: detected "<< pointBuf.size() << " out of " << needed_num << " corners");
+          found = (pointBuf.size() == needed_num);
+
+          // Special handling of charuco boards:
+          if (found)
+          {
+            LINFO("ChArUco calibration board successfully detected");
+          
+            itsImagePoints.push_back(pointBuf);
+          
+            // Draw the corners into the image:
+            itsLastGoodView = view.clone();
+            itsLastGoodTime = std::chrono::steady_clock::now();
+            if (markerIds.size() > 0)
+              cv::aruco::drawDetectedMarkers(itsLastGoodView, markerCorners);
+            if (charucoIds.size() > 0)
+              cv::aruco::drawDetectedCornersCharuco(itsLastGoodView, pointBuf, charucoIds, cv::Scalar(255, 0, 0));
+          }
           break;
         }
-          
+        
         case Pattern::CirclesGrid:
           found = findCirclesGrid(view, bs, pointBuf);
           break;
@@ -202,24 +244,22 @@ class CalibrateCamera : public jevois::Module,
           break;
         }
 
-        if (found)
-        {
-          LINFO("Calibration board successfully detected");
-          
-          itsImagePoints.push_back(pointBuf);
-          
-          // Draw the corners into the image:
-          itsLastGoodView = view.clone();
-
-          if (pattern::get() == Pattern::ChArUcoBoard)
-            drawChessboardCorners(itsLastGoodView, cv::Size(bs.width-1, bs.height-1), cv::Mat(pointBuf), found);
-          else
-            drawChessboardCorners(itsLastGoodView, bs, cv::Mat(pointBuf), found);
-
-          itsLastGoodTime = std::chrono::steady_clock::now();
-        }
-        else engine()->reportError("Calibration board was not detected. Make sure it is in full view with no "
-                                   "occlusions, reflections, strong shadows, etc.");
+        // Common handling of non-charuco boards:
+        if (pattern::get() != Pattern::ChArUcoBoard)
+          if (found)
+            {
+              LINFO("Calibration board successfully detected");
+              
+              itsImagePoints.push_back(pointBuf);
+              
+              // Draw the corners into the image:
+              itsLastGoodView = view.clone();
+              itsLastGoodTime = std::chrono::steady_clock::now();
+              drawChessboardCorners(itsLastGoodView, bs, cv::Mat(pointBuf), found);
+              
+            }
+            else engine()->reportError("Calibration board was not detected. Make sure it is in full view with no "
+                                       "occlusions, reflections, strong shadows, etc.");
       }
 
       // Do we want to calibrate now?
@@ -613,7 +653,8 @@ class CalibrateCamera : public jevois::Module,
             ImGui::Bullet();
             ImGui::Text("markerSize - if using ChArUco, physical size of markers in your units");
             ImGui::Bullet();
-            ImGui::Text("boardSize - number of inner corners horizontally and vertically on your board");
+            ImGui::Text("boardSize - for chessboards, number of inner corners horizontally and vertically on "
+                        "your board; for ChArUco boards, horizontal and vertical number of tiles");
             
             ImGui::TextUnformatted("");
             ImGui::Separator();
@@ -684,7 +725,8 @@ class CalibrateCamera : public jevois::Module,
     int itsFlag = 0;
     cv::Size itsImageSize;
     std::vector<std::vector<cv::Point2f> > itsImagePoints;
-    cv::Mat itsCameraMatrix, itsDistCoeffs;
+    cv::Mat itsCameraMatrix = cv::Mat::eye(3, 3, CV_64F);
+    cv::Mat itsDistCoeffs = cv::Mat::zeros(8, 1, CV_64F);
     cv::Mat itsLastGoodView;
     std::chrono::time_point<std::chrono::steady_clock> itsLastGoodTime;
     std::shared_ptr<cv::aruco::CharucoDetector> itsChArUcoDetector;
