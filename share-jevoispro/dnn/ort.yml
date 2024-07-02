@@ -188,6 +188,16 @@ LaneSOD:
   cthresh: 5
   alpha: 160
 
+YoloV8n-seg:
+  comment: "Detection + segmentation"
+  url: "https://github.com/ultralytics/ultralytics"
+  mean: "0 0 0"
+  scale: 0.0039215
+  model: "ort/segmentation/yolov8n-seg.onnx"
+  postproc: Python
+  pypost: "pydnn/post/PyPostYOLOv8seg.py"
+  classes: "darknet/yolo/data/coco.names"
+
 ####################################################################################################
 # Other models
 ####################################################################################################

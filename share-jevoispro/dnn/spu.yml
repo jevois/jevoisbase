@@ -284,13 +284,14 @@ YOLOv7-tiny:
 #   model: "hailo/detection/yolox_tiny.hef"
 #   classes: "darknet/yolo/data/coco.names"
 
-YOLOv9c:
-  detecttype: RAWYOLO
-  anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
-  model: "hailo/detection/yolov9c.hef"
-  classes: "darknet/yolo/data/coco.names"
-  scalexy: 2.0
-  sigmoid: false
+# split outputs, need a postproc
+#YOLOv9c:
+#  detecttype: RAWYOLO
+#  anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
+#  model: "hailo/detection/yolov9c.hef"
+#  classes: "darknet/yolo/data/coco.names"
+#  scalexy: 2.0
+#  sigmoid: false
 
 ####################################################################################################
 # Semantic segmentation models
@@ -300,6 +301,11 @@ postproc: Segment
 dequant: false
 comment: "Demo model from Hailo"
 url: "https://hailo.ai/devzone-model-zoo/segmentation/"
+
+# split outputs, need a post-processor
+#YoloV8n-seg:
+#  segtype: ClassesHWC
+#  model: "hailo/segmentation/yolov8n_seg.hef"
 
 DeepLabV3-MobileNetV2:
   segtype: ClassesHWC

@@ -195,9 +195,9 @@ class DetectionDNN : public jevois::StdModule,
     void onParamChange(model const & /*param*/, Model const & val) override
     {
       // Un-freeze the dependent parameters:
-      classnames::unFreeze();
-      configname::unFreeze();
-      modelname::unFreeze();
+      classnames::freeze(false);
+      configname::freeze(false);
+      modelname::freeze(false);
 
       // Reset the other parameters:
       netin::reset();
@@ -257,9 +257,9 @@ class DetectionDNN : public jevois::StdModule,
       // Freeze the dependent parameters unless we are in custom mode:
       if (val != Model::Custom)
       {
-        classnames::freeze();
-        configname::freeze();
-        modelname::freeze();
+        classnames::freeze(true);
+        configname::freeze(true);
+        modelname::freeze(true);
       }
 
       // Load/re-load the model:

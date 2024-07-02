@@ -6,14 +6,14 @@ import cv2
 import numpy as np
 import apriltag
 
-## Detect AprilTag robotic fiducial markers in Python
+## Detect apriltag robotic fiducial markers in Python
 #
-# This module detects AprilTag markers, which are small 2D barcode-like patterns used in many robotics applications.
+# This module detects apriltag markers, which are small 2D barcode-like patterns used in many robotics applications.
 # The code here is derived from https://pyimagesearch.com/2020/11/02/apriltag-with-python/
 #
-# On host, make sure the apriltag library is installed with 'pip3 install apriltag'; it is pre-installed on platform.
+# On host, make sure the apriltag library is installed with 'pip install apriltag'; it is pre-installed on platform.
 #
-# If you need full 3D pose revovery, see our other module DemoArUco which also supports AprilTag.
+# If you need full 3D pose revovery, see our other module \jvmod{DemoArUco}, which also supports AprilTag.
 #
 # @author Laurent Itti
 # 
@@ -113,7 +113,7 @@ class AprilTag:
                 helper.drawText(float(r.center[0] + 7), float(r.center[1] + 7), str(r.tag_id), col)
 
                 # Send a serial message:
-                jevois.sendSerial('ATAG' + r.tag_id + ' ' + str(r.center[0]) + ' ' + str(r.center[1]))
+                jevois.sendSerial('ATAG' + str(r.tag_id) + ' ' + str(r.center[0]) + ' ' + str(r.center[1]))
                 
         # Write frames/s info from our timer:
         fps = self.timer.stop()

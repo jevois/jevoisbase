@@ -36,17 +36,17 @@ JEVOIS_DEFINE_ENUM_CLASS(Pattern, (ChessBoard) (ChArUcoBoard) (CirclesGrid) (Asy
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(pattern, Pattern, "Type of calibration board pattern to use",
-                         Pattern::ChArUcoBoard, Pattern_Values, ParamCateg);
+                         Pattern::ChessBoard, Pattern_Values, ParamCateg);
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(dictionary, aruco::Dict, "ArUco dictionary to use",
                                        aruco::Dict::D4X4_50, aruco::Dict_Values, ParamCateg);
 
 //! Parameter \relates CameraCalibration
-JEVOIS_DECLARE_PARAMETER(squareSize, float, "Checkboard square size in user-chosen units (e.g., mm, inch, etc). The "
+JEVOIS_DECLARE_PARAMETER(squareSize, float, "Size of each tile (check) in user-chosen units (e.g., mm, inch, etc). The "
                          "unit used here is the one that will be used once calibrated to report 3D coordinates "
                          "of objects relative to the camera",
-                         36.0f, ParamCateg);
+                         23.0f, ParamCateg);
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER(markerSize, float, "ChArUco marker size in user-chosen units (e.g., mm, inch, "
@@ -55,9 +55,11 @@ JEVOIS_DECLARE_PARAMETER(markerSize, float, "ChArUco marker size in user-chosen 
                          27.0f, ParamCateg);
 
 //! Parameter \relates CameraCalibration
-JEVOIS_DECLARE_PARAMETER(boardSize, cv::Size, "Board size (for chessboards, number of inner corners in x and y); "
-                         "for ChArUco boards, number of columns and rows)",
-                         { 7, 5 }, ParamCateg);
+JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(boardSize, cv::Size, "Board size [width height] in number of horizontal and "
+                                       "vertical tiles/disks. (Note: for asymmetric circle grid, count the number of "
+                                       "disks on each row, then the number of rows). The product width * height "
+                                       "should be the total number of tiles/disks on the grid.)",
+                                       { 11, 7 }, ParamCateg);
   
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER(aspectRatio, float, "Fixed aspect ratio value to use when non-zero, or auto when 0.0",
@@ -65,7 +67,7 @@ JEVOIS_DECLARE_PARAMETER(aspectRatio, float, "Fixed aspect ratio value to use wh
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER(zeroTangentDist, bool, "Assume zero tangential distortion coefficients P1, P2 and do "
-                         "not try to optimize them",
+                         "not try to optimize them, i.e., assume board is exactly planar",
                          true, ParamCateg);
 
 //! Parameter \relates CameraCalibration
@@ -112,19 +114,46 @@ JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed board
 //! Helper module to calibrate a given sensor+lens combo, which allows ArUco and other modules to do 3D post estimation
 /*! Just follow the on-screen prompts to calibrate your camera. The calibration results will be saved into
     /jevois[pro]/share/camera/ on microSD and will be automatically loaded when using a machine vision module that uses
-    camera calibration, for example DemoArUco.
+    camera calibration, for example \jvmod{DemoArUco} or \jvmod{FirstVision}.
 
-    The default settings are for a 7x5 ChArUco board that was created using the online generator at https://calib.io and
-    which you can get from http://jevois.org/data/calib.io_charuco_260x200_5x7_36_27_DICT_4X4.pdf
-   
+    The basic workflow is:
+
+    - print a calibration board and affix is to a good planar surface (e.g., an acrylic board, aluminum board, etc). Or
+      buy a board from the web, for example from https://calib.io or similar.
+
+    - decide which sensor, resolution, and lens you want to calibrate. The sensor should be detected at boot time (check
+      \p engine::camerasens system parameter). The lens can be set manually through the \p engine::cameralens
+      parameter. The default lens is called "standard". For the resolution, edit videomappings.cfg and add a mode for
+      the CalibrateCamera module that will use the same resolution as the one you want to use later for machine
+      vision. Several commented-out examples are already in videomappings.cfg, so likely you can just uncomment one of
+      them. Then run the corresponding version of the CameraCalibration module.
+
+    - set the parameters to match the board type, board width and height in number of tiles, tile size in the unit that
+      you want to later use to estimate distance to detected objects (e.g., in millimeters, inches, etc), and possibly
+      ChArUco marker size and dictionary.
+
+    - point the camera towards the board so that the full board is in the camera view. Click 'grab'. Change the
+      viewpoint and repeat at least 5 times. Use various 3D viewpoints.
+
+    - click 'calibrate' and the calibration will be computed and saved to microSD for that sensor, resolution, and
+      lens. It will be ready to be loaded by modules that want to use it.
+
+    The default settings are for a 11x7 Chess Board that was created using the online generator at https://calib.io and
+    which you can get from http://jevois.org/data/calib.io_checker_260x200_7x11_23.pdf -
     When you print the board, make sure you print at 100% scale. You should confirm that the checks in the printout are
-    36mm x 36mm, and the ArUco patterns within the white checks are 27mm x 27mm.
+    23mm x 23mm.
 
-    If you are using a wide-angle fish-eye lens with a lot of distortion, you may be better off using a chess board, and
-    turn on the fishEye parameter.
-    
-    An alternate board with more checks is at http://jevois.org/data/calib.io_charuco_260x200_7x11_23_17_DICT_4X4.pdf -
-    if you use it, you need to set the board size, marker size, and square size parameters to match it.
+    An alternate chess board with fewer checks may be desirable at low resolutions, such as the 7x5 chess board at
+    http://jevois.org/data/calib.io_checker_260x200_5x7_36.pdf - if you use it, set board size to '7 5', and square size
+    to '36' to match it.
+   
+    If you are using a wide-angle fish-eye lens with a lot of distortion, turn on the fishEye parameter.
+
+    You can also use a ChArUco board, though we have actually obtained worse reprojection errors with these boards. You
+    can print the board at calib.io_charuco_260x200_5x7_36_27_DICT_4X4.pdf at 100% scale, and you should confirm that
+    the checks in the printout are 36mm x 36mm, and the ArUco patterns within the white checks are 27mm x 27mm.  If you
+    use it, you need to set the board type, size, marker size, and square size parameters to match it. An alternate
+    board with more ChArUcos is at http://jevois.org/data/calib.io_charuco_260x200_7x11_23_17_DICT_4X4.pdf
 
 
     @author Laurent Itti
@@ -160,15 +189,6 @@ class CalibrateCamera : public jevois::Module,
     { }
 
     // ####################################################################################################
-    //! Initialization
-    // ####################################################################################################
-    virtual void postInit() override
-    {
-      // At startup, we cannot calibrate yet, need to grab first:
-      calibrate::freeze(true);
-    }
-
-    // ####################################################################################################
     //! Process one captured image
     // ####################################################################################################
     void process_frame(cv::Mat const & view)
@@ -192,7 +212,7 @@ class CalibrateCamera : public jevois::Module,
         switch (pattern::get())
         {
         case Pattern::ChessBoard:
-          found = cv::findChessboardCorners(view, bs, pointBuf, chessBoardFlags);
+          found = cv::findChessboardCorners(view, cv::Size(bs.width - 1, bs.height - 1), pointBuf, chessBoardFlags);
           if (found)
           {
             // Improve the found corners' coordinate accuracy for chessboard:
@@ -213,7 +233,7 @@ class CalibrateCamera : public jevois::Module,
             cv::aruco::CharucoBoard ch_board({boardSize::get().width, boardSize::get().height}, squareSize::get(),
                                              markerSize::get(), dico);
             cv::aruco::DetectorParameters detector_params;
-            detector_params.cornerRefinementMethod = int(cv::aruco::CORNER_REFINE_SUBPIX);
+            detector_params.cornerRefinementMethod = int(cv::aruco::CORNER_REFINE_NONE); // recommended by docs
             
             cv::aruco::CharucoParameters charuco_params;
             charuco_params.tryRefineMarkers = true;
@@ -268,7 +288,7 @@ class CalibrateCamera : public jevois::Module,
               // Draw the corners into the image:
               itsLastGoodView = view.clone();
               itsLastGoodTime = std::chrono::steady_clock::now();
-              drawChessboardCorners(itsLastGoodView, bs, cv::Mat(pointBuf), found);
+              drawChessboardCorners(itsLastGoodView, cv::Size(bs.width - 1, bs.height - 1), cv::Mat(pointBuf), found);
               
             }
             else engine()->reportError("Calibration board was not detected. Make sure it is in full view with no "
@@ -279,8 +299,19 @@ class CalibrateCamera : public jevois::Module,
       if (calibrate::get())
       {
         calibrate::set(false);
-        do_calibration();
-        if (itsCalibrated == false) engine()->reportError("Calibration failed. Let's try again.");
+
+        if (itsImagePoints.size() < 5)
+          engine()->reportError("Need at least 5 good board views before calibration");
+        else
+        {
+          do_calibration();
+
+          if (itsCalibrated == false)
+          {
+            engine()->reportError("Calibration failed. Let's try again.");
+            restart();
+          }
+        }
       }
  
       // If we are calibrated, show either live view or undistorted view:
@@ -327,14 +358,11 @@ class CalibrateCamera : public jevois::Module,
         if (fixK3::get())             itsFlag |= cv::CALIB_FIX_K3;
       }
 
-      float grid_width = squareSize::get() * (boardSize::get().width - 1);
-      if (pattern::get() == Pattern::ChArUcoBoard) grid_width = squareSize::get() * (boardSize::get().width - 2);
-
       std::vector<cv::Mat> rvecs, tvecs;
       std::vector<float> reprojErrs;
       std::vector<cv::Point3f> newObjPoints;
       
-      itsCalibrated = runCalibration(rvecs, tvecs, reprojErrs, itsAvgErr, newObjPoints, grid_width);
+      itsCalibrated = runCalibration(rvecs, tvecs, reprojErrs, itsAvgErr, newObjPoints);
 
       // If calibrated, save the calibration now:
       if (itsCalibrated)
@@ -389,8 +417,8 @@ class CalibrateCamera : public jevois::Module,
       {
       case Pattern::ChessBoard:
       case Pattern::CirclesGrid:
-        for (int i = 0; i < boardsiz.height; ++i)
-          for (int j = 0; j < boardsiz.width; ++j)
+        for (int i = 0; i < boardsiz.height - 1; ++i)
+          for (int j = 0; j < boardsiz.width - 1; ++j)
             corners.push_back(cv::Point3f(j*squaresiz, i*squaresiz, 0));
         break;
         
@@ -401,8 +429,8 @@ class CalibrateCamera : public jevois::Module,
         break;
         
       case Pattern::AsymmetricCirclesGrid:
-        for (int i = 0; i < boardsiz.height; i++)
-          for (int j = 0; j < boardsiz.width; j++)
+        for (int i = 0; i < boardsiz.height - 1; i++)
+          for (int j = 0; j < boardsiz.width - 1; j++)
             corners.push_back(cv::Point3f((2 * j + i % 2)*squaresiz, i*squaresiz, 0));
         break;
       }
@@ -410,24 +438,16 @@ class CalibrateCamera : public jevois::Module,
     
     // ####################################################################################################
     bool runCalibration(std::vector<cv::Mat> & rvecs, std::vector<cv::Mat> & tvecs, std::vector<float> & reprojErrs,
-                        double & totalAvgErr, std::vector<cv::Point3f> & newObjPoints,
-                        float grid_width)
+                        double & totalAvgErr, std::vector<cv::Point3f> & newObjPoints)
     {
-      //! [fixed_aspect]
       itsCameraMatrix = cv::Mat::eye(3, 3, CV_64F);
       if (fishEye::get() == false && itsFlag & cv::CALIB_FIX_ASPECT_RATIO)
         itsCameraMatrix.at<double>(0,0) = aspectRatio::get();
-      //! [fixed_aspect]
       if (fishEye::get()) itsDistCoeffs = cv::Mat::zeros(4, 1, CV_64F);
       else itsDistCoeffs = cv::Mat::zeros(8, 1, CV_64F);
 
       std::vector<std::vector<cv::Point3f> > objectPoints(1);
       calcBoardCornerPositions(boardSize::get(), squareSize::get(), objectPoints[0]);
-      if (pattern::get() == Pattern::ChArUcoBoard)
-        objectPoints[0][boardSize::get().width - 2].x = objectPoints[0][0].x + grid_width;
-      else
-        objectPoints[0][boardSize::get().width - 1].x = objectPoints[0][0].x + grid_width;
-
       newObjPoints = objectPoints[0];
       
       objectPoints.resize(itsImagePoints.size(), objectPoints[0]);
@@ -499,8 +519,6 @@ class CalibrateCamera : public jevois::Module,
 
       // Convert the image to BGR and process:
       cv::Mat cvimg = jevois::rawimage::convertToCvBGR(inimg);
-      itsImageSize.width = cvimg.cols;
-      itsImageSize.height = cvimg.rows;
 
       // Detect/calibrate, will update itsCalibrated and itsLastGoodView:
       process_frame(cvimg);
@@ -539,13 +557,11 @@ class CalibrateCamera : public jevois::Module,
         {
           y = jevois::rawimage::itext(outimg, "Ok to calibrate", y);
           jevois::rawimage::itext(outimg, "Ok to calibrate", outimg.height - 13);
-          calibrate::freeze(false);
         }
         else
         {
           y = jevois::rawimage::itext(outimg, "Need to grab 5+ good views", y);
           jevois::rawimage::itext(outimg, "Need to grab 5+ good views", outimg.height - 13);
-          calibrate::freeze(true);
         }
         y2 = jevois::rawimage::itext(outimg, "Last grabbed board", y2);
       }
@@ -603,16 +619,10 @@ class CalibrateCamera : public jevois::Module,
         // Show some guiding messages:
         helper.itext("Good calibration board views so far: " + std::to_string(itsImagePoints.size()));
         if (itsImagePoints.size() >= 5)
-        {
           helper.itext("Enough good board views acquired for calibration, you may grab more to improve accuracy,"
                        "  or calibrate now.");
-          calibrate::freeze(false);
-        }
         else
-        {
           helper.itext("Need at least 5 good board views for calibration, keep grabbing, use varied viewpoints");
-          calibrate::freeze(true);
-        }
 
         // Display last good view for a while, otherwise nothing (live video already drawn):
         std::chrono::duration<float> const elapsed = std::chrono::steady_clock::now() - itsLastGoodTime;
@@ -633,7 +643,6 @@ class CalibrateCamera : public jevois::Module,
       // Light blue window background:
       ImGui::PushStyleColor(ImGuiCol_WindowBg, 0xf0ffe0e0);
 
-      static bool ready = false;
       if (ImGui::Begin("Calibrate Camera Controls"))
       {
         int wrap = ImGui::GetWindowSize().x - ImGui::GetFontSize() * 2.0f;
@@ -649,7 +658,7 @@ class CalibrateCamera : public jevois::Module,
           
           if (ImGui::Button("Grab more views")) itsCalibrated = false;
         }
-        else if (ready == false)
+        else if (itsReady == false)
         {
           if (itsImagePoints.empty())
           {
@@ -667,13 +676,12 @@ class CalibrateCamera : public jevois::Module,
             ImGui::Bullet();
             ImGui::Text("markerSize - if using ChArUco, physical size of markers in your units");
             ImGui::Bullet();
-            ImGui::Text("boardSize - for chessboards, number of inner corners horizontally and vertically on "
-                        "your board; for ChArUco boards, horizontal and vertical number of tiles");
+            ImGui::Text("boardSize - horizontal and vertical number of tiles");
             
             ImGui::TextUnformatted("");
             ImGui::Separator();
           }
-          ready = ImGui::Button("Ready!");
+          itsReady = ImGui::Button("Ready!");
         }
         else
         {
@@ -698,48 +706,45 @@ class CalibrateCamera : public jevois::Module,
         }
 
         // Always show a start over button, except at the every beginning:
-        if (ready)
+        if (itsReady)
         {
           ImGui::SameLine(); ImGui::TextUnformatted("     "); ImGui::SameLine();
-          if (ImGui::Button("Start over"))
-          {
-            ready = false;
-            itsAvgErr = 0.0;
-            itsCalibrated = false;
-            itsImagePoints.clear();
-            calibrate::freeze(true);
-          }
+          if (ImGui::Button("Start over")) restart();
         }
         
         ImGui::PopTextWrapPos();
-        ImGui::End();
       }
+      
+      ImGui::End();
       ImGui::PopStyleColor();
-
+      
       // Show processing fps:
       std::string const & fpscpu = timer.stop();
       helper.iinfo(inframe, fpscpu, winw, winh);
-
+      
       // Render the image and GUI:
       helper.endFrame();
-     }
+    }
 #endif
 
   protected:
-    //! Freeze/unfreeze dictionary depending on chosen board pattern:
-    virtual void onParamChange(pattern const & par, Pattern const & val)
+    // Restart if some params changed:
+    void restart()
     {
       itsChArUcoDetector.reset();
-      dictionary::freeze( (val != Pattern::ChArUcoBoard) );
+      itsReady = false;
+      itsAvgErr = 0.0;
+      itsCalibrated = false;
+      itsImagePoints.clear();
     }
-
-    //! Nuke our charuco detector whenever dictionary changes:
-    virtual void onParamChange(dictionary const & par, aruco::Dict const & val)
-    {
-      itsChArUcoDetector.reset();
-    }
+    
+    //! Restart when some critical params are changed:
+    virtual void onParamChange(pattern const & par, Pattern const & val) { restart(); }
+    virtual void onParamChange(dictionary const & par, aruco::Dict const & val) { restart(); }
+    virtual void onParamChange(boardSize const & par, cv::Size const & val) { restart(); }
 
   private:
+    bool itsReady = false;
     bool itsCalibrated = false;
     int itsFlag = 0;
     cv::Size itsImageSize;

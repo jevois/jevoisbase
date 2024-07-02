@@ -212,18 +212,19 @@ class CustomDNN : public jevois::StdModule
         {
           // Give a unique name to each edge ROI and display it. Note: if is_overlay is true in the call to drawImage()
           // below, then coordinates for subsequent drawings will remain relative to the origin of the full frame drawn
-          // above using drawInputFrame(). If false, then coordinates will shift to be relative to the origin of the
-          // last drawn image. Here, we want is_overlay=true because we will be drawing several ROIs (one per detection)
-          // and we do not want the origin of the next ROI to be relative to the previous ROI; we want all ROIs to be
-          // drawn at specific locations relative to the input frame:
+          // above using drawInputFrame(), and will automatically be scaled from processing resolution (imimg) to
+          // display resolution (inhd). If false, then coordinates will shift to be relative to the origin of the last
+          // drawn image. Here, we want is_overlay=true because we will be drawing several ROIs (one per detection) and
+          // we do not want the origin of the next ROI to be relative to the previous ROI; we want all ROIs to be drawn
+          // at specific locations relative to the input frame:
           std::string roi_name = "roi" + std::to_string(i);
           unsigned short rw = mask.cols, rh = mask.rows;
           
           helper->drawImage(roi_name.c_str(), mask, true, r.x, r.y, rw, rh, false /*noalias*/, true /*is_overlay*/);
           
-          // Also draw a circle over each ROI to test that drawing works. Because is_overlay was true in drawImage, we
-          // need to shift the center of the circle by (r.x, r.y) which is the top-left corner of the last drawn ROI:
-          helper->drawCircle(r.x + r.width/2, r.y + r.height/2, std::min(r.width, r.height)/2);
+          // Also draw a circle over each ROI to test that drawing works. Because is_overlay was true in drawImage, the
+          // coordinates here are just as if we were drawing on the processing resolution (inimg):
+          helper->drawCircle((d.tlx + d.brx)/2, (d.tly+d.bry)/2, std::min(d.brx - d.tlx, d.bry - d.tly)/2);
         }
 #endif
         

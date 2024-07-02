@@ -212,17 +212,17 @@ RoadFinder::~RoadFinder()
 // ######################################################################
 void RoadFinder::postInit()
 {
-  roadfinder::horizon::freeze();
-  roadfinder::support::freeze();
-  roadfinder::spacing::freeze();
+  roadfinder::horizon::freeze(true);
+  roadfinder::support::freeze(true);
+  roadfinder::spacing::freeze(true);
 }
 
 // ######################################################################
 void RoadFinder::preUninit()
 {
-  roadfinder::horizon::unFreeze();
-  roadfinder::support::unFreeze();
-  roadfinder::spacing::unFreeze();
+  roadfinder::horizon::freeze(false);
+  roadfinder::support::freeze(false);
+  roadfinder::spacing::freeze(false);
 }
 
 // ######################################################################

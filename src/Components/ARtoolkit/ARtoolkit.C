@@ -29,7 +29,7 @@ ARtoolkit::~ARtoolkit()
 void ARtoolkit::postInit()
 {
   // Defer reading camera parameters to first processed frame, so we know the resolution:
-  camparams::freeze();
+  camparams::freeze(true);
 }
 
 // ##############################################################################################################
@@ -51,7 +51,7 @@ void ARtoolkit::postUninit()
     arParamLTFree(&gCparamLT);
   }
 
-  camparams::unFreeze();
+  camparams::freeze(false);
 }
 
 // ##############################################################################################################

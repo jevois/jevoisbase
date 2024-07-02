@@ -50,7 +50,7 @@ class PyPostDAMOyolo:
         
         self.maxnbox = jevois.Parameter(self, 'maxnbox', 'uint',
                        "Max number of top-scoring boxes to report",
-                       500, pc);
+                       500, pc)
         
         self.cthresh = jevois.Parameter(self, 'cthresh', 'float',
                        "Detection/classification score threshold, in percent confidence",

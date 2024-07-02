@@ -64,8 +64,8 @@ void ArUco::postInit()
   itsCalib = engine()->loadCameraCalibration();
 
   // Init detector parameters:
-  aruco::dictionary::freeze();
-  aruco::detparams::freeze();
+  aruco::dictionary::freeze(true);
+  aruco::detparams::freeze(true);
   cv::aruco::DetectorParameters dparams;
   
   switch (aruco::dictionary::get())
@@ -106,8 +106,8 @@ void ArUco::postUninit()
 {
   itsDetector.release();
   itsCalib = jevois::CameraCalibration();
-  aruco::detparams::unFreeze();
-  aruco::dictionary::unFreeze();
+  aruco::detparams::freeze(false);
+  aruco::dictionary::freeze(false);
 }
 
 // ##############################################################################################################

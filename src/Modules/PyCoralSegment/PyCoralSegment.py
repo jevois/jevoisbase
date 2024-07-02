@@ -108,9 +108,9 @@ class PyCoralSegment:
         img = Image.fromarray(frame);
         if self.keepaspect:
             resized_img, _ = common.set_resized_input(self.interpreter, img.size,
-                                                      lambda size: img.resize(size, Image.ANTIALIAS))
+                                                      lambda size: img.resize(size, Image.LANCSOZ))
         else:
-            resized_img = img.resize((width, height), Image.ANTIALIAS)
+            resized_img = img.resize((width, height), Image.LANCSOZ)
             common.set_input(self.interpreter, resized_img)
   
         # Run the model
@@ -168,9 +168,9 @@ class PyCoralSegment:
         img = Image.fromarray(frame);
         if self.keepaspect:
             resized_img, _ = common.set_resized_input(self.interpreter, img.size,
-                                                      lambda size: img.resize(size, Image.ANTIALIAS))
+                                                      lambda size: img.resize(size, Image.LANCSOZ))
         else:
-            resized_img = img.resize((width, height), Image.ANTIALIAS)
+            resized_img = img.resize((width, height), Image.LANCSOZ)
             common.set_input(self.interpreter, resized_img)
   
         # Run the model:

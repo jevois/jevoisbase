@@ -167,6 +167,7 @@ SSD-Caffe:
   scale: 0.007843
   rgb: false
   classes: "darknet/yolo/data/voc.names"
+  classoffset: -1
 
 ####################################################################################################
 # Semantic segmentation models

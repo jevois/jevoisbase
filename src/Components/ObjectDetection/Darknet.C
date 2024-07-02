@@ -37,11 +37,11 @@ Darknet::Darknet(std::string const & instance, bool show_detail_params) :
   // Possibly hide some parameters:
   if (itsShowDetailParams == false)
   {
-    dataroot::freeze();
-    datacfg::freeze();
-    cfgfile::freeze();
-    weightfile::freeze();
-    namefile::freeze();
+    dataroot::freeze(true);
+    datacfg::freeze(true);
+    cfgfile::freeze(true);
+    weightfile::freeze(true);
+    namefile::freeze(true);
   }
 }
 
@@ -61,11 +61,11 @@ void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval
 {
   if (itsShowDetailParams == false)
   {
-    dataroot::unFreeze();
-    datacfg::unFreeze();
-    cfgfile::unFreeze();
-    weightfile::unFreeze();
-    namefile::unFreeze();
+    dataroot::freeze(false);
+    datacfg::freeze(false);
+    cfgfile::freeze(false);
+    weightfile::freeze(false);
+    namefile::freeze(false);
   }
 
   switch (newval)
@@ -89,11 +89,11 @@ void Darknet::onParamChange(dknet::netw const & param, dknet::Net const & newval
 
   if (itsShowDetailParams == false)
   {
-    dataroot::freeze();
-    datacfg::freeze();
-    cfgfile::freeze();
-    weightfile::freeze();
-    namefile::freeze();
+    dataroot::freeze(true);
+    datacfg::freeze(true);
+    cfgfile::freeze(true);
+    weightfile::freeze(true);
+    namefile::freeze(true);
   }
 }
 

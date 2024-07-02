@@ -166,7 +166,7 @@ class ArUcoBlob : public jevois::StdModule,
     // ####################################################################################################
     void postInit() override
     {
-      numtrack::freeze();
+      numtrack::freeze(true);
       
       for (size_t i = 0; i < numtrack::get(); ++i)
         itsBlobs.push_back(addSubComponent<BlobDetector>("blob" + std::to_string(i)));
