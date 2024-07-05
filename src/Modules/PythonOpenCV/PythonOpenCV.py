@@ -58,7 +58,38 @@ class PythonOpenCV:
         
         # Convert our GRAY output image to video output format and send to host over USB:
         outframe.sendCvGRAY(edges)
-    
+        
+    # ###################################################################################################
+    ## Process function with GUI output on JeVois-Pro
+    def processGUI(self, inframe, helper):
+        # Start a new display frame, gets its size and also whether mouse/keyboard are idle:
+        idle, winw, winh = helper.startFrame()
+
+        # Draw full-resolution input frame from camera:
+        x, y, w, h = helper.drawInputFrame("c", inframe, False, False)
+        helper.itext('JeVois-Pro AprilTag detection')
+        
+        # Get the next camera image as grayscale and lower resolution for processing (may block until it is captured):
+        ingray = inframe.getCvGRAYp()
+
+        # Start measuring image processing time (NOTE: does not account for input conversion time):
+        self.timer.start()
+
+        # Detect edges using the Canny algorithm from OpenCV:
+        edges = cv2.Canny(inimggray, 100, 200, apertureSize = 3)
+
+        # Draw edges as a transparent overlay using OpenGL. Here, our mask is just the edges replicated 4 times for the
+        # R, G, B, Alpha color channels:
+        mask = cv2.merge( [ edges, edges, edges, edges ] )
+        helper.drawImage("edges", mask, True, x, y, w, h, False, True);
+        
+        # Write frames/s info from our timer:
+        fps = self.timer.stop()
+        helper.iinfo(inframe, fps, winw, winh);
+
+        # End of frame:
+        helper.endFrame()
+
     # ###################################################################################################
     ## Parse a serial command forwarded to us by the JeVois Engine, return a string
     #def parseSerial(self, str):

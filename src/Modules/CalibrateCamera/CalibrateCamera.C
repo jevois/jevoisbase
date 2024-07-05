@@ -72,7 +72,7 @@ JEVOIS_DECLARE_PARAMETER(zeroTangentDist, bool, "Assume zero tangential distorti
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER(fixPrincipalPoint, bool, "Fix principal point at center, otherwise find its location",
-                         false, ParamCateg);
+                         true, ParamCateg);
 
 //! Parameter \relates CameraCalibration
 JEVOIS_DECLARE_PARAMETER(fishEye, bool, "Use fisheye model. Should be true if using a wide-angle lens that "
@@ -111,7 +111,7 @@ JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed board
                          "enough good views of your calibration board before you can calibrate.",
                          false, ParamCateg);
 
-//! Helper module to calibrate a given sensor+lens combo, which allows ArUco and other modules to do 3D post estimation
+//! Helper module to calibrate a given sensor+lens combo, which allows ArUco and other modules to do 3D pose estimation
 /*! Just follow the on-screen prompts to calibrate your camera. The calibration results will be saved into
     /jevois[pro]/share/camera/ on microSD and will be automatically loaded when using a machine vision module that uses
     camera calibration, for example \jvmod{DemoArUco} or \jvmod{FirstVision}.
@@ -119,7 +119,7 @@ JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed board
     The basic workflow is:
 
     - print a calibration board and affix is to a good planar surface (e.g., an acrylic board, aluminum board, etc). Or
-      buy a board from the web, for example from https://calib.io or similar.
+      buy a board, for example from https://calib.io or similar.
 
     - decide which sensor, resolution, and lens you want to calibrate. The sensor should be detected at boot time (check
       \p engine::camerasens system parameter). The lens can be set manually through the \p engine::cameralens
@@ -147,13 +147,14 @@ JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed board
     http://jevois.org/data/calib.io_checker_260x200_5x7_36.pdf - if you use it, set board size to '7 5', and square size
     to '36' to match it.
    
-    If you are using a wide-angle fish-eye lens with a lot of distortion, turn on the fishEye parameter.
+    If you are using a wide-angle fish-eye lens with a lot of distortion, turn on the \p fishEye parameter.
 
     You can also use a ChArUco board, though we have actually obtained worse reprojection errors with these boards. You
-    can print the board at calib.io_charuco_260x200_5x7_36_27_DICT_4X4.pdf at 100% scale, and you should confirm that
-    the checks in the printout are 36mm x 36mm, and the ArUco patterns within the white checks are 27mm x 27mm.  If you
-    use it, you need to set the board type, size, marker size, and square size parameters to match it. An alternate
-    board with more ChArUcos is at http://jevois.org/data/calib.io_charuco_260x200_7x11_23_17_DICT_4X4.pdf
+    can print the board at http://jevois.org/data/calib.io_charuco_260x200_5x7_36_27_DICT_4X4.pdf at 100% scale, and you
+    should confirm that the checks in the printout are 36mm x 36mm, and the ArUco patterns within the white checks are
+    27mm x 27mm.  If you use it, you need to set the board type, size, marker size, and square size parameters to match
+    it. An alternate board with more ChArUcos is at
+    http://jevois.org/data/calib.io_charuco_260x200_7x11_23_17_DICT_4X4.pdf
 
 
     @author Laurent Itti
