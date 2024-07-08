@@ -1,0 +1,20 @@
+%YAML:1.0
+---
+calibration_time: "Mon Jul  8 12:35:43 2024"
+sensor: imx290
+lens: standard
+image_width: 1280
+image_height: 720
+camera_matrix: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 870.97568429895659, 0., 639.5, 0., 872.6897185167353, 359.5,
+       0., 0., 1. ]
+distortion_coefficients: !!opencv-matrix
+   rows: 5
+   cols: 1
+   dt: d
+   data: [ 0.04445531268481575, -0.18162622300579742, 0., 0.,
+       0.24637014544138777 ]
+avg_reprojection_error: 1.1165167328034733
