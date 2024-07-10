@@ -89,7 +89,7 @@ class PyCoralClassify:
 
         # Set the input:
         size = common.input_size(self.interpreter)
-        image = Image.fromarray(frame).resize(size, Image.LANCSOZ)
+        image = Image.fromarray(frame).resize(size, Image.LANCZOS)
         common.set_input(self.interpreter, image)
   
         # Run the model
@@ -138,7 +138,7 @@ class PyCoralClassify:
         
         # Set the input:
         size = common.input_size(self.interpreter)
-        image = Image.fromarray(frame).resize(size, Image.LANCSOZ)
+        image = Image.fromarray(frame).resize(size, Image.LANCZOS)
         common.set_input(self.interpreter, image)
   
         # Run the model

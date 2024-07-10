@@ -85,7 +85,7 @@ class PyCoralDetect:
         # Set the input:
         image = Image.fromarray(frame);
         _, scale = common.set_resized_input(self.interpreter, image.size,
-                                            lambda size: image.resize(size, Image.LANCSOZ))
+                                            lambda size: image.resize(size, Image.LANCZOS))
   
         # Run the model
         start = time.perf_counter()
@@ -144,7 +144,7 @@ class PyCoralDetect:
         # Set the input:
         image = Image.fromarray(frame);
         _, scale = common.set_resized_input(self.interpreter, image.size,
-                                            lambda size: image.resize(size, Image.LANCSOZ))
+                                            lambda size: image.resize(size, Image.LANCZOS))
         # Run the model
         start = time.perf_counter()
         self.interpreter.invoke()
