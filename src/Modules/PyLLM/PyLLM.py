@@ -11,7 +11,7 @@ import psutil
 ## Interact with a large-language model (LLM) or vision-language model (VLM) in a chat box
 #
 # This module uses the ollama framework from https://ollama.com to run a large language model (LLM) or vision language
-# model (VML) right inside the JeVois-Pro camera. The default model is tinydolphin, an experimental LLM (no vision)
+# model (VLM) right inside the JeVois-Pro camera. The default model is tinydolphin, an experimental LLM (no vision)
 # model with 1.1 Billion parameters, obtained from training the TinyLlama model on the popular Dolphin dataset by Eric
 # Hartford.
 #
@@ -61,7 +61,7 @@ import psutil
 # @author Laurent Itti
 # 
 # @displayname PyLLM
-# @videomapping JVUI 0 0 30.0 YUYV 1920 1080 30.0 JeVois PyDNN
+# @videomapping JVUI 0 0 30.0 YUYV 1920 1080 30.0 JeVois PyLLM
 # @email itti\@usc.edu
 # @address University of Southern California, HNB-07A, 3641 Watt Way, Los Angeles, CA 90089-2520, USA
 # @copyright Copyright (C) 2024 by Laurent Itti, iLab and the University of Southern California
