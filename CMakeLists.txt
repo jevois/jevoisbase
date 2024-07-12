@@ -432,22 +432,19 @@ install(DIRECTORY Contrib/ARToolKit5arm DESTINATION ${INCDEST} COMPONENT bin)
 ########################################################################################################################
 # Link to OpenCV libraries for superpixels, aruco, and others:
 # From this: ls /usr/share/jevois-opencv-4.*/lib/|grep ".so$"|sed -e s/.so//|sed -e s/^lib//|xargs
-#
-# Note: with 4.10.0 compiled for platform, we are missing the plain .so links somehow... They were created on compile
-# but included by checkinstall...
 
-set(JVBOCVLIBS opencv_alphamat opencv_aruco opencv_bgsegm opencv_bioinspired opencv_calib3d opencv_ccalib opencv_core
-  opencv_datasets opencv_dnn_objdetect opencv_dnn opencv_dnn_superres opencv_dpm opencv_face opencv_features2d
-  opencv_flann opencv_fuzzy opencv_gapi opencv_hfs opencv_imgcodecs opencv_img_hash opencv_imgproc
-  opencv_intensity_transform opencv_line_descriptor opencv_mcc opencv_ml opencv_objdetect opencv_optflow
-  opencv_phase_unwrapping opencv_photo opencv_plot opencv_quality opencv_rapid opencv_reg opencv_saliency opencv_shape
-  opencv_stereo opencv_stitching opencv_structured_light opencv_superres opencv_surface_matching opencv_text
-  opencv_tracking opencv_videoio opencv_video opencv_videostab opencv_wechat_qrcode opencv_xfeatures2d opencv_ximgproc
-  opencv_xobjdetect opencv_xphoto)
+set(OPENCV_LIBS_FOR_JEVOISBASE -lopencv_alphamat -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_calib3d
+-lopencv_ccalib -lopencv_core -lopencv_datasets -lopencv_dnn_objdetect -lopencv_dnn -lopencv_dnn_superres -lopencv_dpm
+-lopencv_face -lopencv_features2d -lopencv_flann -lopencv_fuzzy -lopencv_gapi -lopencv_hfs -lopencv_imgcodecs
+-lopencv_img_hash -lopencv_imgproc -lopencv_intensity_transform -lopencv_line_descriptor -lopencv_mcc -lopencv_ml
+-lopencv_objdetect -lopencv_optflow -lopencv_phase_unwrapping -lopencv_photo -lopencv_plot -lopencv_quality
+-lopencv_rapid -lopencv_reg -lopencv_saliency -lopencv_shape -lopencv_stereo -lopencv_stitching
+-lopencv_structured_light -lopencv_superres -lopencv_surface_matching -lopencv_text -lopencv_tracking -lopencv_videoio
+-lopencv_video -lopencv_videostab -lopencv_wechat_qrcode -lopencv_xfeatures2d -lopencv_ximgproc -lopencv_xobjdetect
+-lopencv_xphoto)
 # removed: opencv_highgui (not needed), opencv_rgbd (not needed),
 # opencv_freetype (would need to enable freetype and harfbuzz on a33 platform)
 
-jevois_versioned_libs(JVBOCVLIBS ".so.${JEVOIS_OPENCV_VERSION}" OPENCV_LIBS_FOR_JEVOISBASE)
 target_link_libraries(${JEVOIS}base ${JEVOIS_OPENCV_LIBS} ${OPENCV_LIBS_FOR_JEVOISBASE})
 #message(STATUS "OpenCV libs: ${OPENCV_LIBS_FOR_JEVOISBASE}")
 
