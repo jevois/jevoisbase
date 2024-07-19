@@ -1,4 +1,4 @@
-/*!@file Envision/env_channel.h Base class for channels that will use integer math */
+/*!@file env_channel.h Base class for channels that will use integer math */
 
 // //////////////////////////////////////////////////////////////////// //
 // The iLab Neuromorphic Vision C++ Toolkit - Copyright (C) 2000-2005   //

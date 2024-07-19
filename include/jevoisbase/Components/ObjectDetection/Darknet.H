@@ -34,7 +34,7 @@ namespace dknet
   static jevois::ParameterCategory const ParamCateg("Darknet Options");
 
   //! Enum \relates Darknet
-  JEVOIS_DEFINE_ENUM_CLASS(Net, (Reference) (Tiny) )
+  JEVOIS_DEFINE_ENUM_CLASS(Net, (Reference) (Tiny) );
 
   //! Parameter \relates Darknet
   JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(netw, Net, "Network to load. This meta-parameter sets parameters "

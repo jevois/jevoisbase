@@ -1,4 +1,4 @@
-/*!@file Envision/env_types.h  Basic integer types */
+/*!@file env_types.h  Basic integer types */
 
 // //////////////////////////////////////////////////////////////////// //
 // The iLab Neuromorphic Vision C++ Toolkit - Copyright (C) 2001 by the //

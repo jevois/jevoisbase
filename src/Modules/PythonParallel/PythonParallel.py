@@ -28,17 +28,17 @@ def computefunc(inimggray, th1, th2):
 # amount of data (streaming video) that needs to be packaged, transferred, and unpacked is high. C++ is the preferred
 # way of developping multi-threaded JeVois modules, where std::async() makes multi-threaded programming easy.
 #
-# \fixme <b>You should consider this module highly experimental and buggy!</b> This module is currently not working well
+# \note <b>You should consider this module highly experimental and buggy!</b> This module is currently not working well
 # when running with USB output. There is some internal issue with using the Python \b multiprocessing module in
 # JeVois. Just creating a python process pool interferes with our USB video output driver, even if we simply create the
 # pool and destroy it immediately without using it at all. Once the python process pool has been created, any subsequent
 # attempt to change video format will fail with a video buffer allocation error. This module may still be useful for
 # robotics applications where parallel python processing is needed but no video output to USB is necessary).
 #
-# \fixme This module is hence not enabled by default. You need to edit <b>JEVOIS:/config/videomappings.cfg</b>, and
+# \note This module is hence not enabled by default. You need to edit <b>JEVOIS:/config/videomappings.cfg</b>, and
 # uncomment the line with \jvmod{PythonParallel} in it, to enable it.
 #
-# \fixme Conflated with this problem is the fact that guvcview sometimes, when it starts, turns streaming on, then grabs
+# \note Conflated with this problem is the fact that guvcview sometimes, when it starts, turns streaming on, then grabs
 # only 5 frames, then stream off, then set same video format again, and then stream on again. We are not sure why
 # guvcview is doing this, however, this breaks this module since the second streamon fails as it is unable to allocate
 # video buffers.

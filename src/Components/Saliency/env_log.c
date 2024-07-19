@@ -1,4 +1,4 @@
-/*!@file Envision/env_log.c Interface to syslog */
+/*!@file env_log.c Interface to syslog */
 
 // //////////////////////////////////////////////////////////////////// //
 // The iLab Neuromorphic Vision C++ Toolkit - Copyright (C) 2001 by the //

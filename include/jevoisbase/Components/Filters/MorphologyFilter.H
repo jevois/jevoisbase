@@ -26,7 +26,7 @@ namespace morphologyfilter
   static jevois::ParameterCategory const ParamCateg("Morphology Filter Parameters");
 
   //! Enum \relates MorphologyFilter
-  JEVOIS_DEFINE_ENUM_CLASS(MorphoOp, (Erode) (Dilate) (Open) (Close) (Gradient) (TopHat) (BlackHat) )
+  JEVOIS_DEFINE_ENUM_CLASS(MorphoOp, (Erode) (Dilate) (Open) (Close) (Gradient) (TopHat) (BlackHat) );
 
   //! Parameter \relates MorphologyFilter
   JEVOIS_DECLARE_PARAMETER(op, MorphoOp, "Morphological operation to apply",

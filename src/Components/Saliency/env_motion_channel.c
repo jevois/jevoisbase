@@ -1,4 +1,4 @@
-/*!@file Envision/env_motion_channel.c */
+/*!@file env_motion_channel.c */
 
 // //////////////////////////////////////////////////////////////////// //
 // The iLab Neuromorphic Vision C++ Toolkit - Copyright (C) 2000-2005   //

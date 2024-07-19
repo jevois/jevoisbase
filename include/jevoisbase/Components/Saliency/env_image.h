@@ -1,4 +1,4 @@
-/*!@file Envision/env_image.h A basic image class */
+/*!@file env_image.h A basic image class */
 
 // //////////////////////////////////////////////////////////////////// //
 // The iLab Neuromorphic Vision C++ Toolkit - Copyright (C) 2001 by the //

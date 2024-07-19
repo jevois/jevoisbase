@@ -1,4 +1,4 @@
-/*!@file Envision/env_config.h */
+/*!@file env_config.h */
 
 // //////////////////////////////////////////////////////////////////// //
 // The iLab Neuromorphic Vision C++ Toolkit - Copyright (C) 2000-2005   //

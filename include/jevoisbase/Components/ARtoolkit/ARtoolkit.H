@@ -53,17 +53,12 @@ namespace artoolkit
                            false, ParamCateg);
 
   //! Enum for parameter \relates ARtoolkit
-  /*! dictionary to use according to the ARtoolkit 
-      AR_MATRIX_CODE_3x3 support 64 markers
-      AR_MATRIX_CODE_3x3_HAMMING63 support 7 markers
-      AR_MATRIX_CODE_3x3_PARITY65 support 32 markers
-      the smaller the # of marker => larger distance between markers => better performance */
-  JEVOIS_DEFINE_ENUM_CLASS(Dict, (AR_MATRIX_CODE_3x3) (AR_MATRIX_CODE_3x3_HAMMING63) (AR_MATRIX_CODE_3x3_PARITY65));
+  JEVOIS_DEFINE_ENUM_CLASS(Dict, (AR_MATRIX_CODE_3x3) (AR_MATRIX_CODE_3x3_HAMMING63) (AR_MATRIX_CODE_3x3_PARITY65) );
 
   //! ThreshMode to overcome different lighting situation  \relates ARtoolkit
   JEVOIS_DEFINE_ENUM_CLASS(DictThreshMode, (AR_LABELING_THRESH_MODE_MANUAL) (AR_LABELING_THRESH_MODE_AUTO_MEDIAN)
                            (AR_LABELING_THRESH_MODE_AUTO_OTSU) (AR_LABELING_THRESH_MODE_AUTO_ADAPTIVE)
-                           (AR_LABELING_THRESH_MODE_AUTO_BRACKETING));
+                           (AR_LABELING_THRESH_MODE_AUTO_BRACKETING) );
 
   //! Parameter \relates ARtoolkit
   JEVOIS_DECLARE_PARAMETER(threshmode, DictThreshMode, "Dictionary threshold mode to use, affects "

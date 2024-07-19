@@ -95,14 +95,14 @@
     registration with TDK InvenSense. We provide the following user-level functions in the command-line interface of
     JeVois to allow you to get/set raw registers of the IMU and DMP:
 
-    - setimureg <reg> <val> - set raw IMU register <reg> to value <val>
-    - getimureg <reg> - get value of raw IMU register <reg>
-    - setimuregs <reg> <num> <val1> ... <valn> - set array of raw IMU register values
-    - getimuregs <reg> <num> - get array of raw IMU register values
-    - setdmpreg <reg> <val> - set raw DMP register <reg> to value <val>
-    - getdmpreg <reg> - get value of raw DMP register <reg>
-    - setdmpregs <reg> <num> <val1> ... <valn> - set array of raw DMP register values
-    - getdmpregs <reg> <num> - get array of raw DMP register values
+    - setimureg \a reg \a val - set raw IMU register \a reg to value \a val
+    - getimureg \a reg - get value of raw IMU register \a reg
+    - setimuregs \a reg \a num \a val1 ... \a valn - set array of raw IMU register values
+    - getimuregs \a reg \a num - get array of raw IMU register values
+    - setdmpreg \a reg \a val - set raw DMP register \a reg to value \a val
+    - getdmpreg \a reg - get value of raw DMP register \a reg
+    - setdmpregs \a reg \a num \a val1 ... \a valn - set array of raw DMP register values
+    - getdmpregs \a reg \a num - get array of raw DMP register values
 
     The registers and values can be specified in decimal, hex (with prefix 0x), or octal (with prefix 0 - beware of this
     and be careful). The values returned are always in hex (with no prefix). Note that the above functions are not

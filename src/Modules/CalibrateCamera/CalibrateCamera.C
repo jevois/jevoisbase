@@ -31,82 +31,82 @@
 
 static jevois::ParameterCategory const ParamCateg("Camera Calibration Options");
 
-//! Enum for parameter \relates CameraCalibration
-JEVOIS_DEFINE_ENUM_CLASS(Pattern, (ChessBoard) (ChArUcoBoard) (CirclesGrid) (AsymmetricCirclesGrid) )
+//! Enum for parameter \relates CalibrateCamera
+JEVOIS_DEFINE_ENUM_CLASS(Pattern, (ChessBoard) (ChArUcoBoard) (CirclesGrid) (AsymmetricCirclesGrid) );
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(pattern, Pattern, "Type of calibration board pattern to use",
                          Pattern::ChessBoard, Pattern_Values, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(dictionary, aruco::Dict, "ArUco dictionary to use",
                                        aruco::Dict::D4X4_50, aruco::Dict_Values, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(squareSize, float, "Size of each tile (check) in user-chosen units (e.g., mm, inch, etc). The "
                          "unit used here is the one that will be used once calibrated to report 3D coordinates "
                          "of objects relative to the camera",
                          23.0f, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(markerSize, float, "ChArUco marker size in user-chosen units (e.g., mm, inch, "
                          "etc). The unit used here is the one that will be used once calibrated to report 3D "
                          "coordinates of objects relative to the camera",
                          27.0f, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER_WITH_CALLBACK(boardSize, cv::Size, "Board size [width height] in number of horizontal and "
                                        "vertical tiles/disks. (Note: for asymmetric circle grid, count the number of "
                                        "disks on each row, then the number of rows). The product width * height "
                                        "should be the total number of tiles/disks on the grid.)",
                                        { 11, 7 }, ParamCateg);
   
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(aspectRatio, float, "Fixed aspect ratio value to use when non-zero, or auto when 0.0",
                          0.0F, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(zeroTangentDist, bool, "Assume zero tangential distortion coefficients P1, P2 and do "
                          "not try to optimize them, i.e., assume board is exactly planar",
                          true, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(fixPrincipalPoint, bool, "Fix principal point at center, otherwise find its location",
                          true, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(fishEye, bool, "Use fisheye model. Should be true if using a wide-angle lens that "
                          "produces significant barrel distortion, otherwise false",
                          false, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(winSize, unsigned char, "Half of search window size for sub-pixel corner refinement",
                          11, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(fixK1, bool, "Fix (do not try to optimize) K1 radial distortion parameter",
                          false, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(fixK2, bool, "Fix (do not try to optimize) K2 radial distortion parameter",
                          false, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(fixK3, bool, "Fix (do not try to optimize) K3 radial distortion parameter",
                          false, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(showUndistorted, bool, "Once calibrated, show undistorted image instead of original capture",
                          false, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(grab, bool, "Grab one image, try to detect the calibration pattern, and add to list of "
                          "detected patterns so far. Click this for at least 5 images showing your calibration board "
                          "under various viewpoints. When enough boards have been successfully captured, click "
                          "'calibrate'",
                          false, ParamCateg);
 
-//! Parameter \relates CameraCalibration
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed boards so far. You first need to grab "
                          "enough good views of your calibration board before you can calibrate.",
                          false, ParamCateg);
@@ -126,7 +126,7 @@ JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed board
       parameter. The default lens is called "standard". For the resolution, edit videomappings.cfg and add a mode for
       the CalibrateCamera module that will use the same resolution as the one you want to use later for machine
       vision. Several commented-out examples are already in videomappings.cfg, so likely you can just uncomment one of
-      them. Then run the corresponding version of the CameraCalibration module.
+      them. Then run the corresponding version of the \jvmod{CalibrateCamera} module.
 
     - set the parameters to match the board type, board width and height in number of tiles, tile size in the unit that
       you want to later use to estimate distance to detected objects (e.g., in millimeters, inches, etc), and possibly

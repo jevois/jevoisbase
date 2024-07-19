@@ -93,7 +93,7 @@ JEVOIS_DECLARE_PARAMETER(netin, cv::Size, "Width and height (in pixels) of the n
     ---------------
 
     On every frame where detection results were obtained that are above \p thresh, this module sends a standardized 2D
-    message as specified in \ref UserSerialStyle:
+    message as specified in \ref UserSerialStyle
       + Serial message type: \b 2D
       + `id`: top-scoring category name of the recognized object, followed by ':' and the confidence score in percent
       + `x`, `y`, or vertices: standardized 2D coordinates of object center or corners

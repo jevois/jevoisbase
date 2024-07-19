@@ -1,4 +1,4 @@
-/*!@file Envision/env_image_ops.c Fixed-point integer math versions of some of our floating-point image functions */
+/*!@file env_image_ops.c Fixed-point integer math versions of some of our floating-point image functions */
 
 // //////////////////////////////////////////////////////////////////// //
 // The iLab Neuromorphic Vision C++ Toolkit - Copyright (C) 2000-2005   //

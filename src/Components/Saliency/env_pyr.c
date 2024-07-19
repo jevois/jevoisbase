@@ -1,4 +1,4 @@
-/*!@file Envision/env_pyr.c */
+/*!@file env_pyr.c */
 
 // //////////////////////////////////////////////////////////////////// //
 // The iLab Neuromorphic Vision C++ Toolkit - Copyright (C) 2000-2005   //
