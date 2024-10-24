@@ -82,7 +82,11 @@ class PyPostYolo:
                         "many only use one threshold confidence threshold (cthresh parameter). The YOLO "
                         "family is an example that uses both box and classification confidences",
                         15.0, pc)
-        
+
+        self.sigmoid = jevois.Parameter(self, 'sigmoid', 'bool',
+                                        "When true, apply sigmoid to class confidence scores",
+                                        False, pc)
+       
         # note: compared to the C++ code, only RAWYOLO detecttype is supported here.
         
     # ###################################################################################################
@@ -138,7 +142,8 @@ class PyPostYolo:
                                                   self.cthresh.get() * 0.01,
                                                   bw, bh,
                                                   self.classoffset.get(),
-                                                  self.maxnbox.get())
+                                                  self.maxnbox.get(),
+                                                  self.sigmoid.get())
         
         # Cleanup overlapping boxes:
         indices = cv2.dnn.NMSBoxes(boxes, confs, self.cthresh.get() * 0.01, self.nms.get() * 0.01)

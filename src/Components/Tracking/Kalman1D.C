@@ -21,7 +21,7 @@
 
 // ####################################################################################################
 Kalman1D::Kalman1D(std::string const & instance) :
-    jevois::Component(instance), itsKF(2, 1, 0), itsState(2, 1, CV_32F), itsProcessNoise(2, 1, CV_32F),
+    jevois::Component(instance), itsKF(2, 1, 0), itsProcessNoise(2, 1, CV_32F),
     itsMeasurement(1, 1, CV_32F), itsLatest(1, 1, CV_32F), itsFresh(false)
 {
   cv::setIdentity(itsKF.measurementMatrix);

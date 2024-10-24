@@ -32,7 +32,7 @@ YOLOv10n:
   detecttype: YOLOv10pp
   dthresh: 10.0
   cthresh: 10.0
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
 
 YOLOv7-Tiny:
   comment: "Resized 480x256 ONNX model, COCO classes"
@@ -43,7 +43,7 @@ YOLOv7-Tiny:
   detecttype: YOLO
   dthresh: 10.0
   cthresh: 10.0
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
 
 DamoYOLO-tinynasL20_T-320x192:
   comment: "Resized ONNX model by PINTO0309"
@@ -53,7 +53,7 @@ DamoYOLO-tinynasL20_T-320x192:
   postproc: Python
   pypost: "pydnn/post/PyPostDAMOyolo.py"
   model: "ort/detection/damoyolo_tinynasL20_T_192x320.onnx"
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
   cthresh: 25
   nms: 85
 
@@ -70,7 +70,7 @@ DamoYOLO-tinynasL20_T-320x192-Python:
   intensors: "NCHW:32F:1x3x192x320"
   postproc: Python
   pypost: "pydnn/post/PyPostDAMOyolo.py"
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
   cthresh: 25
   nms: 85
   # Sync processing required if network type is Python and preproc or postproc are Python too, as Python not re-entrant
@@ -84,7 +84,7 @@ DamoYOLO-tinynasL20_T-480x288:
   postproc: Python
   pypost: "pydnn/post/PyPostDAMOyolo.py"
   model: "ort/detection/damoyolo_tinynasL20_T_288x480.onnx"
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
   cthresh: 25
   nms: 85
 
@@ -96,7 +96,7 @@ DamoYOLO-tinynasL25_S-320x192:
   postproc: Python
   pypost: "pydnn/post/PyPostDAMOyolo.py"
   model: "ort/detection/damoyolo_tinynasL25_S_192x320.onnx"
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
   cthresh: 25
   nms: 85
 
@@ -108,7 +108,7 @@ DamoYOLO-tinynasL25_S-480x288:
   postproc: Python
   pypost: "pydnn/post/PyPostDAMOyolo.py"
   model: "ort/detection/damoyolo_tinynasL25_S_288x480.onnx"
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
   cthresh: 25
   nms: 85
 
@@ -120,7 +120,7 @@ DamoYOLO-tinynasL35_M-320x192:
   postproc: Python
   pypost: "pydnn/post/PyPostDAMOyolo.py"
   model: "ort/detection/damoyolo_tinynasL35_M_192x320.onnx"
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
   cthresh: 25
   nms: 85
 
@@ -132,7 +132,7 @@ DamoYOLO-tinynasL35_M-480x288:
   postproc: Python
   pypost: "pydnn/post/PyPostDAMOyolo.py"
   model: "ort/detection/damoyolo_tinynasL35_M_288x480.onnx"
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
   cthresh: 25
   nms: 85
 
@@ -196,7 +196,7 @@ YoloV8n-seg:
   model: "ort/segmentation/yolov8n-seg.onnx"
   postproc: Python
   pypost: "pydnn/post/PyPostYOLOv8seg.py"
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
 
 ####################################################################################################
 # Other models

@@ -3,6 +3,7 @@
 calibration_time: "Thu Jan  1 00:49:41 1970"
 sensor: ov9650
 lens: standard
+fisheye: 0
 image_width: 352
 image_height: 288
 camera_matrix: !!opencv-matrix

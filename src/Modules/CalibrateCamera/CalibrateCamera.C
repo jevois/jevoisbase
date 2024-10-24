@@ -96,6 +96,20 @@ JEVOIS_DECLARE_PARAMETER(fixK3, bool, "Fix (do not try to optimize) K3 radial di
                          false, ParamCateg);
 
 //! Parameter \relates CalibrateCamera
+JEVOIS_DECLARE_PARAMETER(fixK4, bool, "Fix (do not try to optimize) K4 radial distortion parameter",
+                         false, ParamCateg);
+
+//! Parameter \relates CalibrateCamera
+JEVOIS_DECLARE_PARAMETER(fixK5, bool, "Fix (do not try to optimize) K5 radial distortion parameter (not used "
+                         "by fisheye lenses)",
+                         false, ParamCateg);
+
+//! Parameter \relates CalibrateCamera
+JEVOIS_DECLARE_PARAMETER(fixK6, bool, "Fix (do not try to optimize) K6 radial distortion parameter (not used "
+                         "by fisheye lenses)",
+                         false, ParamCateg);
+
+//! Parameter \relates CalibrateCamera
 JEVOIS_DECLARE_PARAMETER(showUndistorted, bool, "Once calibrated, show undistorted image instead of original capture",
                          false, ParamCateg);
 
@@ -175,7 +189,8 @@ JEVOIS_DECLARE_PARAMETER(calibrate, bool, "Calibrate using all the grabbed board
 class CalibrateCamera : public jevois::Module,
                         public jevois::Parameter<pattern, dictionary, squareSize, markerSize, boardSize,
                                                  aspectRatio, zeroTangentDist, fixPrincipalPoint, winSize,
-                                                 fishEye, fixK1, fixK2, fixK3, showUndistorted, grab, calibrate>
+                                                 fishEye, fixK1, fixK2, fixK3, fixK4, fixK5, fixK6,
+                                                 showUndistorted, grab, calibrate>
 {
   public:
     // ####################################################################################################
@@ -203,7 +218,7 @@ class CalibrateCamera : public jevois::Module,
         std::vector<cv::Point2f> pointBuf;
         int chessBoardFlags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
 
-        // fast check erroneously fails with high distortions like fisheye
+        // Fast check erroneously fails with high distortions like fisheye
         if (fishEye::get() == false) chessBoardFlags |= cv::CALIB_CB_FAST_CHECK;
 
         // Find feature points:
@@ -320,15 +335,15 @@ class CalibrateCamera : public jevois::Module,
       {
         if (showUndistorted::get())
         {
-          cv::Mat temp = view.clone();
+          itsLastGoodView = cv::Mat();
           if (fishEye::get())
           {
             cv::Mat newCamMat;
             cv::fisheye::estimateNewCameraMatrixForUndistortRectify(itsCameraMatrix, itsDistCoeffs, itsImageSize,
                                                                     cv::Matx33d::eye(), newCamMat, 1);
-            cv::fisheye::undistortImage(temp, itsLastGoodView, itsCameraMatrix, itsDistCoeffs, newCamMat);
+            cv::fisheye::undistortImage(view, itsLastGoodView, itsCameraMatrix, itsDistCoeffs, newCamMat);
           }
-          else cv::undistort(temp, itsLastGoodView, itsCameraMatrix, itsDistCoeffs);
+          else cv::undistort(view, itsLastGoodView, itsCameraMatrix, itsDistCoeffs);
         }
         else itsLastGoodView = view;
       }
@@ -347,6 +362,7 @@ class CalibrateCamera : public jevois::Module,
         if (fixK1::get())             itsFlag |= cv::fisheye::CALIB_FIX_K1;
         if (fixK2::get())             itsFlag |= cv::fisheye::CALIB_FIX_K2;
         if (fixK3::get())             itsFlag |= cv::fisheye::CALIB_FIX_K3;
+        if (fixK4::get())             itsFlag |= cv::fisheye::CALIB_FIX_K4;
         if (fixPrincipalPoint::get()) itsFlag |= cv::fisheye::CALIB_FIX_PRINCIPAL_POINT;
       }
       else
@@ -357,6 +373,9 @@ class CalibrateCamera : public jevois::Module,
         if (fixK1::get())             itsFlag |= cv::CALIB_FIX_K1;
         if (fixK2::get())             itsFlag |= cv::CALIB_FIX_K2;
         if (fixK3::get())             itsFlag |= cv::CALIB_FIX_K3;
+        if (fixK4::get())             itsFlag |= cv::CALIB_FIX_K4;
+        if (fixK5::get())             itsFlag |= cv::CALIB_FIX_K5;
+        if (fixK6::get())             itsFlag |= cv::CALIB_FIX_K6;
       }
 
       std::vector<cv::Mat> rvecs, tvecs;
@@ -371,6 +390,7 @@ class CalibrateCamera : public jevois::Module,
         jevois::CameraCalibration calib;
         calib.sensor = engine()->camerasens::get();
         calib.lens = engine()->cameralens::get();
+        calib.fisheye = fishEye::get();
         calib.w = itsImageSize.width;
         calib.h = itsImageSize.height;
         calib.camMatrix = itsCameraMatrix;
@@ -602,7 +622,7 @@ class CalibrateCamera : public jevois::Module,
 
       // Detect/calibrate, will update itsCalibrated and itsLastGoodView:
       process_frame(cvimg); // fixme they want bgr!
-      
+
       // If we are now calibrated, show live view, possibly undistorted:
       if (itsCalibrated)
       {
@@ -699,17 +719,21 @@ class CalibrateCamera : public jevois::Module,
           ImGui::TextUnformatted("");
           ImGui::Separator();
           if (ImGui::Button("Grab")) grab::set(true);
+
           if (itsImagePoints.size() >= 5)
           {
-            ImGui::SameLine(); ImGui::TextUnformatted("        "); ImGui::SameLine();
+            ImGui::SameLine(); ImGui::TextUnformatted("   "); ImGui::SameLine();
             if (ImGui::Button("Calibrate now")) calibrate::set(true);
           }
+
+          ImGui::SameLine(); ImGui::TextUnformatted("   "); ImGui::SameLine();
+          if (ImGui::Button("Drop last grab") && itsImagePoints.empty() == false) itsImagePoints.pop_back();
         }
 
-        // Always show a start over button, except at the every beginning:
+        // Always show a start over button, except at the very beginning:
         if (itsReady)
         {
-          ImGui::SameLine(); ImGui::TextUnformatted("     "); ImGui::SameLine();
+          ImGui::SameLine(); ImGui::TextUnformatted("   "); ImGui::SameLine();
           if (ImGui::Button("Start over")) restart();
         }
         

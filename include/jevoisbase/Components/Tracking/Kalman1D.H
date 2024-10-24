@@ -80,8 +80,8 @@ class Kalman1D : public jevois::Component,
     void onParamChange(kalman1d::measnoise const & param, float const & newval) override;
     void onParamChange(kalman1d::postnoise const & param, float const & newval) override;
     
+    // state is (x, xdot)
     cv::KalmanFilter itsKF;
-    cv::Mat itsState; //!< (x, y, xdot, ydot)
     cv::Mat itsProcessNoise;
     cv::Mat itsMeasurement;
     cv::Mat itsLatest;

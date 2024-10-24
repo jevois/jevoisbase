@@ -24,109 +24,109 @@ MobileNetV3-1.0-224:
   model: "coral/classification/tf2_mobilenet_v3_edgetpu_1.0_224_ptq_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 MobileNetV2-1.0-224:
   postproc: Classify
   model: "coral/classification/mobilenet_v2_1.0_224_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 MobileNetV1-1.0-224:
   postproc: Classify
   model: "coral/classification/mobilenet_v1_1.0_224_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 EfficientNet-L:
   postproc: Classify
   model: "coral/classification/efficientnet-edgetpu-L_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x300x300x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 EfficientNet-M:
   postproc: Classify
   model: "coral/classification/efficientnet-edgetpu-M_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x240x240x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 EfficientNet-S:
   postproc: Classify
   model: "coral/classification/efficientnet-edgetpu-S_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 MobileNetV1-1.0-224-TF2:
   postproc: Classify
   model: "coral/classification/tf2_mobilenet_v1_1.0_224_ptq_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 MobileNetV2-1.0-224-TF2:
   postproc: Classify
   model: "coral/classification/tf2_mobilenet_v2_1.0_224_ptq_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 MobileNetV3-1.0-224-TF2:
   postproc: Classify
   model: "coral/classification/tf2_mobilenet_v3_edgetpu_1.0_224_ptq_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 MobileNetV2-iNat-Insects:
   postproc: Classify
   model: "coral/classification/mobilenet_v2_1.0_224_inat_insect_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
-  classes: "coral/classification/inat_insect_labels.txt"
+  classes: "dnn/labels/inat-insects.txt"
 
 MobileNetV2-iNat-Plants:
   postproc: Classify
   model: "coral/classification/mobilenet_v2_1.0_224_inat_plant_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
-  classes: "coral/classification/inat_plant_labels.txt"
+  classes: "dnn/labels/inat-plants.txt"
 
 MobileNetV2-iNat-Birds:
   postproc: Classify
   model: "coral/classification/mobilenet_v2_1.0_224_inat_bird_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
-  classes: "coral/classification/inat_bird_labels.txt"
+  classes: "dnn/labels/inat-birds.txt"
 
 Inception-V1:
   postproc: Classify
   model: "coral/classification/inception_v1_224_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 Inception-V2:
   postproc: Classify
   model: "coral/classification/inception_v2_224_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 Inception-V3:
   postproc: Classify
   model: "coral/classification/inception_v3_299_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x299x299x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 Inception-V4:
   postproc: Classify
   model: "coral/classification/inception_v4_299_quant_edgetpu.tflite"
   intensors: "NHWC:8U:1x299x299x3"
   rgb: false
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 Resnet-50:
   postproc: Classify
@@ -134,13 +134,13 @@ Resnet-50:
   intensors: "NHWC:8U:1x224x224x3"
   rgb: false
   classoffset: 1
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
 
 Popular-US-Products:
   postproc: Classify
   model: "coral/classification/tfhub_tf1_popular_us_products_ptq_fc_split_edgetpu.tflite"
   intensors: "NHWC:8U:1x224x224x3"
-  classes: "coral/classification/popular_us_products_V1_labelmap.csv"
+  classes: "dnn/labels/popular_us_products_V1_labelmap.csv"
 
 ####################################################################################################
 # Object detection models.
@@ -155,76 +155,76 @@ url: "https://coral.ai/models/object-detection/"
 #  model: "coral/detection/ssdlite_mobilenet_v2_coco_300_full_integer_quant_edgetpu.tflite"
 #  intensors: "NHWC:32F:1x300x300x3"
 #  outtensors: "32F:1x1917x4, 32F:1x1917x91"
-#  classes: "coral/detection/coco_labels.txt"
+#  classes: "dnn/labels/coco-coral.txt"
 
 #fixme this network produces a weird set of outputs, need custom postproc
 #YoloV4-Tiny-VOC:
 #  detecttype: TPUSSD
 #  model: "coral/detection/yolov4_tiny_voc_416x416_full_integer_quant_edgetpu.tflite"
 #  intensors: "NHWC:8U:1x416x416x3"
-#  classes: "darknet/yolo/data/voc.names"
+#  classes: "dnn/labels/pascal-voc.txt"
 
 MobileDetSSD-Coco:
   detecttype: TPUSSD
   model: "coral/detection/ssdlite_mobiledet_coco_qat_postprocess_edgetpu.tflite"
   intensors: "NHWC:8U:1x320x320x3"
-  classes: "coral/detection/coco_labels.txt"
+  classes: "dnn/labels/coco-coral.txt"
 
 MobileNetSSDv2-face:
   detecttype: TPUSSD
   model: "coral/detection/ssd_mobilenet_v2_face_quant_postprocess_edgetpu.tflite"
   intensors: "NHWC:8U:1x320x320x3"
-  classes: "opencv-dnn/detection/face.txt"
+  classes: "dnn/labels/face.txt"
   classoffset: 1
 
 MobileNetSSDv2-Coco:
   detecttype: TPUSSD
   model: "coral/detection/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite"
   intensors: "NHWC:8U:1x300x300x3"
-  classes: "coral/detection/coco_labels.txt"
+  classes: "dnn/labels/coco-coral.txt"
 
 MobileNetSSDv1-Coco:
   detecttype: TPUSSD
   model: "coral/detection/ssd_mobilenet_v1_coco_quant_postprocess_edgetpu.tflite"
   intensors: "NHWC:8U:1x300x300x3"
-  classes: "coral/detection/coco_labels.txt"
+  classes: "dnn/labels/coco-coral.txt"
 
 # boo, outputs are in wrong order, transposed, etc
 #MobileNetSSDFPNv1-Coco:
 #  detecttype: TPUSSD
 #  model: "coral/detection/tf2_ssd_mobilenet_v1_fpn_640x640_coco17_ptq_edgetpu.tflite"
 #  intensors: "NHWC:8U:1x640x640x3"
-#  classes: "coral/detection/coco_labels.txt"
+#  classes: "dnn/labels/coco-coral.txt"
 
 EfficientDetLite0-Coco:
   detecttype: TPUSSD
   model: "coral/detection/efficientdet_lite0_320_ptq_edgetpu.tflite"
   intensors: "NHWC:8U:1x320x320x3"
-  classes: "coral/detection/coco_labels.txt"
+  classes: "dnn/labels/coco-coral.txt"
 
 EfficientDetLite1-Coco:
   detecttype: TPUSSD
   model: "coral/detection/efficientdet_lite1_384_ptq_edgetpu.tflite"
   intensors: "NHWC:8U:1x384x384x3"
-  classes: "coral/detection/coco_labels.txt"
+  classes: "dnn/labels/coco-coral.txt"
 
 EfficientDetLite2-Coco:
   detecttype: TPUSSD
   model: "coral/detection/efficientdet_lite2_448_ptq_edgetpu.tflite"
   intensors: "NHWC:8U:1x448x448x3"
-  classes: "coral/detection/coco_labels.txt"
+  classes: "dnn/labels/coco-coral.txt"
 
 EfficientDetLite3-Coco:
   detecttype: TPUSSD
   model: "coral/detection/efficientdet_lite3_512_ptq_edgetpu.tflite"
   intensors: "NHWC:8U:1x512x512x3"
-  classes: "coral/detection/coco_labels.txt"
+  classes: "dnn/labels/coco-coral.txt"
 
 EfficientDetLite3x-Coco:
   detecttype: TPUSSD
   model: "coral/detection/efficientdet_lite3x_640_ptq_edgetpu.tflite"
   intensors: "NHWC:8U:1x640x640x3"
-  classes: "coral/detection/coco_labels.txt"
+  classes: "dnn/labels/coco-coral.txt"
 
 
 ####################################################################################################

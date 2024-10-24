@@ -33,11 +33,11 @@ SqueezeNet:
   model: "opencv-dnn/classification/squeezenet_v1.1.caffemodel"
   config: "opencv-dnn/classification/squeezenet_v1.1.prototxt"
   intensors: "NCHW:32F:1x3x227x227"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
 
 # Python version of SqueezeNet v1.1 from https://github.com/DeepScale/SqueezeNet
-SqueezeNet:
+SqueezeNet-python:
   comment: "Using Python pre/net/post"
   url: "https://github.com/DeepScale/SqueezeNet"
   processing: Sync # required if network type is Python and preproc or postproc are Python too
@@ -53,7 +53,7 @@ SqueezeNet:
   intensors: "NCHW:32F:1x3x227x227"
   postproc: Python
   pypost: "pydnn/post/PyPostClassify.py"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
 
 Inception-V3:
@@ -62,7 +62,7 @@ Inception-V3:
   rgb: false
   model: "openvino/classification/inception-v3/inception_v3_2016_08_28_frozen.pb"
   intensors: "NCHW:32F:1x3x299x299"
-  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+  classes: "dnn/labels/imagenet-slim.txt"
 
 GoogleNet:
   comment: "Caffe model"
@@ -73,7 +73,7 @@ GoogleNet:
   model: "opencv-dnn/classification/bvlc_googlenet.caffemodel"
   config: "opencv-dnn/classification/bvlc_googlenet.prototxt"
   intensors: "NCHW:32F:1x3x224x224"
-  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+  classes: "dnn/labels/imagenet-slim.txt"
   classoffset: 1
 
 ResNet-50-int8:
@@ -84,7 +84,7 @@ ResNet-50-int8:
   rgb: false
   model: "npu/classification/resnet50-v1-12-int8.onnx"
   intensors: "NCHW:32F:1x3x224x224"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
   softmax: true
 
@@ -93,6 +93,45 @@ ResNet-50-int8:
 ####################################################################################################
 
 postproc: Detect
+
+# We truncated this network using ONNX as shown in jevois.org/doc/UserDNNtips.html
+# Even though we specified the outputs in the order we wanted them during truncation, what we receive from the net
+# is in a different order; hence the outtransform below.
+yolo11n-512x288:
+  comment: "ONNX model exported with size 512x288 and truncated"
+  mean: "0 0 0"
+  scale: 0.00392
+  model: "opencv-dnn/detection/yolo11n-512x288-raw.onnx"
+  intensors: "NCHW:32F:1x3x288x512"
+  outtransform: "order(0, 3, 1, 4, 2, 5)"
+  detecttype: YOLOv8
+  classes: "dnn/labels/coco-labels.txt"
+
+YOLOv7-Tiny:
+  comment: "Resized 480x256 ONNX model, COCO classes"
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/307_YOLOv7"
+  mean: "0.0 0.0 0.0"
+  scale: 0.003921
+  model: "opencv-dnn/detection/yolov7-tiny_256x480.onnx"
+  intensors: "NCHW:32F:1x3x256x480"
+  detecttype: YOLO
+  dthresh: 10.0
+  cthresh: 10.0
+  classes: "dnn/labels/coco-labels.txt"
+
+# Works but way too slow...
+# FIXME does not work anymore, squished boxes
+#YOLOv5-COCO:
+#  comment "ONNX model, COCO classes"
+#  detecttype: YOLO
+#  model: "opencv-dnn/detection/yolov5-640x640.onnx"
+#  mean: "127.5 127.5 127.5"
+#  scale: 0.003921
+#  dthresh: 5.0
+#  cthresh: 5.0
+#  intensors: "NCHW:32F:1x3x640x640"
+#  classes: "dnn/labels/coco-labels.txt"
+
 
 # YOLO4 object detection family from Darknet (https://github.com/AlexeyAB/darknet)
 # YOLO object detection family from Darknet (https://pjreddie.com/darknet/yolo/)
@@ -105,7 +144,7 @@ YoloV3-Tiny:
   config: "darknet/yolo/cfg/yolov3-tiny.cfg"
   intensors: "NCHW:32F:1x3x416x416"
   detecttype: YOLO
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
 
 YoloV2-Tiny-VOC:
   comment: "Darknet model, Pascal VOC classes"
@@ -115,7 +154,7 @@ YoloV2-Tiny-VOC:
   config: "darknet/yolo/cfg/yolov2-tiny-voc.cfg"
   intensors: "NCHW:32F:1x3x416x416"
   detecttype: YOLO
-  classes: "darknet/yolo/data/voc.names"
+  classes: "dnn/labels/pascal-voc.txt"
 
 OpenCV-Face:
   comment: "Face detection, Caffe model"
@@ -126,7 +165,7 @@ OpenCV-Face:
   config: "opencv-dnn/detection/opencv_face_detector.prototxt"
   intensors: "NCHW:32F:1x3x300x300"
   detecttype: SSD
-  classes: "opencv-dnn/detection/face.txt"
+  classes: "dnn/labels/face.txt"
   classoffset: -1
   
 YOLOv3:
@@ -137,7 +176,7 @@ YOLOv3:
   config: "darknet/yolo/cfg/yolov3.cfg"
   intensors: "NCHW:32F:1x3x416x416"
   detecttype: YOLO
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
 
 MobileNet-SSD-VOC:
   comment: "Caffe model, Pascal VOC classes"
@@ -148,34 +187,9 @@ MobileNet-SSD-VOC:
   config: "opencv-dnn/detection/MobileNetSSD_deploy.prototxt"
   intensors: "NCHW:32F:1x3x300x300"
   detecttype: SSD
-  classes: "darknet/yolo/data/voc.names"
+  classes: "dnn/labels/pascal-voc.txt"
   classoffset: 1
   
-# Works but way too slow...
-# FIXME does not work anymore, squished boxes
-#YOLOv5-COCO:
-#  comment "ONNX model, COCO classes"
-#  detecttype: YOLO
-#  model: "opencv-dnn/detection/yolov5-640x640.onnx"
-#  mean: "127.5 127.5 127.5"
-#  scale: 0.003921
-#  dthresh: 5.0
-#  cthresh: 5.0
-#  intensors: "NCHW:32F:1x3x640x640"
-#  classes: "darknet/yolo/data/coco.names"
-
-YOLOv7-Tiny:
-  comment: "Resized 480x256 ONNX model, COCO classes"
-  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/307_YOLOv7"
-  mean: "0.0 0.0 0.0"
-  scale: 0.003921
-  model: "opencv-dnn/detection/yolov7-tiny_256x480.onnx"
-  intensors: "NCHW:32F:1x3x256x480"
-  detecttype: YOLO
-  dthresh: 10.0
-  cthresh: 10.0
-  classes: "darknet/yolo/data/coco.names"
-
 ####################################################################################################
 # Semantic segmentation models
 ####################################################################################################

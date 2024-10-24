@@ -37,6 +37,9 @@ class MyPostProc : public jevois::dnn::PostProcessorDetect
     { }
     
     // Get access to the detections. Beware that this is not thread safe.
+    /* Note: since this tutorial was written, we have added latestDetections() to PostProcessorDetect which
+       achieves the same thing as what we are doing here. We are keeping this tutorial as still a valid example of how
+       to use derived post-processor classes to customize DNN processing. */
     std::vector<jevois::ObjDetect> const & getDetections()
     { return itsDetections; }
 };

@@ -7,6 +7,7 @@ import ollama
 import cv2
 import os # to delete temp image
 import psutil
+import subprocess # for subprocess.run()
 
 ## Interact with a large-language model (LLM) or vision-language model (VLM) in a chat box
 #
@@ -87,12 +88,17 @@ class PyLLM:
         # Create some parameters that users can adjust in the GUI:
         self.pc = jevois.ParameterCategory("LLM Parameters", "")
 
+        models = []
+        avail_models = subprocess.run(["ollama", "list"], capture_output=True, encoding="ascii").stdout.split('\n')
+        for m in avail_models:
+            if m and m.split()[0] != "NAME": models.append(m.split()[0])
+        
         self.modelname = jevois.Parameter(self, 'modelname', 'str',
-                         'Model to use, must be one of the supported names at https://ollama.com and typically ' +
-                         '< 2B parameters. Working internet connection and space on microSD required to download ' +
-                         'a new model. You need to download the model from the ollama command-line first, before ' +
-                         'using it here.',
-                                          'tinydolphin', self.pc)
+                         'Model to use, one of:' + str(models) + '. Other models available at ' +
+                         'https://ollama.com, typically select one with < 2B parameters. Working internet connection ' +
+                         'and space on microSD required to download a new model. You need to download the model ' +
+                         'from the ollama command-line first, before using it here.',
+                                          'qwen2.5:0.5b', self.pc)
         self.modelname.setCallback(self.setModel);
         
     # ###################################################################################################

@@ -3,6 +3,7 @@
 calibration_time: "Mon Jul  8 12:37:05 2024"
 sensor: imx290
 lens: standard
+fisheye: 0
 image_width: 512
 image_height: 288
 camera_matrix: !!opencv-matrix

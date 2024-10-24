@@ -23,80 +23,91 @@ postproc: Classify
 comment: "Demo model from Hailo"
 url: "https://hailo.ai/devzone-model-zoo/clasification/"
 
+CAS-ViT-s:
+  model: "hailo/classification/cas_vit_s.hef"
+  classes: "dnn/labels/imagenet-coral.txt"
+  classoffset: 1
+  softmax: true
+
+DEIT-tiny:
+  model: "hailo/classification/deit_tiny.hef"
+  classes: "dnn/labels/imagenet-coral.txt"
+  classoffset: 1
+  softmax: true
+
 ResNext-50-32x4d:
   model: "hailo/classification/resnext50_32x4d.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
   softmax: true
 
 EfficientNet-Large:
   model: "hailo/classification/efficientnet_l.hef"
-  classes: "coral/classification/imagenet_labels.txt"
-
+  classes: "dnn/labels/imagenet-coral.txt"
+  extramodel: true
+  
 EfficientNet-Medium:
   model: "hailo/classification/efficientnet_m.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
+  extramodel: true
 
 EfficientNet-Small:
   mean: "127.5 127.5 127.5"
   scale: 0.0039215686
   model: "hailo/classification/efficientnet_s.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
+  extramodel: true
   
 EfficientNet-Lite4:
   model: "hailo/classification/efficientnet_lite4.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
 
 Hardnet68:
   model: "hailo/classification/hardnet68.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
   softmax: true
   
 Inception-v1:
   model: "hailo/classification/inception_v1.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
+  extramodel: true
   
 MobileNetV3:
   model: "hailo/classification/mobilenet_v3.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   
 ResNet-V1-50:
   postproc: Classify
   model: "hailo/classification/resnet_v1_50.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
   
 ResNet-V2-34:
   model: "hailo/classification/resnet_v2_34.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
   softmax: true
 
-ResNext50-32x4d:
-  model: "hailo/classification/resnext50_32x4d.hef"
-  classes: "coral/classification/imagenet_labels.txt"
-  classoffset: 1
-  softmax: true
-  
 SqueezeNet:
   model: "hailo/classification/squeezenet_v1.1.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
 
 # works but sometimes fails to load (memory issue likely)...
 ViT-Base:
   model: "hailo/classification/vit_base.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   mean: "128 128 128"
   scale: 0.007874
   classoffset: 1
   softmax: true
+  extramodel: true
 
 ViT-Small:
   model: "hailo/classification/vit_small_bn.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   mean: "128 128 128"
   scale: 0.007874
   classoffset: 1
@@ -104,11 +115,12 @@ ViT-Small:
 
 ViT-Tiny:
   model: "hailo/classification/vit_tiny.hef"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   mean: "128 128 128"
   scale: 0.007874
   classoffset: 1
   softmax: true
+  extramodel: true
 
 ####################################################################################################
 # Object detection models.
@@ -117,68 +129,61 @@ ViT-Tiny:
 postproc: Detect
 comment: "Demo model from Hailo"
 url: "https://hailo.ai/devzone-model-zoo/object-detection/"
+classes: "dnn/labels/coco-labels.txt"
 
-YOLOv5m:
-  detecttype: RAWYOLO
-  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
-  scale: 1.0
-  model: "hailo/detection/yolov5m_wo_spp_60p.hef"
-  classes: "darknet/yolo/data/coco.names"
-  scalexy: 2.0
-  sigmoid: false
-
-YOLOv3-tiny:
-  detecttype: RAWYOLO
-  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
-  model: "hailo/detection/tiny_yolov3.hef"
-  classes: "darknet/yolo/data/coco.names"
-
-# This network was converted to output 8 tensors, which our post-processor cannot handle
-# Try to re-convert but keep the usual 3 YOLO outputs
-#YOLOv4-tiny:
-#  detecttype: RAWYOLO
-#  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
-#  model: "hailo/detection/tiny_yolov4.hef"
-#  classes: "darknet/yolo/data/coco.names"
-
-# This network was converted to output 8 tensors, which our post-processor cannot handle
-# Try to re-convert but keep the usual 3 YOLO outputs
-#YOLOv3-416:
-#  detecttype: RAWYOLO
-#  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
-#  model: "hailo/detection/yolov3_gluon_416.hef"
-#  classes: "darknet/yolo/data/coco.names"
-
-YOLOv5s:
-  detecttype: RAWYOLO
-  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
-  model: "hailo/detection/yolov5s_wo_spp.hef"
-  classes: "darknet/yolo/data/coco.names"
-  scalexy: 2.0
-  sigmoid: false
-
-YOLOv5xs:
-  detecttype: RAWYOLO
-  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
-  model: "hailo/detection/yolov5xs_wo_spp.hef"
-  classes: "darknet/yolo/data/coco.names"
-  scalexy: 2.0
-  sigmoid: false
-
-# FIXME 9 blobs
-#YOLOv6n:
-#  detecttype: RAWYOLO
-#  model: "hailo/detection/yolov6n.hef"
-#  classes: "darknet/yolo/data/coco.names"
-#  scalexy: 2.0
+YOLO11n-1024x576:
+  detecttype: YOLOv8t
 #  sigmoid: false
+  model: "hailo/detection/yolo11n-1024x576.hef"
+  classes: "dnn/labels/coco-labels.txt"
+
+YOLOv8n:
+  model: "hailo/detection/yolov8n.hef"
+  comment: "Demo model from Hailo"
+  url: "https://hailo.ai/devzone-model-zoo/object-detection/"
+  detecttype: YOLOv8t
+  sigmoid: false
+
+YOLOv8s:
+  detecttype: YOLOv8t
+  sigmoid: false
+  model: "hailo/detection/yolov8s.hef"
+  classes: "dnn/labels/coco-labels.txt"
+
+YOLOv8m:
+  detecttype: YOLOv8t
+  sigmoid: false
+  model: "hailo/detection/yolov8m.hef"
+  classes: "dnn/labels/coco-labels.txt"
+
+YOLOv8l:
+  detecttype: YOLOv8t
+  sigmoid: false
+  model: "hailo/detection/yolov8l.hef"
+  classes: "dnn/labels/coco-labels.txt"
+
+# outputs are not in large-to-small order somehow, handled by outtransform
+YOLOv8x:
+  detecttype: YOLOv8t
+  sigmoid: false
+  outtransform: "order(2,3,4,5,0,1)"
+  model: "hailo/detection/yolov8x.hef"
+  classes: "dnn/labels/coco-labels.txt"
+
+YOLOv7-tiny:
+  detecttype: RAWYOLO
+  anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
+  model: "hailo/detection/yolov7_tiny.hef"
+  classes: "dnn/labels/coco-labels.txt"
+  scalexy: 2.0
+  sigmoid: false
 
 YOLOv7:
   url: "https://github.com/WongKinYiu/yolov7"
   detecttype: RAWYOLO
   anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
   model: "hailo/detection/yolov7.hef"
-  classes: "darknet/yolo/data/coco.names"
+  classes: "dnn/labels/coco-labels.txt"
   scalexy: 2.0
   sigmoid: false
 
@@ -187,150 +192,214 @@ YOLOv7:
 #  detecttype: RAWYOLO
 #  anchors: "19,27, 44,40, 38,94;   96,68, 86,152, 180,137;   140,301, 303,264, 238,542;  436,615, 739,380, 925,792"
 #  model: "hailo/detection/yolov7e6.hef"
-#  classes: "darknet/yolo/data/coco.names"
+#  classes: "dnn/labels/coco-labels.txt"
 #  scalexy: 2.0
 #  sigmoid: false
 
-YOLOv7-tiny:
+YOLOv5xs:
   detecttype: RAWYOLO
-  anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
-  model: "hailo/detection/yolov7_tiny.hef"
-  classes: "darknet/yolo/data/coco.names"
+  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
+  model: "hailo/detection/yolov5xs_wo_spp.hef"
+  classes: "dnn/labels/coco-labels.txt"
+  scalexy: 2.0
+  sigmoid: false
+  extramodel: true
+
+YOLOv5s:
+  detecttype: RAWYOLO
+  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
+  model: "hailo/detection/yolov5s_wo_spp.hef"
+  classes: "dnn/labels/coco-labels.txt"
+  scalexy: 2.0
+  sigmoid: false
+  extramodel: true
+
+YOLOv5m:
+  detecttype: RAWYOLO
+  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
+  scale: 1.0
+  model: "hailo/detection/yolov5m_wo_spp_60p.hef"
+  classes: "dnn/labels/coco-labels.txt"
   scalexy: 2.0
   sigmoid: false
 
-# split outputs, need custom post processor...
-# YOLOv8l:
-#   detecttype: RAWYOLO
-#   anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
-#   model: "hailo/detection/yolov8l.hef"
-#   classes: "darknet/yolo/data/coco.names"
-#   scalexy: 2.0
-#   sigmoid: false
+YOLOv3-tiny:
+  detecttype: RAWYOLO
+  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
+  model: "hailo/detection/tiny_yolov3.hef"
+  classes: "dnn/labels/coco-labels.txt"
 
-# YOLOv8m:
-#   detecttype: RAWYOLO
-#   anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
-#   model: "hailo/detection/yolov8m.hef"
-#   classes: "darknet/yolo/data/coco.names"
-#   scalexy: 2.0
-#   sigmoid: false
+#YOLOv4-tiny:
+#  outtransform: FIXME
+#  detecttype: RAWYOLO
+#  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
+#  model: "hailo/detection/tiny_yolov4.hef"
+#  classes: "dnn/labels/coco-labels.txt"
 
-# YOLOv8n:
-#   detecttype: RAWYOLO
-#   anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
-#   model: "hailo/detection/yolov8n.hef"
-#   classes: "darknet/yolo/data/coco.names"
-#   scalexy: 2.0
-#   sigmoid: false
+#YOLOv3-416:
+#  outtransform: FIXME
+#  detecttype: RAWYOLO
+#  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
+#  model: "hailo/detection/yolov3_gluon_416.hef"
+#  classes: "dnn/labels/coco-labels.txt"
 
-# YOLOv8s:
-#   detecttype: RAWYOLO
-#   anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
-#   model: "hailo/detection/yolov8s.hef"
-#   classes: "darknet/yolo/data/coco.names"
-#   scalexy: 2.0
-#   sigmoid: false
-
-# YOLOv8x:
-#   detecttype: RAWYOLO
-#   anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
-#   model: "hailo/detection/yolov8x.hef"
-#   classes: "darknet/yolo/data/coco.names"
-#   scalexy: 2.0
-#   sigmoid: false
+#YOLOv6n:
+#  detecttype: YOLOv8t
+#  model: "hailo/detection/yolov6n.hef"
+#  classes: "dnn/labels/coco-labels.txt"
+#  sigmoid: false
 
 # DamoYOLO-tinynasL20_T:
 #   postproc: Python
 #   pypost: "pydnn/post/PyPostDAMOyolo.py"
 #   model: "hailo/detection/damoyolo_tinynasL20_T.hef"
-#   classes: "darknet/yolo/data/coco.names"
+#   classes: "dnn/labels/coco-labels.txt"
 
 # DamoYOLO-tinynasL25_S:
 #   postproc: Python
 #   pypost: "pydnn/post/PyPostDAMOyolo.py"
 #   model: "hailo/detection/damoyolo_tinynasL25_S.hef"
-#   classes: "darknet/yolo/data/coco.names"
+#   classes: "dnn/labels/coco-labels.txt"
 
 # DamoYOLO-tinynasL35_M:
 #   postproc: Python
 #   pypost: "pydnn/post/PyPostDAMOyolo.py"
 #   model: "hailo/detection/damoyolo_tinynasL35_M.hef"
-#   classes: "darknet/yolo/data/coco.names"
+#   classes: "dnn/labels/coco-labels.txt"
 
 # Need a post-processor...
 # CenterNet-ResNet-v1-18:
 #   model: "hailo/detection/centernet_resnet_v1_18_postprocess.hef"
-#   classes: "darknet/yolo/data/coco.names"
+#   classes: "dnn/labels/coco-labels.txt"
 
 # CenterNet-ResNet-v1-50:
 #   model: "hailo/detection/centernet_resnet_v1_50_postprocess.hef"
-#   classes: "darknet/yolo/data/coco.names"
+#   classes: "dnn/labels/coco-labels.txt"
 
-# Need a post-processor...
-# Yolox-l-leaky:
-#   model: "hailo/detection/yolox_l_leaky.hef"
-#   classes: "darknet/yolo/data/coco.names"
+Yolox-s-leaky:
+  model: "hailo/detection/yolox_s_leaky.hef"
+  detecttype: YOLOX
+  classes: "dnn/labels/coco-labels.txt"
 
-# Yolox-s-leaky:
-#   model: "hailo/detection/yolox_s_leaky.hef"
-#   classes: "darknet/yolo/data/coco.names"
+Yolox-tiny:
+  model: "hailo/detection/yolox_tiny.hef"
+  detecttype: YOLOX
+  classes: "dnn/labels/coco-labels.txt"
 
-# Yolox-s-wide-leaky:
-#   model: "hailo/detection/yolox_s_wide_leaky.hef"
-#   classes: "darknet/yolo/data/coco.names"
+Yolox-s-wide-leaky:
+  model: "hailo/detection/yolox_s_wide_leaky.hef"
+  detecttype: YOLOX
+  classes: "dnn/labels/coco-labels.txt"
 
-# Yolox-tiny:
-#   model: "hailo/detection/yolox_tiny.hef"
-#   classes: "darknet/yolo/data/coco.names"
+yolov9s-headpose-1024x576:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/458_YOLOv9-Discrete-HeadPose-Yaw"
+  model: "hailo/detection/yolov9s-det-headpose-1024x576.hef"
+  detecttype: YOLOv8t
+  sigmoid: false
+  classes: "dnn/labels/discrete-headpose.txt"
 
-# split outputs, need a postproc
-#YOLOv9c:
-#  detecttype: RAWYOLO
-#  anchors: "12,16, 19,36, 40,28;   36,75, 76,55, 72,146;   142,110, 192,243, 459,401"
-#  model: "hailo/detection/yolov9c.hef"
-#  classes: "darknet/yolo/data/coco.names"
-#  scalexy: 2.0
-#  sigmoid: false
+unset: classes
+
+####################################################################################################
+# Object detection with instance segmentation (object masks)
+####################################################################################################
+
+YOLOv8n-seg:
+  model: "hailo/detection/yolov8n_seg.hef"
+  sigmoid: false
+  detecttype: YOLOv8segt
+  classes: "dnn/labels/coco-labels.txt"
+  # mask protos is 4th output, should be last, re-order the outputs:
+  outtransform: "order(0, 1, 2, 4, 5, 6, 7, 8, 9, 3)"
+
+YOLOv8m-seg:
+  model: "hailo/detection/yolov8m_seg.hef"
+  sigmoid: false
+  detecttype: YOLOv8segt
+  classes: "dnn/labels/coco-labels.txt"
+  # mask protos is 4th output, should be last, re-order the outputs:
+  outtransform: "order(0, 1, 2, 4, 5, 6, 7, 8, 9, 3)"
 
 ####################################################################################################
 # Semantic segmentation models
 ####################################################################################################
 
 postproc: Segment
-dequant: false
 comment: "Demo model from Hailo"
 url: "https://hailo.ai/devzone-model-zoo/segmentation/"
 
-# split outputs, need a post-processor
-#YoloV8n-seg:
-#  segtype: ClassesHWC
-#  model: "hailo/segmentation/yolov8n_seg.hef"
+Unet-MobileNetV2:
+  segtype: ClassesHWC
+  dequant: false
+  model: "hailo/segmentation/unet_mobilenet_v2.hef"
 
 DeepLabV3-MobileNetV2:
   segtype: ClassesHWC
+  dequant: false
   model: "hailo/segmentation/deeplab_v3_mobilenet_v2.hef"
 
 DeepLabV3-MobileNetV2-NoDilation:
   segtype: ArgMax
+  dequant: false
   model: "hailo/segmentation/deeplab_v3_mobilenet_v2_wo_dilation.hef"
 
 stdc1-cityscapes:
   segtype: ArgMax
+  dequant: false
   model: "hailo/segmentation/stdc1.hef"
+
+unset: postproc
+unset: comment
+unset: url
+
+####################################################################################################
+# Pose models
+####################################################################################################
+
+postproc: Pose
+
+Yolov8s-pose:
+  comment: "Human pose/skeleton detection"
+  url: "https://github.com/hailo-ai/hailo_model_zoo/blob/master/docs/public_models/HAILO8/HAILO8_pose_estimation.rst"
+  model: "hailo/pose/yolov8s_pose.hef"
+  posetype: YOLOv8t
+  skeleton: "dnn/skeletons/Coco17.yml"
+  sigmoid: true
+  cthresh: 60.0
+  nms: 70.0
+  classes: "dnn/labels/person.txt"
+
+Yolov8m-pose:
+  comment: "Human pose/skeleton detection"
+  url: "https://github.com/hailo-ai/hailo_model_zoo/blob/master/docs/public_models/HAILO8/HAILO8_pose_estimation.rst"
+  model: "hailo/pose/yolov8m_pose.hef"
+  posetype: YOLOv8t
+  skeleton: "dnn/skeletons/Coco17.yml"
+  sigmoid: true
+  cthresh: 60.0
+  nms: 70.0
+  classes: "dnn/labels/person.txt"
+  
+Yolov8m-pose-hailopp:
+  comment: "Human pose/skeleton detection, using post-processing code from Hailo (slower)"
+  url: "https://github.com/hailo-ai/hailo_model_zoo/blob/master/docs/public_models/HAILO8/HAILO8_pose_estimation.rst"
+  model: "hailo/pose/yolov8m_pose.hef"
+  dequant: false
+  postproc: Pose
+  posetype: YOLOv8HAILO
+  cthresh: 60.0
+  nms: 70.0
+
+unset: postproc
 
 ####################################################################################################
 # Other models
 ####################################################################################################
 
-postproc: Segment
-dequant: false
-comment: "Demo model from Hailo"
-
 FastDepth:
   url: "https://hailo.ai/devzone-model-zoo/depth-estimation/"
+  comment: "Demo model from Hailo"
   postproc: Python
   pypost: "pydnn/post/PyPostDepth.py"
   model: "hailo/other/fast_depth.hef"
-  dequant: true
-  
+

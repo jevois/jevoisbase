@@ -11,8 +11,12 @@
 # Global defaults for all models in this file
 ####################################################################################################
 
+# These defaults may be overriden by specific models:
 preproc: Blob
 nettype: NPU
+comment: "Converted using JeVois NPU SDK and Asymmetric Affine quant"
+mean: "0 0 0"
+scale: 0.003921568393707275
 
 ####################################################################################################
 # Image classification models.
@@ -20,96 +24,301 @@ nettype: NPU
 
 postproc: Classify
 
+MobileNetV1-uint8:
+  comment: "Model from Khadas KSNN examples, TFlite origin model"
+  model: "npu/classification/mobilenet_v1_uint8.nb"
+  library: "npu/classification/libnn_mobilenet_v1_uint8.so"
+  classes: "dnn/labels/imagenet-coral.txt"
+  processing: Sync
+  extramodel: true
+  
+MobileNet-V1:
+  model: "npu/classification/mobilenet_tf.nb"
+  intensors: "NHWC:8S:1x224x224x3:DFP:7"
+  outtensors: "16F:1x1001"
+  classes: "dnn/labels/imagenet-coral.txt"
+  processing: Sync
+  extramodel: true
+  
+MobileNet-V2:
+  comment: "Model from Khadas KSNN examples, Caffe origin model"
+  model: "npu/classification/mobilenet_v2_uint8.nb"
+  library: "npu/classification/libnn_mobilenet_v2_uint8.so"
+  classes: "dnn/labels/imagenet-coral.txt"
+  processing: Sync
+  classoffset: 1
+
+ResNet18-uint8:
+  comment: "Model from Khadas KSNN examples, PyTorch origin model"
+  model: "npu/classification/resnet18_uint8.nb"
+  library: "npu/classification/libnn_resnet18_uint8.so"
+  classes: "dnn/labels/imagenet-coral.txt"
+  classoffset: 1
+  processing: Sync
+  softmax: true
+
 Inception-V3:
   comment: "From the Amlogic/VeriSilicon NPU SDK"
   model: "npu/classification/inception_v3.nb"
   intensors: "NHWC:8U:1x299x299x3:AA:0.0078125:128"
   outtensors: "16F:1x1001"
-  classes: "coral/classification/imagenet_labels.txt"
-
-MobileNet-V1:
-  mean: "0 0 0"
-  model: "npu/classification/mobilenet_tf.nb"
-  intensors: "NHWC:8S:1x224x224x3:DFP:7"
-  outtensors: "16F:1x1001"
-  classes: "coral/classification/imagenet_labels.txt"
-
+  classes: "dnn/labels/imagenet-coral.txt"
+  processing: Sync
+  extramodel: true
+  
+Xception:
+  comment: "Model from Khadas KSNN examples, Keras origin model"
+  model: "npu/classification/xception_uint8.nb"
+  library: "npu/classification/libnn_xception_uint8.so"
+  classes: "dnn/labels/imagenet-coral.txt"
+  extramodel: true
+  
 ResNet-50-int8:
   comment: "Resnet-50 on NPU via TIM-VX"
   url: "https://github.com/opencv/opencv_zoo/blob/master/README.md"
   mean: "123.675 116.280 103.530"
   stdev: "0.229 0.224 0.225"
-  scale: 0.003921568393707275
   rgb: false
   nettype: OpenCV
   backend: TimVX
   target: NPU
   model: "npu/classification/resnet50-v1-12-int8.onnx"
   intensors: "NCHW:32F:1x3x224x224"
-  classes: "coral/classification/imagenet_labels.txt"
+  classes: "dnn/labels/imagenet-coral.txt"
   classoffset: 1
   softmax: true
 
+# Graph fails to verify and then fails to run... May need to convert again
+#ResNet50v2-uint8:
+#  comment: "Model from Khadas KSNN examples, ONNX origin model"
+#  model: "npu/classification/resnet50v2_uint8.nb"
+#  library: "npu/classification/libnn_xception_uint8.so"
+#  classes: "dnn/labels/imagenet-coral.txt"
+#  verifygraph: false
+ 
+unset: postproc
 
 ####################################################################################################
 # Object detection models.
 ####################################################################################################
 
+# -------------------- YOLOv8/v9/v10/11 on COCO
 postproc: Detect
+detecttype: YOLOv8
+nmsperclass: true
+classes: "dnn/labels/coco-labels.txt"
+
+yolo11n-512x288:
+  model: "npu/detection/yolo11n-512x288.nb"
+  library: "npu/detection/libnn_yolo11n-512x288.so"
+  processing: Sync
+
+yolov10n-512x288:
+  model: "npu/detection/yolov10n-512x288.nb"
+  library: "npu/detection/libnn_yolov10n-512x288.so"
+  processing: Sync
+
+yolov9t-512x288:
+  model: "npu/detection/yolov9t-512x288.nb"
+  library: "npu/detection/libnn_yolov9t-512x288.so"
+  processing: Sync
+
+yolov8n-512x288:
+  model: "npu/detection/yolov8n-512x288.nb"
+  library: "npu/detection/libnn_yolov8n-512x288.so"
+  processing: Sync
+
+yolo11s-512x288:
+  model: "npu/detection/yolo11s-512x288.nb"
+  library: "npu/detection/libnn_yolo11s-512x288.so"
+
+yolov10s-512x288:
+  model: "npu/detection/yolov10s-512x288.nb"
+  library: "npu/detection/libnn_yolov10s-512x288.so"
+
+yolov9s-512x288:
+  model: "npu/detection/yolov9s-512x288.nb"
+  library: "npu/detection/libnn_yolov9s-512x288.so"
+
+yolov8s-512x288:
+  model: "npu/detection/yolov8s-512x288.nb"
+  library: "npu/detection/libnn_yolov8s-512x288.so"
+
+yolo11m-512x288:
+  model: "npu/detection/yolo11m-512x288.nb"
+  library: "npu/detection/libnn_yolo11m-512x288.so"
+  extramodel: true
+
+yolov10m-512x288:
+  model: "npu/detection/yolov10m-512x288.nb"
+  library: "npu/detection/libnn_yolov10m-512x288.so"
+
+yolov9m-512x288:
+  model: "npu/detection/yolov9m-512x288.nb"
+  library: "npu/detection/libnn_yolov9m-512x288.so"
+
+yolov8m-512x288:
+  model: "npu/detection/yolov8m-512x288.nb"
+  library: "npu/detection/libnn_yolov8m-512x288.so"
+
+yolo11n-1024x576:
+  model: "npu/detection/yolo11n-1024x576.nb"
+  library: "npu/detection/libnn_yolo11n-1024x576.so"
+
+yolov10n-1024x576:
+  model: "npu/detection/yolov10n-1024x576.nb"
+  library: "npu/detection/libnn_yolov10n-1024x576.so"
+
+yolov9t-1024x576:
+  model: "npu/detection/yolov9t-1024x576.nb"
+  library: "npu/detection/libnn_yolov9t-1024x576.so"
+
+yolov8n-1024x576:
+  model: "npu/detection/yolov8n-1024x576.nb"
+  library: "npu/detection/libnn_yolov8n-1024x576.so"
+
+yolo11s-1024x576:
+  model: "npu/detection/yolo11s-1024x576.nb"
+  library: "npu/detection/libnn_yolo11s-1024x576.so"
+
+yolov10s-1024x576:
+  model: "npu/detection/yolov10s-1024x576.nb"
+  library: "npu/detection/libnn_yolov10s-1024x576.so"
+
+yolov9s-1024x576:
+  model: "npu/detection/yolov9s-1024x576.nb"
+  library: "npu/detection/libnn_yolov9s-1024x576.so"
+
+yolov8s-1024x576:
+  model: "npu/detection/yolov8s-1024x576.nb"
+  library: "npu/detection/libnn_yolov8s-1024x576.so"
+
+yolo11m-1024x576:
+  model: "npu/detection/yolo11m-1024x576.nb"
+  library: "npu/detection/libnn_yolo11m-1024x576.so"
+  
+yolov10m-1024x576:
+  model: "npu/detection/yolov10m-1024x576.nb"
+  library: "npu/detection/libnn_yolov10m-1024x576.so"
+
+yolov9m-1024x576:
+  model: "npu/detection/yolov9m-1024x576.nb"
+  library: "npu/detection/libnn_yolov9m-1024x576.so"
+
+yolov8m-1024x576:
+  model: "npu/detection/yolov8m-1024x576.nb"
+  library: "npu/detection/libnn_yolov8m-1024x576.so"
+
+# Output tensors are combined, with first classes and then DFL boxes
+yolov8n-ksnn:
+  comment: "From Khadas KSNN examples, combined outputs, low accuracy"
+  url: "https://docs.khadas.com/products/sbc/vim3/npu/ksnn/demos/yolov8n"
+  model: "npu/detection/yolov8n_uint8.nb"
+  library: "npu/detection/libnn_yolov8n_uint8.so"
+  outtransform: "split(*,1,80,64); order(1,0,3,2,5,4)"
+
+# Note: this would also work, but slower due to transpose
+#yolov8n-ksnn-b:
+#  comment: "From Khadas KSNN examples, combined outputs, low accuracy"
+#  url: "https://docs.khadas.com/products/sbc/vim3/npu/ksnn/demos/yolov8n"
+#  model: "npu/detection/yolov8n_uint8.nb"
+#  library: "npu/detection/libnn_yolov8n_uint8.so"
+#  detecttype: YOLOv8t
+#  outtransform: "split(*,1,80,64); order(1,0,3,2,5,4); transpose(*,0,2,3,1)"
+
+# -------------------- YOLOv9 on custom datasets
+
+# Converted with: ./convert --model-name yolov9_n_wholebody17_0100_1x3x576x1024.onnx --platform onnx --model
+#   yolov9_n_wholebody17_0100_1x3x576x1024.onnx --mean-values '0 0 0 0.003921568393707275' --quantized-dtype
+#   asymmetric_affine --source-files dataset-hand.txt --kboard VIM3 --print-level 1 --outputs
+#   "'/model.22/cv2.0/cv2.0.2/Conv_output_0 /model.22/cv3.0/cv3.0.2/Conv_output_0 /model.22/cv2.1/cv2.1.2/Conv_output_0
+#   /model.22/cv3.1/cv3.1.2/Conv_output_0 /model.22/cv2.2/cv2.2.2/Conv_output_0 /model.22/cv3.2/cv3.2.2/Conv_output_0'"
+yolov9-n-wholebody17-1024x576:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/457_YOLOv9-Wholebody17"
+  model: "npu/detection/yolov9_n_wholebody17_0100_1x3x576x1024.nb"
+  library: "npu/detection/libnn_yolov9_n_wholebody17_0100_1x3x576x1024.so"
+  classes: "dnn/labels/wholebody17.txt"
+  cthresh: 60.0
+
+# Converted with: ./convert --model-name yolov9_n_wholebody15_0145_1x3x576x1024.onnx --platform onnx --model
+#   yolov9_n_wholebody15_0145_1x3x576x1024.onnx --mean-values '0 0 0 0.003921568393707275' --quantized-dtype
+#   asymmetric_affine --source-files dataset-hand.txt --kboard VIM3 --print-level 1 --outputs
+#   "'/model.22/cv2.0/cv2.0.2/Conv_output_0 /model.22/cv3.0/cv3.0.2/Conv_output_0 /model.22/cv2.1/cv2.1.2/Conv_output_0
+#   /model.22/cv3.1/cv3.1.2/Conv_output_0 /model.22/cv2.2/cv2.2.2/Conv_output_0 /model.22/cv3.2/cv3.2.2/Conv_output_0'"
+yolov9-n-wholebody15-1024x576:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/456_YOLOv9-Wholebody15"
+  model: "npu/detection/yolov9_n_wholebody15_0145_1x3x576x1024.nb"
+  library: "npu/detection/libnn_yolov9_n_wholebody15_0145_1x3x576x1024.so"
+  classes: "dnn/labels/wholebody15.txt"
+  cthresh: 60.0
+
+# Converted with: ./convert --model-name yolov9_n_wholebody13_0245_1x3x576x1024.onnx --platform onnx --model
+#   yolov9_n_wholebody13_0245_1x3x576x1024.onnx --mean-values '0 0 0 0.003921568393707275' --quantized-dtype
+#   asymmetric_affine --source-files dataset-hand.txt --kboard VIM3 --print-level 1 --outputs
+#   "'/model.22/cv2.0/cv2.0.2/Conv_output_0 /model.22/cv3.0/cv3.0.2/Conv_output_0 /model.22/cv2.1/cv2.1.2/Conv_output_0
+#   /model.22/cv3.1/cv3.1.2/Conv_output_0 /model.22/cv2.2/cv2.2.2/Conv_output_0 /model.22/cv3.2/cv3.2.2/Conv_output_0'"
+yolov9-n-wholebody13-1024x576:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/454_YOLOv9-Wholebody13"
+  model: "npu/detection/yolov9_n_wholebody13_0245_1x3x576x1024.nb"
+  library: "npu/detection/libnn_yolov9_n_wholebody13_0245_1x3x576x1024.so"
+  classes: "dnn/labels/wholebody13.txt"
+  cthresh: 60.0
+
+# Converted with: ./convert --model-name yolov9_n_gender_0245_1x3x576x1024.onnx --platform onnx --model
+#   yolov9_n_gender_0245_1x3x576x1024.onnx --mean-values '0 0 0 0.003921568393707275' --quantized-dtype
+#   asymmetric_affine --source-files dataset-hand.txt --kboard VIM3 --print-level 1 --outputs
+#   "'/model.22/cv2.0/cv2.0.2/Conv_output_0 /model.22/cv3.0/cv3.0.2/Conv_output_0 /model.22/cv2.1/cv2.1.2/Conv_output_0
+#   /model.22/cv3.1/cv3.1.2/Conv_output_0 /model.22/cv2.2/cv2.2.2/Conv_output_0 /model.22/cv3.2/cv3.2.2/Conv_output_0'"
+yolov9-n-gender-1024x576:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/455_YOLOv9-Gender"
+  model: "npu/detection/yolov9_n_gender_0245_1x3x576x1024.nb"
+  library: "npu/detection/libnn_yolov9_n_gender_0245_1x3x576x1024.so"
+  classes: "dnn/labels/gender.txt"
+  cthresh: 60.0
+
+yolov9n-headpose-1024x576:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/458_YOLOv9-Discrete-HeadPose-Yaw"
+  model: "npu/detection/yolov9n-det-headpose-1024x576.nb"
+  library: "npu/detection/libnn_yolov9n-det-headpose-1024x576.so"
+  comment: "Converted using JeVois NPU SDK and Asymmetric Affine quant"
+  classes: "dnn/labels/discrete-headpose.txt"
+
+yolov9s-headpose-1024x576:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/458_YOLOv9-Discrete-HeadPose-Yaw"
+  model: "npu/detection/yolov9s-det-headpose-1024x576.nb"
+  library: "npu/detection/libnn_yolov9s-det-headpose-1024x576.so"
+  comment: "Converted using JeVois NPU SDK and Asymmetric Affine quant"
+  classes: "dnn/labels/discrete-headpose.txt"
+
+yolov9s-headpose-480x288:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/458_YOLOv9-Discrete-HeadPose-Yaw"
+  model: "npu/detection/yolov9s-det-headpose-480x288.nb"
+  library: "npu/detection/libnn_yolov9s-det-headpose-480x288.so"
+  comment: "Converted using JeVois NPU SDK and Asymmetric Affine quant"
+  classes: "dnn/labels/discrete-headpose.txt"
+
+
+# -------------------- Older YOLOv2/v3/v4/v5/v7/misc
 detecttype: RAWYOLO
-mean: "0 0 0"
 
-Yolo-Face-DFP:
-  comment: "From the Amlogic/VeriSilicon NPU SDK"
-  model: "npu/detection/yolo_face_88.nb"
-  intensors: "NCHW:8S:1x3x416x416:DFP:7"
-  outtensors: "8S:1x30x13x13:DFP:2"
-  anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
-  classes: "opencv-dnn/detection/face.txt"
-
-YoloV3-Tiny-DFP:
-  comment: "From the Amlogic/VeriSilicon NPU SDK"
-  model: "npu/detection/yolotiny_88.nb"
-  intensors: "NCHW:8S:1x3x416x416:DFP:7"
-  outtensors: "8S:1x255x13x13:DFP:2, 8S:1x255x26x26:DFP:2"
-  anchors: "10,14, 23,27, 37,58;   40.5,41, 67.5,84.5, 172,159.5"
-  #anchors: "10,14,  23,27,  37,58;  81,82,  135,169,  344,319" ## official
-  classes: "npu/detection/coco-labels.txt"
-
-YoloV4-DFP:
-  comment: "From the Amlogic/VeriSilicon NPU SDK"
-  model: "npu/detection/yolov4_88.nb"
-  intensors: "NCHW:8S:1x3x416x416:DFP:7"
-  outtensors: "8S:1x255x52x52:DFP:1, 8S:1x255x26x26:DFP:2, 8S:1x255x13x13:DFP:2"
+yolov7-tiny-512x288:
+  model: "npu/detection/yolov7-tiny-512x288.nb"
+  comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
+  intensors: "NCHW:8U:1x3x288x512:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x36x64:AA:0.003916095942258835:0, NCHW:8U:1x255x18x32:AA:0.00392133416607976:0, NCHW:8U:1x255x9x16:AA:0.003921062219887972:0"
   anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
-  classes: "npu/detection/coco-labels.txt"
-
-YoloV3-DFP:
-  comment: "From the Amlogic/VeriSilicon NPU SDK"
-  model: "npu/detection/yolov3_88.nb"
-  intensors: "NCHW:8S:1x3x416x416:DFP:7"
-  outtensors: "8S:1x255x13x13:DFP:2, 8S:1x255x26x26:DFP:2, 8S:1x255x52x52:DFP:2"
-  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
-  classes: "npu/detection/coco-labels.txt"
-
-YoloV2-DFP:
-  comment: "From the Amlogic/VeriSilicon NPU SDK"
-  model: "npu/detection/yolov2_88.nb"
-  intensors: "NCHW:8S:1x3x416x416:DFP:7"
-  outtensors: "8S:1x425x13x13:DFP:2"
-  anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
-  classes: "npu/detection/coco-labels.txt"
+  scalexy: 2.0
+  sigmoid: false
 
 YoloV7-Tiny-AA:
   comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
-  scale: 0.003921568393707275
   model: "npu/detection/YOLOv7-Tiny-AA.nb"
   intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
   outtensors: "8U:1x255x52x52:AA:0.0038335032295435667:0, 8U:1x255x26x26:AA:0.0038371747359633446:0, 8U:1x255x13x13:AA:0.003918845672160387:0"
   anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
   scalexy: 2.0
   sigmoid: false
-  classes: "npu/detection/coco-labels.txt"
+  extramodel: true
 
 YoloV7-Tiny-DFP:
   comment: "JeVois converted using NPU SDK and Dynamic Fixed Point quant"
@@ -119,129 +328,284 @@ YoloV7-Tiny-DFP:
   anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
   scalexy: 2.0
   sigmoid: false
-  classes: "npu/detection/coco-labels.txt"
 
 yolov7-tiny-512x288:
-  comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
-  scale: 0.003921568393707275
   model: "npu/detection/yolov7-tiny-512x288.nb"
   intensors: "NCHW:8U:1x3x288x512:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x36x64:AA:0.003916095942258835:0, NCHW:8U:1x255x18x32:AA:0.00392133416607976:0, NCHW:8U:1x255x9x16:AA:0.003921062219887972:0"
   anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
   scalexy: 2.0
   sigmoid: false
-  classes: "npu/detection/coco-labels.txt"
+  extramodel: true
 
 yolov7-tiny-1024x576:
-  comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
-  scale: 0.003921568393707275
   model: "npu/detection/yolov7-tiny-1024x576.nb"
   intensors: "NCHW:8U:1x3x576x1024:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x72x128:AA:0.003911261446774006:0, NCHW:8U:1x255x36x64:AA:0.003920680843293667:0, NCHW:8U:1x255x18x32:AA:0.003921556286513805:0"
   anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
   scalexy: 2.0
   sigmoid: false
-  classes: "npu/detection/coco-labels.txt"
 
-yolov2-coco:
-  comment: "Converted by USC/iLab model converter"
-  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.003921568393707275
-  model: "npu/detection/yolov2-coco.nb"
-  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
-  outtensors: "NCHW:8U:1x425x13x13:AA:0.14820359647274017:147"
-  anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
-  classes: "npu/detection/coco-labels.txt"
-
-yolov2-voc:
-  comment: "Converted by USC/iLab model converter"
-  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.003921568393707275
-  model: "npu/detection/yolov2-voc.nb"
-  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
-  outtensors: "NCHW:8U:1x125x13x13:AA:0.11101983487606049:134"
-  anchors: "10.5768,13.85160, 25.54200,32.07552, 40.44696,64.79136, 75.76896,38.72424, 89.8912,80.0568"
-  classes: "darknet/yolo/data/voc.names"
-
-yolov3-tiny:
-  comment: "Converted by USC/iLab model converter"
-  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.003921568393707275
-  model: "npu/detection/yolov3-tiny.nb"
-  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
-  outtensors: "NCHW:8U:1x255x13x13:AA:0.0827922374010086:214,NCHW:8U:1x255x26x26:AA:0.1048106923699379:202"
-  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
-  classes: "npu/detection/coco-labels.txt"
+yolov7-tiny-ksnn:
+  comment: "From Khadas KSNN examples"
+  model: "npu/detection/yolov7_tiny_uint8.nb"
+  library: "npu/detection/libnn_yolov7_tiny_uint8.so"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  scalexy: 2.0
+  sigmoid: true
+  extramodel: true
 
 yolov4-tiny:
   comment: "Converted by USC/iLab model converter"
   url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.003921568393707275
   model: "npu/detection/yolov4-tiny.nb"
   intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x13x13:AA:0.10826179385185242:192, NCHW:8U:1x255x26x26:AA:0.10561909526586533:185"
   anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
-  classes: "npu/detection/coco-labels.txt"
+  extramodel: true
 
-yolov3-spp:
-  comment: "Converted by USC/iLab model converter"
-  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.003921568393707275
-  model: "npu/detection/yolov3-spp.nb"
-  intensors: "NCHW:8U:1x3x608x608:AA:0.003921568393707275:0"
-  outtensors: "NCHW:8U:1x255x19x19:AA:0.09413968771696091:199, NCHW:8U:1x255x38x38:AA:0.12566116452217102:180, NCHW:8U:1x255x76x76:AA:0.12598100304603577:196"
-  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
-  classes: "npu/detection/coco-labels.txt"
+YoloV4-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolov4_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x255x52x52:DFP:1, 8S:1x255x26x26:DFP:2, 8S:1x255x13x13:DFP:2"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  extramodel: true
 
 yolov4-csp-x-swish:
   comment: "Converted by USC/iLab model converter"
   url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
-  scale: 0.003921568393707275
   model: "npu/detection/yolov4-csp-x-swish.nb"
   intensors: "NCHW:8U:1x3x640x640:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x80x80:AA:0.003918692469596863:0, NCHW:8U:1x255x40x40:AA:0.003918323200196028:0, NCHW:8U:1x255x20x20:AA:0.003918614238500595:0"
   anchors: "12,16, 19,36, 40,28;  36,75, 76,55, 72,146;  142,110, 192,243, 459,401"
   scalexy: 2.0
   sigmoid: false
-  classes: "npu/detection/coco-labels.txt"
 
+YoloV3-Tiny-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolotiny_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x255x13x13:DFP:2, 8S:1x255x26x26:DFP:2"
+  anchors: "10,14, 23,27, 37,58;   40.5,41, 67.5,84.5, 172,159.5"
 
-# Networks with post other than RAWYOLO:
-unset: detecttype
+YoloV3-uint8:
+  comment: "Model from Khadas KSNN examples, Darknet origin model"
+  model: "npu/detection/yolov3_uint8.nb"
+  library: "npu/detection/libnn_yolov3_uint8.so"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  extramodel: true
 
-yolov10n-512x288-int16:
-  comment: "JeVois converted using NPU SDK and 16-bit Dynamic Fixed Point"
-  scale: 0.003921568393707275
-  model: "npu/detection/yolov10n-512x288.nb"
-  intensors: "NCHW:16S:1x3x288x512:DFP:15"
-  outtensors: "16S:1x3024x84:DFP:5"
-  detecttype: YOLOv10
-  classes: "npu/detection/coco-labels.txt"
-  cthresh: 10.0
-  dthresh: 0.0 # not used by YOLOv10
+yolov3-spp:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  model: "npu/detection/yolov3-spp.nb"
+  intensors: "NCHW:8U:1x3x608x608:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x19x19:AA:0.09413968771696091:199, NCHW:8U:1x255x38x38:AA:0.12566116452217102:180, NCHW:8U:1x255x76x76:AA:0.12598100304603577:196"
+  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
 
+YoloV3-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolov3_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x255x13x13:DFP:2, 8S:1x255x26x26:DFP:2, 8S:1x255x52x52:DFP:2"
+  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
+  extramodel: true
+
+YoloV2-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolov2_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x425x13x13:DFP:2"
+  anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
+
+yolov2-coco:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  model: "npu/detection/yolov2-coco.nb"
+  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x425x13x13:AA:0.14820359647274017:147"
+  anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
+  extramodel: true
+
+yolov2-voc:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  model: "npu/detection/yolov2-voc.nb"
+  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x125x13x13:AA:0.11101983487606049:134"
+  anchors: "10.5768,13.85160, 25.54200,32.07552, 40.44696,64.79136, 75.76896,38.72424, 89.8912,80.0568"
+  classes: "dnn/labels/pascal-voc.txt"
+
+yolov3-tiny:
+  comment: "Converted by USC/iLab model converter"
+  url: "https://github.com/AlexeyAB/darknet#pre-trained-models"
+  model: "npu/detection/yolov3-tiny.nb"
+  intensors: "NCHW:8U:1x3x416x416:AA:0.003921568393707275:0"
+  outtensors: "NCHW:8U:1x255x13x13:AA:0.0827922374010086:214,NCHW:8U:1x255x26x26:AA:0.1048106923699379:202"
+  anchors: "10,14, 23,27, 37,58;  81,82, 135,169, 344,319"
+  extramodel: true
+
+Yolo-Face-DFP:
+  comment: "From the Amlogic/VeriSilicon NPU SDK"
+  model: "npu/detection/yolo_face_88.nb"
+  intensors: "NCHW:8S:1x3x416x416:DFP:7"
+  outtensors: "8S:1x30x13x13:DFP:2"
+  anchors: "4.58184,5.419080, 14.99568,16.50024, 26.70744,43.79472, 63.06256,28.22224, 78.16416,73.34624"
+  classes: "dnn/labels/face.txt"
+  extramodel: true
+  
 # need a post-processor...
 #FaceNet:
 #  model: "npu/detection/faceNet_88.nb"
 #  intensors: "NHWC:8S:1x160x160x3:DFP:7"
-#  mean: "0 0 0"
 #  outtensors: "8S:1x128:DFP:5"
+
+#MobileNetSSD-uint8:
+#  comment: "Model from Khadas KSNN examples, TensorFlow origin model"
+#  model: "npu/detection/mobilenet_ssd_uint8.nb"
+#  library: "npu/detection/libnn_mobilenet_ssd_uint8.so"
+#  detecttype: TPUSSD # does not work, need something else
+
+####################################################################################################
+# Object detection with instance segmentation (object masks)
+####################################################################################################
+
+detecttype: YOLOv8seg
+
+yolo11n-seg-512x288:
+  model: "npu/detection/yolo11n-seg-512x288.nb"
+  library: "npu/detection/libnn_yolo11n-seg-512x288.so"
+
+yolov8n-seg-512x288:
+  model: "npu/detection/yolov8n-seg-512x288.nb"
+  library: "npu/detection/libnn_yolov8n-seg-512x288.so"
+
+yolo11s-seg-512x288:
+  model: "npu/detection/yolo11s-seg-512x288.nb"
+  library: "npu/detection/libnn_yolo11s-seg-512x288.so"
+
+yolov8s-seg-512x288:
+  model: "npu/detection/yolov8s-seg-512x288.nb"
+  library: "npu/detection/libnn_yolov8s-seg-512x288.so"
+
+yolo11m-seg-512x288:
+  model: "npu/detection/yolo11m-seg-512x288.nb"
+  library: "npu/detection/libnn_yolo11m-seg-512x288.so"
+
+yolov8m-seg-512x288:
+  model: "npu/detection/yolov8m-seg-512x288.nb"
+  library: "npu/detection/libnn_yolov8m-seg-512x288.so"
+
+yolo11n-seg-1024x576:
+  model: "npu/detection/yolo11n-seg-1024x576.nb"
+  library: "npu/detection/libnn_yolo11n-seg-1024x576.so"
+
+yolov8n-seg-1024x576:
+  model: "npu/detection/yolov8n-seg-1024x576.nb"
+  library: "npu/detection/libnn_yolov8n-seg-1024x576.so"
+
+yolo11s-seg-1024x576:
+  model: "npu/detection/yolo11s-seg-1024x576.nb"
+  library: "npu/detection/libnn_yolo11s-seg-1024x576.so"
+
+yolov8s-seg-1024x576:
+  model: "npu/detection/yolov8s-seg-1024x576.nb"
+  library: "npu/detection/libnn_yolov8s-seg-1024x576.so"
+
+yolo11m-seg-1024x576:
+  model: "npu/detection/yolo11m-seg-1024x576.nb"
+  library: "npu/detection/libnn_yolo11m-seg-1024x576.so"
+
+yolov8m-seg-1024x576:
+  model: "npu/detection/yolov8m-seg-1024x576.nb"
+  library: "npu/detection/libnn_yolov8m-seg-1024x576.so"
+
+unset: detecttype
+unset: classes
+unset: postproc
+unset: nmsperclass
+
+# -------------------- detection with python post-processing
+# (preset global settings do not work for postproc params since we need to set the pypost before they can take effect)
 
 # Yolov7 on NPU with Python post-processing
 yolov7-tiny-512x288-PyPost:
   comment: "Like yolov7-tiny-512x288 but with Python post-processing"
   postproc: Python
   pypost: "pydnn/post/PyPostYolo.py"
-  scale: 0.003921568393707275
+  detecttype: RAWYOLO
   model: "npu/detection/yolov7-tiny-512x288.nb"
   intensors: "NCHW:8U:1x3x288x512:AA:0.003921568393707275:0"
   outtensors: "NCHW:8U:1x255x36x64:AA:0.003916095942258835:0, NCHW:8U:1x255x18x32:AA:0.00392133416607976:0, NCHW:8U:1x255x9x16:AA:0.003921062219887972:0"
   anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
   scalexy: 2.0
   sigmoid: false
-  classes: "npu/detection/coco-labels.txt"
+  classes: "dnn/labels/coco-labels.txt"
+  
+####################################################################################################
+# Oriented bounding box (OBB) detection models
+####################################################################################################
 
-unset: mean
+postproc: DetectOBB
+detecttypeobb: YOLOv8
+nmsperclass: true
+classes: "dnn/labels/dotav1.txt"
+comment: "Oriented bounding boxes for aerial imagery"
+
+yolo11n-obb-512x288:
+  model: "npu/detection/yolo11n-obb-512x288.nb"
+  library: "npu/detection/libnn_yolo11n-obb-512x288.so"
+
+yolov8n-obb-512x288:
+  model: "npu/detection/yolov8n-obb-512x288.nb"
+  library: "npu/detection/libnn_yolov8n-obb-512x288.so"
+
+yolo11s-obb-512x288:
+  model: "npu/detection/yolo11s-obb-512x288.nb"
+  library: "npu/detection/libnn_yolo11s-obb-512x288.so"
+
+yolov8s-obb-512x288:
+  model: "npu/detection/yolov8s-obb-512x288.nb"
+  library: "npu/detection/libnn_yolov8s-obb-512x288.so"
+
+yolo11m-obb-512x288:
+  model: "npu/detection/yolo11m-obb-512x288.nb"
+  library: "npu/detection/libnn_yolo11m-obb-512x288.so"
+
+yolov8m-obb-512x288:
+  model: "npu/detection/yolov8m-obb-512x288.nb"
+  library: "npu/detection/libnn_yolov8m-obb-512x288.so"
+
+yolo11n-obb-1024x576:
+  model: "npu/detection/yolo11n-obb-1024x576.nb"
+  library: "npu/detection/libnn_yolo11n-obb-1024x576.so"
+
+yolov8n-obb-1024x576:
+  model: "npu/detection/yolov8n-obb-1024x576.nb"
+  library: "npu/detection/libnn_yolov8n-obb-1024x576.so"
+
+yolo11s-obb-1024x576:
+  model: "npu/detection/yolo11s-obb-1024x576.nb"
+  library: "npu/detection/libnn_yolo11s-obb-1024x576.so"
+
+yolov8s-obb-1024x576:
+  model: "npu/detection/yolov8s-obb-1024x576.nb"
+  library: "npu/detection/libnn_yolov8s-obb-1024x576.so"
+
+yolo11m-obb-1024x576:
+  model: "npu/detection/yolo11m-obb-1024x576.nb"
+  library: "npu/detection/libnn_yolo11m-obb-1024x576.so"
+
+yolov8m-obb-1024x576:
+  model: "npu/detection/yolov8m-obb-1024x576.nb"
+  library: "npu/detection/libnn_yolov8m-obb-1024x576.so"
+
+unset: nmsperclass
+unset: comment
+unset: detecttypeobb
+unset: classes
+unset: postproc
 
 ####################################################################################################
 # Semantic segmentation models
@@ -260,6 +624,72 @@ PP-HumanSeg:
   bgid: 1
   model: "npu/segmentation/human_segmentation_pphumanseg_2021oct-act_int8-wt_int8-quantized.onnx"
   intensors: "NCHW:8U:1x3x192x192"
+
+unset: postproc
+
+####################################################################################################
+# Pose models
+####################################################################################################
+
+postproc: Pose
+posetype: YOLOv8
+skeleton: "dnn/skeletons/Coco17.yml"
+classes: "dnn/labels/person.txt"
+comment: "Converted using JeVois NPU SDK and Asymmetric Affine quant"
+
+yolo11n-pose-512x288:
+  model: "npu/pose/yolo11n-pose-512x288.nb"
+  library: "npu/pose/libnn_yolo11n-pose-512x288.so"
+
+yolov8n-pose-512x288:
+  model: "npu/pose/yolov8n-pose-512x288.nb"
+  library: "npu/pose/libnn_yolov8n-pose-512x288.so"
+
+yolo11s-pose-512x288:
+  model: "npu/pose/yolo11s-pose-512x288.nb"
+  library: "npu/pose/libnn_yolo11s-pose-512x288.so"
+
+yolov8s-pose-512x288:
+  model: "npu/pose/yolov8s-pose-512x288.nb"
+  library: "npu/pose/libnn_yolov8s-pose-512x288.so"
+
+yolo11m-pose-512x288:
+  model: "npu/pose/yolo11m-pose-512x288.nb"
+  library: "npu/pose/libnn_yolo11m-pose-512x288.so"
+
+yolov8m-pose-512x288:
+  model: "npu/pose/yolov8m-pose-512x288.nb"
+  library: "npu/pose/libnn_yolov8m-pose-512x288.so"
+
+yolo11n-pose-1024x576:
+  model: "npu/pose/yolo11n-pose-1024x576.nb"
+  library: "npu/pose/libnn_yolo11n-pose-1024x576.so"
+
+yolov8n-pose-1024x576:
+  model: "npu/pose/yolov8n-pose-1024x576.nb"
+  library: "npu/pose/libnn_yolov8n-pose-1024x576.so"
+
+yolo11s-pose-1024x576:
+  model: "npu/pose/yolo11s-pose-1024x576.nb"
+  library: "npu/pose/libnn_yolo11s-pose-1024x576.so"
+
+yolov8s-pose-1024x576:
+  model: "npu/pose/yolov8s-pose-1024x576.nb"
+  library: "npu/pose/libnn_yolov8s-pose-1024x576.so"
+
+yolo11m-pose-1024x576:
+  model: "npu/pose/yolo11m-pose-1024x576.nb"
+  library: "npu/pose/libnn_yolo11m-pose-1024x576.so"
+
+yolov8m-pose-1024x576:
+  model: "npu/pose/yolov8m-pose-1024x576.nb"
+  library: "npu/pose/libnn_yolov8m-pose-1024x576.so"
+
+unset: comment
+unset: skeleton
+unset: posetype
+unset: classes
+unset: postproc
 
 ####################################################################################################
 # Other models
@@ -292,3 +722,12 @@ YuNet-Face-768x432:
   cthresh: 90.0
   intensors: "NCHW:8U:1x3x432x768"
 
+####################################################################################################
+# Clear global settings
+####################################################################################################
+
+unset: comment
+unset: mean
+unset: scale
+unset: nettype
+unset: preproc

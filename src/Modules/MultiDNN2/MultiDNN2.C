@@ -69,31 +69,48 @@ class MultiDNN2 : public jevois::StdModule,
     // ####################################################################################################
     //! Processing function implementation
     // ####################################################################################################
-    void doprocess(std::shared_ptr<jevois::dnn::Pipeline> pipe, jevois::InputFrame const & inframe,
-                   jevois::RawImage * outimg, jevois::OptGUIhelper * helper, bool idle)
+    void doprocess(jevois::InputFrame const & inframe, jevois::RawImage * outimg,
+                   jevois::OptGUIhelper * helper, bool idle)
     {
       // If we have a second (scaled) image, assume this is the one we want to process:
-      jevois::RawImage const & inimg = inframe.hasScaledImage() ? inframe.get2() : inframe.get();
+      jevois::RawImage const inimg = inframe.getp();
 
-      // Ok, process it:
-      pipe->process(inimg, this, outimg, helper, idle);
+      // Loop over all pipelines and run and display each:
+      for (auto & pipe : itsPipes) pipe->process(inimg, this, outimg, helper, idle);
     }
     
     // ####################################################################################################
     //! Processing function, no video output
     // ####################################################################################################
-    //virtual void process(jevois::InputFrame && inframe) override
-    //{
-    //  LFATAL("todo");
-    //}
+    virtual void process(jevois::InputFrame && inframe) override
+    {
+      doprocess(inframe, nullptr, nullptr, false);
+    }
     
     // ####################################################################################################
     //! Processing function with video output to USB
     // ####################################################################################################
-    //virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
-    //{
-    //  LFATAL("todo");
-    //}
+    virtual void process(jevois::InputFrame && inframe, jevois::OutputFrame && outframe) override
+    {
+      // Get the input frame:
+      jevois::RawImage const & inimg = inframe.get();
+      unsigned int const w = inimg.width, h = inimg.height;
+
+      // Get the output image:
+      jevois::RawImage outimg = outframe.get();
+
+      // Input and output sizes and format must match:
+      outimg.require("output", w, h, inimg.fmt);
+
+      // Copy input to output:
+      jevois::rawimage::paste(inimg, outimg, 0, 0);
+
+      // Process and draw any results (e.g., detected boxes) into outimg:
+      doprocess(inframe, &outimg, nullptr, false);
+
+      // Send the output image with our processing results to the host over USB:
+      outframe.send();
+    }
 
 #ifdef JEVOIS_PRO
     // ####################################################################################################
@@ -114,8 +131,8 @@ class MultiDNN2 : public jevois::StdModule,
       int x = 0, y = 0; unsigned short w = 0, h = 0;
       helper.drawInputFrame("c", inframe, x, y, w, h, true);
         
-      // Loop over all pipelines and run and display each:
-      for (auto & pipe : itsPipes) doprocess(pipe, inframe, nullptr, &helper, idle);
+      // Process and draw any results (e.g., detected boxes) into GUI:
+      doprocess(inframe, nullptr, &helper, idle);
 
       // Show overall frame rate and camera and display info:
       helper.iinfo(inframe, fpscpu, winw, winh);

@@ -36,39 +36,35 @@
 includedir: custom
 
 # If we have a hailo board installed, run a hailo model by default. Will be skipped if no Hailo is present:
-YOLOv5m:
+YOLOv8n-640:
   preproc: Blob
   scale: 1.0
   mean: "0 0 0"
   nettype: SPU
-  postproc: Detect
-  detecttype: RAWYOLO
-  anchors: "10,13, 16,30, 33,23;  30,61, 62,45, 59,119;  116,90, 156,198, 373,326"
-  scale: 1.0
-  model: "hailo/detection/yolov5m_wo_spp_60p.hef"
+  model: "hailo/detection/yolov8n.hef"
   comment: "Demo model from Hailo"
   url: "https://hailo.ai/devzone-model-zoo/object-detection/"
-  classes: "darknet/yolo/data/coco.names"
-  scalexy: 2.0
+  postproc: Detect
+  detecttype: YOLOv8t
   sigmoid: false
+  classes: "dnn/labels/coco-labels.txt"
 
 # Default model to run if there are no custom models and no Hailo-8 board above. On host, which has no NPU, this one
 # will be skipped and the first one from the next included file (opencv.yml) will be loaded instead:
-yolov7-tiny-NPU:
+yolo11n-512x288-AA:
   preproc: Blob
   mean: "0 0 0"
   scale: 0.0039215686
   nettype: NPU
-  model: "npu/detection/yolov7-tiny-512x288.nb"
+  model: "npu/detection/yolo11n-512x288.nb"
+  library: "npu/detection/libnn_yolo11n-512x288.so"
   comment: "JeVois converted using NPU SDK and Asymmetric Affine quant"
-  intensors: "NCHW:8U:1x3x288x512:AA:0.003921568393707275:0"
-  outtensors: "NCHW:8U:1x255x36x64:AA:0.003916095942258835:0, NCHW:8U:1x255x18x32:AA:0.00392133416607976:0, NCHW:8U:1x255x9x16:AA:0.003921062219887972:0"
   postproc: Detect
-  detecttype: RAWYOLO
-  anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
-  scalexy: 2.0
-  sigmoid: false
-  classes: "npu/detection/coco-labels.txt"
+  detecttype: YOLOv8
+  nmsperclass: true
+  processing: Sync
+  classes: "dnn/labels/coco-labels.txt"
+  processing: Sync
 
 # Include (recursively) zoo files for various accelerators:
 include: opencv.yml

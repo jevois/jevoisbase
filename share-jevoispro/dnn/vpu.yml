@@ -31,7 +31,7 @@ Inception-V3:
   comment: "On VPU, with fallback to VPUX emulation if no VPU"
   model: "openvino/classification/inception-v3/inception_v3_2016_08_28_frozen.pb"
   intensors: "NCHW:32F:1x3x299x299"
-  classes: "openvino/classification/inception-v3/imagenet_slim_labels.txt"
+  classes: "dnn/labels/imagenet-slim.txt"
 
 ####################################################################################################
 # Object detection models.
@@ -46,7 +46,7 @@ face-detection-retail-0004:
   config: "openvino/detection/face-detection-retail-0004/FP16/face-detection-retail-0004.xml"
   intensors: "NCHW:8U:1x3x300x300"
   detecttype: SSD
-  classes: "opencv-dnn/detection/face.txt"
+  classes: "dnn/labels/face.txt"
 
 face-detection-adas-0001:
   comment: "MobileNet backbone + SSD"
@@ -55,7 +55,7 @@ face-detection-adas-0001:
   config: "openvino/detection/face-detection-adas-0001/FP16/face-detection-adas-0001.xml"
   intensors: "NCHW:8U:1x3x384x672"
   detecttype: SSD
-  classes: "opencv-dnn/detection/face.txt"
+  classes: "dnn/labels/face.txt"
 
 person-detection-retail-0013:
   comment: "MobileNetV2-like backbone + SSD"
@@ -64,7 +64,7 @@ person-detection-retail-0013:
   config: "openvino/detection/person-detection-retail-0013/FP16/person-detection-retail-0013.xml"
   intensors: "NCHW:8U:1x3x320x544"
   detecttype: SSD
-  classes: "opencv-dnn/detection/person.txt"
+  classes: "dnn/labels/background-person.txt"
 
 pedestrian-detection-adas-0002:
   comment: "MobileNetV1 backbone + SSD"
@@ -73,7 +73,7 @@ pedestrian-detection-adas-0002:
   config: "openvino/detection/pedestrian-detection-adas-0002/FP16/pedestrian-detection-adas-0002.xml"
   intensors: "NCHW:8U:1x3x384x672"
   detecttype: SSD
-  classes: "opencv-dnn/detection/person.txt"
+  classes: "dnn/labels/background-person.txt"
 
 vehicle-detection-adas-0002:
   comment: "MobileNetV1 backbone + SSD"
@@ -82,7 +82,7 @@ vehicle-detection-adas-0002:
   config: "openvino/detection/vehicle-detection-adas-0002/FP16/vehicle-detection-adas-0002.xml"
   intensors: "NCHW:8U:1x3x384x672"
   detecttype: SSD
-  classes: "opencv-dnn/detection/vehicle.txt"
+  classes: "dnn/labels/vehicle.txt"
 
 pedestrian-and-vehicle-detector-adas-0001:
   comment: "MobileNetV1 backbone + SSD"
@@ -91,7 +91,7 @@ pedestrian-and-vehicle-detector-adas-0001:
   config: "openvino/detection/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml"
   intensors: "NCHW:8U:1x3x384x672"
   detecttype: SSD
-  classes: "openvino/detection/pedestrian-and-vehicle-detector-adas-0001/classes.txt"
+  classes: "dnn/labels/pedestrian-and-vehicle.txt"
 
 product-detection-0001:
   comment: "MobileNetV2 backbone + SSD-lite"
@@ -100,7 +100,7 @@ product-detection-0001:
   config: "openvino/detection/product-detection-0001/FP16/product-detection-0001.xml"
   intensors: "NCHW:8U:1x3x512x512"
   detecttype: SSD
-  classes: "openvino/detection/product-detection-0001/classes.txt"
+  classes: "dnn/labels/product-detection-0001.txt"
   classoffset: 1
 
 # Bunch of models based on YOLOv2 retrained (but anchors are not changed?):
@@ -116,7 +116,7 @@ product-detection-0001:
 #   intensors: "NCHW:8U:1x3x416x416"
 #   outtensors: "32F:1x21125"
 #   outreshape: "32F:1x125x13x13"
-#   classes: "darknet/yolo/data/voc.names"
+#   classes: "dnn/labels/pascal-voc.txt"
 
 #yolo-v2-tiny-ava-sparse-60-0001:
 #   model: "openvino/detection/yolo-v2-tiny-ava-sparse-60-0001/FP16/yolo-v2-tiny-ava-sparse-60-0001.bin"
@@ -124,7 +124,7 @@ product-detection-0001:
 #   intensors: "NCHW:8U:1x3x416x416"
 #   outtensors: "32F:1x21125"
 #   outreshape: "32F:1x125x13x13"
-#   classes: "darknet/yolo/data/voc.names"
+#   classes: "dnn/labels/pascal-voc.txt"
 
 #yolo-v2-tiny-vehicle-detection-0001:
 #   model: "openvino/detection/yolo-v2-tiny-vehicle-detection-0001/FP16/yolo-v2-tiny-vehicle-detection-0001.bin"
@@ -132,7 +132,7 @@ product-detection-0001:
 #   intensors: "NCHW:8U:1x3x416x416"
 #   outtensors: "32F:1x71825"
 #   outreshape: "32F:1x425x13x13"
-#   classes: "darknet/yolo/data/coco.names"
+#   classes: "dnn/labels/coco-labels.txt"
 
 #yolo-v2-ava-0001:
 #   model: "openvino/detection/yolo-v2-ava-0001/FP16/yolo-v2-ava-0001.bin"
@@ -140,7 +140,7 @@ product-detection-0001:
 #   intensors: "NCHW:8U:1x3x416x416"
 #   outtensors: "32F:1x21125"
 #   outreshape: "32F:1x125x13x13"
-#   classes: "darknet/yolo/data/voc.names"
+#   classes: "dnn/labels/pascal-voc.txt"
 
 #yolo-v2-ava-sparse-70-0001:
 #   model: "openvino/detection/yolo-v2-ava-sparse-70-0001/FP16/yolo-v2-ava-sparse-70-0001.bin"
@@ -148,7 +148,7 @@ product-detection-0001:
 #   intensors: "NCHW:8U:1x3x416x416"
 #   outtensors: "32F:1x21125"
 #   outreshape: "32F:1x125x13x13"
-#   classes: "darknet/yolo/data/voc.names"
+#   classes: "dnn/labels/pascal-voc.txt"
 
 #unset: anchors
 #unset: detecttype
@@ -162,7 +162,7 @@ YoloV5s:
   intensors: "NCHW:8U:1x3x640x640"
   detecttype: RAWYOLO
   anchors: "10,13, 16,30, 33,23;   30,61, 62,45, 59,119;   116,90, 156,198, 373,326"
-  classes: "npu/detection/coco-labels.txt"
+  classes: "dnn/labels/coco-labels.txt"
   sigmoid: true
   scalexy: 2.0
 
