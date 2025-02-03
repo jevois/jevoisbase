@@ -137,6 +137,60 @@ DamoYOLO-tinynasL35_M-480x288:
   nms: 85
 
 ####################################################################################################
+# Open-World object detection models.
+####################################################################################################
+
+yolov8s-jevois-512x288-1c-onnx:
+  comment: "Open-vocabulary, enter your own class names"
+  nettype: ORT
+  mean: "0 0 0"
+  scale: 0.003921568393707275
+  model: "ort/detection/yolov8s-jevois-512x288-1c.onnx"
+  detecttype: YOLOjevois
+  classes: "dnn/labels/person.txt"
+  perclassthresh: "20.0"
+  extraintensors: "32F:1x1x512:external"
+  clipmodel: "clip-vit-base-patch32_ggml-model-q8_0.gguf"
+
+yolov8s-jevois-512x288-8c-onnx:
+  comment: "Open-vocabulary, enter your own class names"
+  nettype: ORT
+  mean: "0 0 0"
+  scale: 0.003921568393707275
+  model: "ort/detection/yolov8s-jevois-512x288-8c.onnx"
+  detecttype: YOLOjevois
+  classes: "dnn/labels/8classes.txt"
+  perclassthresh: "5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0"
+  extraintensors: "32F:1x8x512:external"
+  clipmodel: "clip-vit-base-patch32_ggml-model-q8_0.gguf"
+
+yolov8s-jevois-512x288-1c-onnx-split:
+  comment: "Open-vocabulary, enter your own class names"
+  nettype: ORT
+  mean: "0 0 0"
+  scale: 0.003921568393707275
+  model: "ort/detection/yolov8s-jevois-512x288-1c-img.onnx"
+  detecttype: YOLOjevois
+  classes: "dnn/labels/1classes.txt"
+  perclassthresh: "20.0"
+  extraintensors: "32F:1x4x32x1:external, 32F:1x2x32x1:external, 32F:1x4x32x1:external, 32F:1x8x32x1:external, 32F:1x1x512:external"
+  clipmodel: "clip-vit-base-patch32_ggml-model-q8_0.gguf"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-1c-txt.onnx"
+
+yolov8s-jevois-512x288-8c-onnx-split:
+  comment: "Open-vocabulary, enter your own class names"
+  nettype: ORT
+  mean: "0 0 0"
+  scale: 0.003921568393707275
+  model: "ort/detection/yolov8s-jevois-512x288-8c-img.onnx"
+  detecttype: YOLOjevois
+  classes: "dnn/labels/8classes.txt"
+  perclassthresh: "20.0 20.0 20.0 20.0 20.0 20.0 20.0 20.0"
+  extraintensors: "32F:1x4x32x1:external, 32F:1x2x32x1:external, 32F:1x4x32x1:external, 32F:1x8x32x1:external, 32F:1x1x512:external"
+  clipmodel: "clip-vit-base-patch32_ggml-model-q8_0.gguf"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-8c-txt.onnx"
+  
+####################################################################################################
 # Semantic segmentation models
 ####################################################################################################
 

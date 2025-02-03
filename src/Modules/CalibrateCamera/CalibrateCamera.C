@@ -698,6 +698,8 @@ class CalibrateCamera : public jevois::Module,
             ImGui::Text("markerSize - if using ChArUco, physical size of markers in your units");
             ImGui::Bullet();
             ImGui::Text("boardSize - horizontal and vertical number of tiles");
+            ImGui::Bullet();
+            ImGui::Text("engine::cameralens - lens you are calibrating (in System Parameters)");
             
             ImGui::TextUnformatted("");
             ImGui::Separator();
@@ -706,6 +708,10 @@ class CalibrateCamera : public jevois::Module,
         }
         else
         {
+          ImGui::Text("Sensor: %s, Lens: %s, Resolution: %dx%d",
+                      engine()->camerasens::strget().c_str(), engine()->cameralens::strget().c_str(),
+                      itsImageSize.width, itsImageSize.height);
+          
           ImGui::TextUnformatted("Point the camera so that you get a full view of the calibration board, "
                                  "then click Grab.");
           if (itsImagePoints.empty() == false)

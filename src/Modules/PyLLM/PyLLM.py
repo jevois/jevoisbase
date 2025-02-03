@@ -81,6 +81,7 @@ class PyLLM:
         self.messages = []
         self.client = ollama.AsyncClient()
         self.statusmsg = "---"
+        self.waitmsg = "Loading Model"
 
     # ###################################################################################################
     ## JeVois optional extra init once the instance is fully constructed
@@ -94,12 +95,12 @@ class PyLLM:
             if m and m.split()[0] != "NAME": models.append(m.split()[0])
         
         self.modelname = jevois.Parameter(self, 'modelname', 'str',
-                         'Model to use, one of:' + str(models) + '. Other models available at ' +
-                         'https://ollama.com, typically select one with < 2B parameters. Working internet connection ' +
-                         'and space on microSD required to download a new model. You need to download the model ' +
-                         'from the ollama command-line first, before using it here.',
-                                          'qwen2.5:0.5b', self.pc)
-        self.modelname.setCallback(self.setModel);
+                        'Model to use. Other models available at https://ollama.com, typically select one with ' +
+                        '< 2B parameters. Working internet connection and space on microSD required to download a ' +
+                        'new model. You need to download the model from the ollama command-line before using it here.',
+                        'smollm2:135m', self.pc)
+        self.modelname.setCallback(self.setModel)
+        self.modelname.setValidValues(models)
         
     # ###################################################################################################
     ## JeVois optional extra un-init before destruction
@@ -116,7 +117,9 @@ class PyLLM:
             del(self.generator)
         self.messages = []
         self.chatbox.clear()
-    
+        self.waitmsg = "Loading Model"
+        jevois.LINFO("Selected model " + name)
+
     # ###################################################################################################
     ## Run the LLM model asynchronously
     async def runmodel(self):
@@ -156,13 +159,18 @@ class PyLLM:
                 # If no exception was thrown, response complete, nuke generator & task, back to user input:
                 del(self.task)
                 del(self.generator)
-                self.chatbox.freeze(False)
+                self.chatbox.freeze(False, self.waitmsg)
+                self.waitmsg = "Working" # messsage to show on subsequent queries
             except:
                 # Timeout, no new response words from the LLM
                 pass
             
         else:
             # We are not generating a response, so we are waiting for user input. Any new user input?
+            if self.chatbox.wasCleared():
+                self.messages = []
+                self.currmsg = []
+                
             if user_input := self.chatbox.get():
                 # Do we want to pass an image to moondream or similar VLM?
                 if '/videoframe/' in user_input:
@@ -176,11 +184,15 @@ class PyLLM:
                     
                 # Prepare to get response from LLM:
                 self.currmsg = {'role': 'assistant', 'content': ''}
-                self.chatbox.freeze(True)
+                self.chatbox.freeze(True, self.waitmsg)
 
                 # Create a response generator and associated asyncio task:
-                self.generator = self.client.chat(model = self.modelname.get(), messages = self.messages, stream=True)
-                self.task = loop.create_task(self.runmodel())
+                try:
+                    self.generator = self.client.chat(model = self.modelname.get(),
+                                                      messages = self.messages, stream = True)
+                    self.task = loop.create_task(self.runmodel())
+                except Exception as e:
+                    helper.reportError(str(e))
         
         # Because ollama runs in a different process (we are just running a web client to it here), get general CPU load
         # and other system info to show to user:

@@ -67,10 +67,10 @@ class PythonOpenCV:
 
         # Draw full-resolution input frame from camera:
         x, y, w, h = helper.drawInputFrame("c", inframe, False, False)
-        helper.itext('JeVois-Pro AprilTag detection')
+        helper.itext('JeVois-Pro OpenCV Sandbox')
         
         # Get the next camera image as grayscale and lower resolution for processing (may block until it is captured):
-        ingray = inframe.getCvGRAYp()
+        inimggray = inframe.getCvGRAYp()
 
         # Start measuring image processing time (NOTE: does not account for input conversion time):
         self.timer.start()

@@ -283,6 +283,20 @@ yolov9n-headpose-1024x576:
   comment: "Converted using JeVois NPU SDK and Asymmetric Affine quant"
   classes: "dnn/labels/discrete-headpose.txt"
 
+yolov9t-wholebody17-1024x576:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/457_YOLOv9-Wholebody17"
+  model: "npu/detection/yolov9t-wholebody17-1024x576.nb"
+  library: "npu/detection/libnn_yolov9t-wholebody17-1024x576.so"
+  classes: "dnn/labels/wholebody17.txt"
+  cthresh: 60.0
+
+yolov9s-wholebody17-1024x576:
+  url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/457_YOLOv9-Wholebody17"
+  model: "npu/detection/yolov9s-wholebody17-1024x576.nb"
+  library: "npu/detection/libnn_yolov9s-wholebody17-1024x576.so"
+  classes: "dnn/labels/wholebody17.txt"
+  cthresh: 60.0
+
 yolov9s-headpose-1024x576:
   url: "https://github.com/PINTO0309/PINTO_model_zoo/tree/main/458_YOLOv9-Discrete-HeadPose-Yaw"
   model: "npu/detection/yolov9s-det-headpose-1024x576.nb"
@@ -468,10 +482,183 @@ Yolo-Face-DFP:
 #  detecttype: TPUSSD # does not work, need something else
 
 ####################################################################################################
+# Open-World object detection models.
+####################################################################################################
+
+comment: "Open-vocabulary, enter your own class names or define from image"
+detecttype: YOLOjevois
+clipmodel: "clip-vit-base-patch32_ggml-model-q8_0.gguf"
+
+yolov8s-jevois-512x288-1c-DFP16:
+  model: "npu/detection/yolov8s-jevois-512x288-1c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-1c-DFP16.so"
+  classes: "dnn/labels/person.txt"
+  perclassthresh: "60.0"
+  extraintensors: "16F:1x1x512:external"
+
+yolov8s-jevois-512x288-8c-DFP16:
+  model: "npu/detection/yolov8s-jevois-512x288-8c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-8c-DFP16.so"
+  classes: "dnn/labels/8classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x8x512:external"
+
+yolov8s-jevois-512x288-16c-DFP16:
+  model: "npu/detection/yolov8s-jevois-512x288-16c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-16c-DFP16.so"
+  classes: "dnn/labels/16classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x16x512:external"
+
+yolov8s-jevois-512x288-32c-DFP16:
+  model: "npu/detection/yolov8s-jevois-512x288-32c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-32c-DFP16.so"
+  classes: "dnn/labels/32classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x32x512:external"
+
+yolov8s-jevois-512x288-64c-DFP16:
+  model: "npu/detection/yolov8s-jevois-512x288-64c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-64c-DFP16.so"
+  classes: "dnn/labels/64classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x64x512:external"
+
+yolov8s-jevois-1024x576-1c-DFP16:
+  model: "npu/detection/yolov8s-jevois-1024x576-1c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-1c-DFP16.so"
+  classes: "dnn/labels/person.txt"
+  perclassthresh: "60.0"
+  extraintensors: "16F:1x1x512:external"
+  extramodel: true
+  
+yolov8s-jevois-1024x576-8c-DFP16:
+  model: "npu/detection/yolov8s-jevois-1024x576-8c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-8c-DFP16.so"
+  classes: "dnn/labels/8classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x8x512:external"
+  extramodel: true
+
+yolov8s-jevois-1024x576-16c-DFP16:
+  model: "npu/detection/yolov8s-jevois-1024x576-16c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-16c-DFP16.so"
+  classes: "dnn/labels/16classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x16x512:external"
+  extramodel: true
+
+yolov8s-jevois-1024x576-32c-DFP16:
+  model: "npu/detection/yolov8s-jevois-1024x576-32c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-32c-DFP16.so"
+  classes: "dnn/labels/32classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x32x512:external"
+  extramodel: true
+
+yolov8s-jevois-1024x576-64c-DFP16:
+  model: "npu/detection/yolov8s-jevois-1024x576-64c-DFP16.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-64c-DFP16.so"
+  classes: "dnn/labels/64classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x64x512:external"
+  extramodel: true
+
+# split model, 8-bit quantization:
+
+yolov8s-jevois-512x288-1c-split-AA:
+  model: "npu/detection/yolov8s-jevois-512x288-1c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-1c-img-AA.so"
+  classes: "dnn/labels/person.txt"
+  perclassthresh: "60.0"
+  extraintensors: "16F:1x4x32x1:external, 16F:1x2x32x1:external, 16F:1x4x32x1:external, 16F:1x8x32x1:external, 16F:1x1x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-1c-txt.onnx"
+
+yolov8s-jevois-512x288-8c-split-AA:
+  model: "npu/detection/yolov8s-jevois-512x288-8c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-8c-img-AA.so"
+  classes: "dnn/labels/8classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x4x32x8:external, 16F:1x2x32x8:external, 16F:1x4x32x8:external, 16F:1x8x32x8:external, 16F:1x8x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-8c-txt.onnx"
+
+yolov8s-jevois-512x288-16c-split-AA:
+  model: "npu/detection/yolov8s-jevois-512x288-16c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-16c-img-AA.so"
+  classes: "dnn/labels/16classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x4x32x16:external, 16F:1x2x32x16:external, 16F:1x4x32x16:external, 16F:1x8x32x16:external, 16F:1x16x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-16c-txt.onnx"
+
+yolov8s-jevois-512x288-32c-split-AA:
+  model: "npu/detection/yolov8s-jevois-512x288-32c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-32c-img-AA.so"
+  classes: "dnn/labels/32classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x4x32x32:external, 16F:1x2x32x32:external, 16F:1x4x32x32:external, 16F:1x8x32x32:external, 16F:1x32x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-32c-txt.onnx"
+
+yolov8s-jevois-512x288-64c-split-AA:
+  model: "npu/detection/yolov8s-jevois-512x288-64c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-512x288-64c-img-AA.so"
+  classes: "dnn/labels/64classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x4x32x64:external, 16F:1x2x32x64:external, 16F:1x4x32x64:external, 16F:1x8x32x64:external, 16F:1x64x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-64c-txt.onnx"
+
+yolov8s-jevois-1024x576-1c-split-AA:
+  model: "npu/detection/yolov8s-jevois-1024x576-1c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-1c-img-AA.so"
+  classes: "dnn/labels/person.txt"
+  perclassthresh: "60.0"
+  extraintensors: "16F:1x4x32x1:external, 16F:1x2x32x1:external, 16F:1x4x32x1:external, 16F:1x8x32x1:external, 16F:1x1x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-1c-txt.onnx"
+  
+yolov8s-jevois-1024x576-8c-split-AA:
+  model: "npu/detection/yolov8s-jevois-1024x576-8c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-8c-img-AA.so"
+  classes: "dnn/labels/8classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x4x32x8:external, 16F:1x2x32x8:external, 16F:1x4x32x8:external, 16F:1x8x32x8:external, 16F:1x8x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-8c-txt.onnx"
+
+yolov8s-jevois-1024x576-16c-split-AA:
+  model: "npu/detection/yolov8s-jevois-1024x576-16c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-16c-img-AA.so"
+  classes: "dnn/labels/16classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x4x32x16:external, 16F:1x2x32x16:external, 16F:1x4x32x16:external, 16F:1x8x32x16:external, 16F:1x16x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-16c-txt.onnx"
+  extramodel: true
+
+yolov8s-jevois-1024x576-32c-split-AA:
+  model: "npu/detection/yolov8s-jevois-1024x576-32c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-32c-img-AA.so"
+  classes: "dnn/labels/32classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x4x32x32:external, 16F:1x2x32x32:external, 16F:1x4x32x32:external, 16F:1x8x32x32:external, 16F:1x32x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-32c-txt.onnx"
+  extramodel: true
+
+yolov8s-jevois-1024x576-64c-split-AA:
+  model: "npu/detection/yolov8s-jevois-1024x576-64c-img-AA.nb"
+  library: "npu/detection/libnn_yolov8s-jevois-1024x576-64c-img-AA.so"
+  classes: "dnn/labels/64classes.txt"
+  perclassthresh: "60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.0"
+  extraintensors: "16F:1x4x32x64:external, 16F:1x2x32x64:external, 16F:1x4x32x64:external, 16F:1x8x32x64:external, 16F:1x64x512:external"
+  textmodel: "ort/detection/yolov8s-jevois-512x288-64c-txt.onnx"
+  extramodel: true
+
+unset: comment
+unset: detecttype
+unset: clipmodel
+
+####################################################################################################
 # Object detection with instance segmentation (object masks)
 ####################################################################################################
 
 detecttype: YOLOv8seg
+comment: "Object detection + instance segmentation"
 
 yolo11n-seg-512x288:
   model: "npu/detection/yolo11n-seg-512x288.nb"
@@ -521,6 +708,7 @@ yolov8m-seg-1024x576:
   model: "npu/detection/yolov8m-seg-1024x576.nb"
   library: "npu/detection/libnn_yolov8m-seg-1024x576.so"
 
+unset: comment
 unset: detecttype
 unset: classes
 unset: postproc

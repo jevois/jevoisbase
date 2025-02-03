@@ -48,7 +48,7 @@ jevois_project_set_flags()
 set(JVB "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Setup our library using the source files in src/Components and call it jevoisbase with the current version number:
-set(JEVOISBASE_SOVERSION "1.22.0")
+set(JEVOISBASE_SOVERSION ${JEVOIS_SOVERSION})
 jevois_setup_library(src/Components ${JEVOIS}base ${JEVOISBASE_SOVERSION})
 
 # Check that we are not trying to compile a newer jevoisbase against an older jevois-sdk, which would typically fail:
