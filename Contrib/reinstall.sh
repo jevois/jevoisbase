@@ -8,11 +8,12 @@ set -e # Exit on any error
 # this reinstall script:
 release=`cat RELEASE`
 
-# Get the current jevoisbase version from CMakeLists.txt
-# CAUTION: This is very brittle and requires this exact format in jevoisbase/CMakeLists.txt:
-#   set(JEVOISBASE_SOVERSION "1.16.0")
+# Get the current jevoisbase version from jevois' CMakeLists.txt
 sdir="$( dirname "${BASH_SOURCE[0]}" )"
-jvbver=`grep JEVOISBASE_SOVERSION "${sdir}/../CMakeLists.txt" | head -1 | awk -F '"' '{ print $2 }'`
+ma=`grep "set(JEVOIS_VERSION_MAJOR" "${sdir}/../../jevois/CMakeLists.txt" | awk '{ print $2 }' | sed -e 's/)//' `
+mi=`grep "set(JEVOIS_VERSION_MINOR" "${sdir}/../../jevois/CMakeLists.txt" | awk '{ print $2 }' | sed -e 's/)//' `
+pa=`grep "set(JEVOIS_VERSION_PATCH" "${sdir}/../../jevois/CMakeLists.txt" | awk '{ print $2 }' | sed -e 's/)//' `
+jvbver="${ma}.${mi}.${pa}"
 
 ###################################################################################################
 function get_github # owner, repo, revision
